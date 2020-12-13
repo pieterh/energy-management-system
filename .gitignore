@@ -1,0 +1,9 @@
+ems.suo
+.DS_Store
+**/obj
+**/bin
+.vscode/solution-explorer/
+**/TestResults
+coverage.opencover.xml
+
+
