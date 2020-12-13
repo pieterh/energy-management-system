@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
+      <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
+      <Name>AlfenNG9xx</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="4.7.6"/>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.13"/>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest"/>
+    <None Update="config.json" CopyToOutputDirectory="PreserveNewest"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="config.schema.json"/>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="config.schema.json"/>
+  </ItemGroup>
+</Project>

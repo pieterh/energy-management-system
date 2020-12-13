@@ -1,0 +1,24 @@
+{
+    "adapters": [
+        {
+            "id": "f5069b64-628e-4cd9-bfad-e665be55c8b7",
+            "type": "chargepoint",
+            "name": "Alfen NG9xx",
+            "driver": {
+                "assembly": "AlfenNG9xx.dll",
+                "type": "AlfenNG9xx.Alfen"
+            }
+        }
+    ],
+    "instances": [
+        {
+            "id": "36104380-b6a4-4dfe-821f-bb23005cd114",
+            "name": "Alfen NG910",
+            "adapterid": "f5069b64-628e-4cd9-bfad-e665be55c8b7",
+            "config": {
+                "host": "192.168.1.9",
+                "port": 502
+            }
+        }
+    ]
+}
