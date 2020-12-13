@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+   <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
+     <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
+     <Name>AlfenNG9xx</Name>
+   </ProjectReference>
+ </ItemGroup>
+
+</Project>
