@@ -1,0 +1,6 @@
+[submodule "SharpModbus"]
+	path = SharpModbus
+	url = https://github.com/pieterh/SharpModbus.git
+[submodule "SharpSerial"]
+	path = SharpSerial
+	url = https://github.com/pieterh/SharpSerial.git
