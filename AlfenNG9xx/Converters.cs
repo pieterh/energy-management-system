@@ -25,12 +25,11 @@ namespace AlfenNG9xx
         /// <returns>Converted String</returns>
         public static string ConvertRegistersToString(ushort[] registers, int offset, int nrOfRegisters)
         {
-            byte[] result = new byte[nrOfRegisters * 2];
-            byte[] registerResult = new byte[2];
+            byte[] result = new byte[nrOfRegisters * 2];           
 
             for (int i = 0; i < nrOfRegisters; i++)
             {
-                registerResult = BitConverter.GetBytes(registers[offset + i]);
+                byte[] registerResult = BitConverter.GetBytes(registers[offset + i]);
                 result[i * 2] = registerResult[1];
                 result[i * 2 + 1] = registerResult[0];
             }

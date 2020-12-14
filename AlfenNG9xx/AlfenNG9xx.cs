@@ -8,15 +8,73 @@ using AlfenNG9xx.Model;
 
 namespace AlfenNG9xx
 {
-    public class AlfenNG9xx
+    public class AlfenNG9xx : IBackgroundWorker
     {
-        string alfenIp = "192.168.1.9";
-        int alfenPort = 502;
+        private bool _disposed = false;
+        private readonly string alfenIp = "192.168.1.9";
+        private readonly int  alfenPort = 502;
         private Task backgroundTask = null;
         private CancellationTokenSource tokenSource = null;
+
+        public Task BackgroundTask { get { return backgroundTask; } }
+
         public AlfenNG9xx()
         {
 
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                Console.WriteLine($"Disposing");
+                if (tokenSource != null)
+                {
+                    try
+                    {
+                        tokenSource.Cancel();
+                    }
+                    finally
+                    {
+                        tokenSource = null;
+                    }
+                }
+
+                if (backgroundTask != null)
+                {
+                    if (!backgroundTask.IsCompleted)
+                    {
+                        Console.WriteLine($"Background worker beeing disposed while not inn IsCompleted state.");
+                        Console.WriteLine($"backgroundTask status = {backgroundTask.Status}");
+                        try
+                        {
+                            tokenSource?.Cancel();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"There was an error while performing an cancel on the background task {ex.ToString()}");
+                        }
+                        tokenSource = null;
+                        Console.WriteLine($"backgroundTask status = {backgroundTask.Status}");
+                    }
+                    backgroundTask.Dispose();
+                    backgroundTask = null;
+                }
+            }
+
+            _disposed = true;
         }
 
         public void Start()
@@ -37,29 +95,43 @@ namespace AlfenNG9xx
             {
                 while (!StopRequested(2500))
                 {
-                    Console.WriteLine("Doing something usefull");
-                    //ShowStationStatus();
-                    ShowSocketMeasurement();
+                    try
+                    {
+                        Console.WriteLine("Doing something usefull");
+                        //ShowStationStatus();
+                        ShowSocketMeasurement();
+                    }
+                    catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
+                    {
+                        Console.WriteLine("Partial Modbus packaged received, we try later again");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Exception {ex.GetType()}\n{ex.Message}, {ex.StackTrace}");
             }
+            Console.WriteLine("Done");
+            if (tokenSource.Token.IsCancellationRequested)
+            {
+                throw new OperationCanceledException();
+            }
         }
 
-        bool StopRequested(int ms)
+        private bool StopRequested(int ms)
         {
+            if (tokenSource.Token.IsCancellationRequested)
+                return true;
             for (var i = 0; i < ms / 500; i++)
             {
+                Thread.Sleep(500);
                 if (tokenSource.Token.IsCancellationRequested)
                     return true;
-                Thread.Sleep(500);
             }
             return false;
         }
 
-        public void ShowProductInformation()
+        private void ShowProductInformation()
         {
             //Modbus TCP over socket
             using (var master = ModbusMaster.TCP(alfenIp, alfenPort))
@@ -67,7 +139,7 @@ namespace AlfenNG9xx
                 ShowProductInformation(master);
             }
         }
-        public void ShowProductInformation(ModbusMaster master)
+        private static void ShowProductInformation(ModbusMaster master)
         {
             //Modbus TCP over socket
             try
@@ -80,7 +152,7 @@ namespace AlfenNG9xx
                 Console.WriteLine("Date Local                 : {0}", pi.DateTimeLocal.ToString("O"));
                 Console.WriteLine("Date UTC                   : {0}", pi.DateTimeUtc.ToString("O"));
                 Console.WriteLine("Uptime                     : {0}", pi.Uptime);
-                Console.WriteLine("Up since                   : {0} {1}", pi.UpSinceUtc.ToString(), pi.UpSinceUtc.Kind);
+                Console.WriteLine("Up since                   : {0}", pi.UpSinceUtc.ToString("O"));
                 Console.WriteLine("Timezone                   : {0}", pi.StationTimezone);
             }
             catch (Exception e)
@@ -96,7 +168,7 @@ namespace AlfenNG9xx
                 ShowStationStatus(master);
             }
         }
-        private void ShowStationStatus(ModbusMaster master)
+        private static void ShowStationStatus(ModbusMaster master)
         {
             var status = ReadStationStatus(master);
 
@@ -119,7 +191,7 @@ namespace AlfenNG9xx
                 ShowSocketMeasurement(master);
             }
         }
-        private void ShowSocketMeasurement(ModbusMaster master)
+        private static void ShowSocketMeasurement(ModbusMaster master)
         {
             var sm = ReadSocketMeasurement(master, 1);
             Console.WriteLine($"Meter State                : {sm.MeterState}");
@@ -134,10 +206,10 @@ namespace AlfenNG9xx
             Console.WriteLine($"Real Energy Delivered Sum  : {sm.RealEnergyDeliveredSum}");
 
             Console.WriteLine($"Max Current Valid Time     : {sm.MaxCurrentValidTime}");
-            Console.WriteLine($"Max Current                : {sm.MaxCurrent}");            
+            Console.WriteLine($"Max Current                : {sm.MaxCurrent}");
         }
 
-        public static ProductIdentification ReadProductIdentification(ModbusMaster master)
+        private static ProductIdentification ReadProductIdentification(ModbusMaster master)
         {
             var result = new ProductIdentification();
             var pi = master.ReadHoldingRegisters(200, 100, 79);
@@ -162,7 +234,7 @@ namespace AlfenNG9xx
 
             return result;
         }
-        private StationStatus ReadStationStatus(ModbusMaster master)
+        private static StationStatus ReadStationStatus(ModbusMaster master)
         {
             var ss = new StationStatus();
             var stationStatus = master.ReadHoldingRegisters(200, 1100, 6);
@@ -170,11 +242,11 @@ namespace AlfenNG9xx
 
             ss.ActiveMaxCurrent = Converters.ConvertRegistersFloat(stationStatus, 0);
             ss.Temparature = Converters.ConvertRegistersFloat(stationStatus, 2);
-            ss.OCCPState = Converters.ConvertRegistersShort(stationStatus, 4) == 0 ? OCCPStateEnum.Disconnected : OCCPStateEnum.Connected;
+            ss.OCCPState = Converters.ConvertRegistersShort(stationStatus, 4) == 0 ? OccpState.Disconnected : OccpState.Connected;
             ss.NrOfSockets = Converters.ConvertRegistersShort(stationStatus, 5);
             return ss;
         }
-        public static SocketMeasurement ReadSocketMeasurement(ModbusMaster master, byte socket)
+        private static SocketMeasurement ReadSocketMeasurement(ModbusMaster master, byte socket)
         {
             var sm = new SocketMeasurement();
             var sm_part1 = master.ReadHoldingRegisters(socket, 300, 125);       // TODO 126

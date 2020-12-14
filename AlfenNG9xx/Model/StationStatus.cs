@@ -1,6 +1,6 @@
 namespace AlfenNG9xx.Model
 {
-            public enum OCCPStateEnum {
+            public enum OccpState {
             Disconnected = 0,
             Connected = 1
         }
@@ -9,7 +9,7 @@ namespace AlfenNG9xx.Model
 
         public float ActiveMaxCurrent {get; set;}
         public float Temparature {get; set;}
-        public OCCPStateEnum OCCPState {get; set;}
+        public OccpState OCCPState {get; set;}
         public uint NrOfSockets {get; set;}
     }
 }
