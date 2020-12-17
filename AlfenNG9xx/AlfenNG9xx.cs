@@ -8,7 +8,7 @@ using AlfenNG9xx.Model;
 
 namespace AlfenNG9xx
 {
-    public class AlfenNG9xx : IBackgroundWorker
+    public class AlfenNg9xx : IBackgroundWorker
     {
         private bool _disposed = false;
         private readonly string alfenIp = "192.168.1.9";
@@ -18,7 +18,7 @@ namespace AlfenNG9xx
 
         public Task BackgroundTask { get { return backgroundTask; } }
 
-        public AlfenNG9xx()
+        public AlfenNg9xx()
         {
 
         }

@@ -1,8 +1,8 @@
 ems.suo
 .DS_Store
-./obj/
+**/obj
+**/bin
 .vscode/solution-explorer/
-EMS/obj/
-EMS/bin/
-AlfenNG9xx/obj/
-AlfenNG9xx/bin/
+**/TestResults
+
+

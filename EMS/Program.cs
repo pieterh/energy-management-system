@@ -11,7 +11,7 @@ namespace EMS
         private static List<IBackgroundWorker> backgroundWorkers = new List<IBackgroundWorker>();
         static void Main(string[] args)
         {
-            var alfen = new AlfenNG9xx.AlfenNG9xx();
+            var alfen = new AlfenNG9xx.AlfenNg9xx();
             backgroundWorkers.Add(alfen);
 
             alfen.Start();
