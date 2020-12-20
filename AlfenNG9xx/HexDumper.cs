@@ -5,6 +5,12 @@ namespace AlfenNG9xx
 {
 public static class HexDumper
 	{
+	    public static string ConvertToHexDump(string str)
+        {
+            var bytes = new byte[(str.Length)];
+            Buffer.BlockCopy(str.ToArray(), 0, bytes, 0, bytes.Length);
+            return ConvertToHexDump(bytes);
+        }
         public static string ConvertToHexDump(ushort[] shorts)
         {
             var bytes = new byte[(shorts.Length * 2)];

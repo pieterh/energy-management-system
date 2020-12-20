@@ -213,6 +213,9 @@ namespace AlfenNG9xx
         {
             var result = new ProductIdentification();
             var pi = master.ReadHoldingRegisters(200, 100, 79);
+
+            Console.WriteLine(HexDumper.ConvertToHexDump(pi));
+
             result.Name = Converters.ConvertRegistersToString(pi, 0, 17);
             result.Manufacterer = Converters.ConvertRegistersToString(pi, 17, 5);
             result.TableVersion = Converters.ConvertRegistersShort(pi, 22);

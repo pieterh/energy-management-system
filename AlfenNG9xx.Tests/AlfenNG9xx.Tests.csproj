@@ -1,17 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild" Version="2.9.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
-    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1"/>
+    <PackageReference Include="xunit" Version="2.4.1"/>
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -20,13 +18,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Moq" Version="4.15.2"/>
   </ItemGroup>
-
   <ItemGroup>
-   <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
-     <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
-     <Name>AlfenNG9xx</Name>
-   </ProjectReference>
+    <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
+      <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
+      <Name>AlfenNG9xx</Name>
+    </ProjectReference>
   </ItemGroup>
-
 </Project>

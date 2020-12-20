@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace AlfenNG9xx
 {
@@ -33,15 +34,25 @@ namespace AlfenNG9xx
                 result[i * 2] = registerResult[1];
                 result[i * 2 + 1] = registerResult[0];
             }
-            return System.Text.Encoding.Default.GetString(result);
+
+            // Do not use GetString to convert. 
+            // Due to trailing 0 character the string length will be incorrect
+            var resultStr = string.Empty;
+            foreach(var b in result){
+                if (b == 0) break;
+                resultStr += (char)b;
+            }
+            return resultStr;
         }
 
         public static UInt16 ConvertRegistersShort(ushort[] registers)
         {
             return ConvertRegistersShort(registers, 0);
         }
+
         public static UInt16 ConvertRegistersShort(ushort[] registers, int offset)
         {
+            if (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException("registers has an incorrect array length");
             byte[] registerBytes = BitConverter.GetBytes(registers[offset]);
             byte[] bytes = {
                                 registerBytes[0],
