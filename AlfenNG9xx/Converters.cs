@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 
 namespace AlfenNG9xx
 {
@@ -37,12 +38,12 @@ namespace AlfenNG9xx
 
             // Do not use GetString to convert. 
             // Due to trailing 0 character the string length will be incorrect
-            var resultStr = string.Empty;
+            var resultStr = new StringBuilder();
             foreach(var b in result){
                 if (b == 0) break;
-                resultStr += (char)b;
+                resultStr.Append((char)b);
             }
-            return resultStr;
+            return resultStr.ToString();
         }
 
         public static UInt16 ConvertRegistersShort(ushort[] registers)
@@ -52,7 +53,7 @@ namespace AlfenNG9xx
 
         public static UInt16 ConvertRegistersShort(ushort[] registers, int offset)
         {
-            if (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException("registers has an incorrect array length");
+            if (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException("registers");
             byte[] registerBytes = BitConverter.GetBytes(registers[offset]);
             byte[] bytes = {
                                 registerBytes[0],
