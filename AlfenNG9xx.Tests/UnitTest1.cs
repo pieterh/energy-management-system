@@ -17,7 +17,7 @@ namespace AlfenNG9xx.Tests
             var handlerMock = new Mock<HttpMessageHandler>();
             var alfen = new AlfenNG9xx.AlfenNg9xx(); 
             alfen.Start();
-            Thread.Sleep(100);
+            Thread.Sleep(20000);
             try{
                 alfen.Stop();            
                 Task.WaitAll(alfen.BackgroundTask);
