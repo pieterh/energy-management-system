@@ -4,5 +4,6 @@ ems.suo
 **/bin
 .vscode/solution-explorer/
 **/TestResults
+coverage.opencover.xml
 
 

@@ -8,7 +8,7 @@ build_script:
  - set PATH=%JAVA_HOME%\bin;%PATH%
  - echo %PATH%
  - choco install "sonarscanner-msbuild-net46" -y
- - SonarScanner.MSBuild.exe begin /k:"energy-management-system" /d:"sonar.host.url=https://sonarcloud.io" /o:"pieterh" /d:"sonar.login=cb4f542313d936d83a476cac3f7d23b64f23b1e0" /d:sonar.cs.vstest.reportsPaths="AlfenNG9xx.Tests\TestResults\*.trx"
+ - SonarScanner.MSBuild.exe begin /k:"energy-management-system" /d:"sonar.host.url=https://sonarcloud.io" /o:"pieterh" /d:"sonar.login=cb4f542313d936d83a476cac3f7d23b64f23b1e0" /d:sonar.cs.vstest.reportsPaths="AlfenNG9xx.Tests\TestResults\*.trx" /d:sonar.cs.opencover.reportsPaths=AlfenNG9xx.Tests/coverage.opencover.xml /d:sonar.coverage.exclusions=”**Test*.cs”
  - msbuild /verbosity:quiet "ems.sln"
- - dotnet test --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage"
+ - dotnet test --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
  - SonarScanner.MSBuild.exe end /d:"sonar.login=cb4f542313d936d83a476cac3f7d23b64f23b1e0"
