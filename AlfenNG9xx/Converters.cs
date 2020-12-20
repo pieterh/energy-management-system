@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Text;
 
 namespace AlfenNG9xx
@@ -53,7 +52,8 @@ namespace AlfenNG9xx
 
         public static UInt16 ConvertRegistersShort(ushort[] registers, int offset)
         {
-            if (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException("registers");
+            if (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
+            
             byte[] registerBytes = BitConverter.GetBytes(registers[offset]);
             byte[] bytes = {
                                 registerBytes[0],
