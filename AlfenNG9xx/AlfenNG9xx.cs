@@ -165,11 +165,13 @@ namespace AlfenNG9xx
 
         private void ShowStationStatus()
         {
+            //Modbus TCP over socket
             using (var master = ModbusMaster.TCP(alfenIp, alfenPort))
             {
                 ShowStationStatus(master);
             }
         }
+
         private static void ShowStationStatus(ModbusMaster master)
         {
             var status = ReadStationStatus(master);
@@ -179,12 +181,9 @@ namespace AlfenNG9xx
             Console.WriteLine($"OCCP                       : {status.OCCPState}");
             Console.WriteLine($"Nr of sockets              : {status.NrOfSockets}");
 
-
-            //Console.WriteLine(HexDumper.ConvertToHexDump(status.Temparature));
-            //Console.WriteLine(HexDumper.ConvertToHexDump((float)19.875));
+            //Logger.Trace(HexDumper.ConvertToHexDump(status.Temparature));
+            //Logger.Trace(HexDumper.ConvertToHexDump((float)19.875));
         }
-
-
 
         private void ShowSocketMeasurement()
         {
@@ -193,6 +192,7 @@ namespace AlfenNG9xx
                 ShowSocketMeasurement(master);
             }
         }
+
         private static void ShowSocketMeasurement(ModbusMaster master)
         {
             var sm = ReadSocketMeasurement(master, 1);
@@ -216,7 +216,7 @@ namespace AlfenNG9xx
             var result = new ProductIdentification();
             var pi = master.ReadHoldingRegisters(200, 100, 79);
 
-            Console.WriteLine(HexDumper.ConvertToHexDump(pi));
+            Logger.Trace(HexDumper.ConvertToHexDump(pi));
 
             result.Name = Converters.ConvertRegistersToString(pi, 0, 17);
             result.Manufacterer = Converters.ConvertRegistersToString(pi, 17, 5);
@@ -243,7 +243,7 @@ namespace AlfenNG9xx
         {
             var ss = new StationStatus();
             var stationStatus = master.ReadHoldingRegisters(200, 1100, 6);
-            Console.WriteLine(HexDumper.ConvertToHexDump(stationStatus));
+            Logger.Trace(HexDumper.ConvertToHexDump(stationStatus));
 
             ss.ActiveMaxCurrent = Converters.ConvertRegistersFloat(stationStatus, 0);
             ss.Temparature = Converters.ConvertRegistersFloat(stationStatus, 2);
@@ -256,9 +256,9 @@ namespace AlfenNG9xx
             var sm = new SocketMeasurement();
             var sm_part1 = master.ReadHoldingRegisters(socket, 300, 125);       // TODO 126
             var sm_part2 = master.ReadHoldingRegisters(socket, 1200, 16);
-            //Console.WriteLine("---");
-            //Console.WriteLine(HexDumper.ConvertToHexDump(sm_part1));
-            //Console.WriteLine(HexDumper.ConvertToHexDump(sm_part2));
+            Logger.Trace("---");
+            Logger.Trace(HexDumper.ConvertToHexDump(sm_part1));
+            Logger.Trace(HexDumper.ConvertToHexDump(sm_part2));
 
             sm.MeterState = Converters.ConvertRegistersShort(sm_part1, 0);
             sm.MeterTimestamp = Converters.ConvertRegistersLong(sm_part1, 1);
