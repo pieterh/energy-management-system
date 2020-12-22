@@ -61,23 +61,39 @@ namespace AlfenNG9xx
                             };
             return BitConverter.ToUInt16(bytes, 0);
         }
+
+        public static UInt32 ConvertRegistersUInt32(ushort[] registers)
+        {
+            return ConvertRegistersUInt32(registers, 0);
+        }
+
         public static UInt32 ConvertRegistersUInt32(ushort[] registers, int offset)
         {
-             int lowRegister = registers[0 + offset];   // AB
-            int highRegister = registers[1 + offset];  // CD
+            if (registers.Length - offset - 1 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
+
+            int lowRegister = registers[0 + offset];    // AB
+            int highRegister = registers[1 + offset];   // CD
 
             byte[] abBytes = BitConverter.GetBytes(lowRegister);
             byte[] cdBytes = BitConverter.GetBytes(highRegister);
             byte[] bytes = {
-                                    cdBytes[0],     // C
-                                    cdBytes[1],     // D
-                                    abBytes[0],     // A
-                                    abBytes[1]      // B
+                                    cdBytes[0],         // C
+                                    cdBytes[1],         // D
+                                    abBytes[0],         // A
+                                    abBytes[1]          // B
                                 };
             return BitConverter.ToUInt32(bytes, 0);
         }
+
+        public static UInt64 ConvertRegistersLong(ushort[] registers)
+        {
+            return ConvertRegistersLong(registers, 0);
+        }
+
         public static UInt64 ConvertRegistersLong(ushort[] registers, int offset)
         {
+            if (registers.Length - offset - 2 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
+
             int abRegister = registers[0 + offset];                // AB
             int cdRegister = registers[1 + offset];                // CD
             int efRegister = registers[2 + offset];                // EF
@@ -88,19 +104,27 @@ namespace AlfenNG9xx
             byte[] efBytes = BitConverter.GetBytes(efRegister);
             byte[] ghBytes = BitConverter.GetBytes(ghRegister);
             byte[] bytes = {
-                                    ghBytes[0],
-                                    ghBytes[1],
-                                    efBytes[0],
-                                    efBytes[1],
-                                    cdBytes[0],
-                                    cdBytes[1],
-                                    abBytes[0],
-                                    abBytes[1]
+                                    ghBytes[0],                     // G
+                                    ghBytes[1],                     // H
+                                    efBytes[0],                     // E
+                                    efBytes[1],                     // F
+                                    cdBytes[0],                     // C
+                                    cdBytes[1],                     // D
+                                    abBytes[0],                     // A
+                                    abBytes[1]                      // B
                                 };
             return BitConverter.ToUInt64(bytes, 0);
         }
+
+        public static float ConvertRegistersFloat(ushort[] registers)
+        {
+            return ConvertRegistersFloat(registers, 0);
+        }
+
         public static float ConvertRegistersFloat(ushort[] registers, int offset)
         {
+            if (registers.Length - offset - 1 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
+
             int lowRegister = registers[0 + offset];   // AB
             int highRegister = registers[1 + offset];  // CD
 
@@ -114,8 +138,16 @@ namespace AlfenNG9xx
                                 };
             return BitConverter.ToSingle(bytes, 0);
         }
+
+        public static double ConvertRegistersDouble(ushort[] registers)
+        {
+            return ConvertRegistersDouble(registers, 0);
+        }
+
         public static double ConvertRegistersDouble(ushort[] registers, int offset)
         {
+            if (registers.Length - offset - 2 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
+
             int abRegister = registers[0 + offset];                // AB
             int cdRegister = registers[1 + offset];                // CD
             int efRegister = registers[2 + offset];                // EF
