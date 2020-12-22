@@ -4,10 +4,15 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-   <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
-     <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
-     <Name>AlfenNG9xx</Name>
-   </ProjectReference>
+    <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
+      <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
+      <Name>AlfenNG9xx</Name>
+    </ProjectReference>
   </ItemGroup>
-
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="4.7.6"/>
+  </ItemGroup>
+<ItemGroup >
+  <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>  
 </Project>

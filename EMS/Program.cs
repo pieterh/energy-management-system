@@ -8,9 +8,13 @@ namespace EMS
 {
     static class Program
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private static List<IBackgroundWorker> backgroundWorkers = new List<IBackgroundWorker>();
         static void Main(string[] args)
         {
+            Logger.Info("Hello world");
+            
             var alfen = new AlfenNG9xx.AlfenNg9xx();
             backgroundWorkers.Add(alfen);
 

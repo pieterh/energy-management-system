@@ -10,6 +10,8 @@ namespace AlfenNG9xx
 {
     public class AlfenNg9xx : IBackgroundWorker
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private bool _disposed = false;
         private readonly string alfenIp = "192.168.1.9";
         private readonly int  alfenPort = 502;
@@ -20,7 +22,7 @@ namespace AlfenNG9xx
 
         public AlfenNg9xx()
         {
-
+            Logger.Trace("Constructor");
         }
 
         public void Dispose()
@@ -39,7 +41,7 @@ namespace AlfenNG9xx
 
             if (disposing)
             {
-                Console.WriteLine($"Disposing");
+                Logger.Trace("Disposing");
                 if (tokenSource != null)
                 {
                     try
@@ -56,18 +58,18 @@ namespace AlfenNG9xx
                 {
                     if (!backgroundTask.IsCompleted)
                     {
-                        Console.WriteLine($"Background worker beeing disposed while not inn IsCompleted state.");
-                        Console.WriteLine($"backgroundTask status = {backgroundTask.Status}");
+                        Logger.Warn($"Background worker beeing disposed while not in IsCompleted state.");
+                        Logger.Warn($"backgroundTask status = {backgroundTask.Status}");
                         try
                         {
                             tokenSource?.Cancel();
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"There was an error while performing an cancel on the background task {ex.ToString()}");
+                            Logger.Error($"There was an error while performing an cancel on the background task {ex.ToString()}");
                         }
                         tokenSource = null;
-                        Console.WriteLine($"backgroundTask status = {backgroundTask.Status}");
+                        Logger.Warn($"backgroundTask status = {backgroundTask.Status}");
                     }
                     backgroundTask.Dispose();
                     backgroundTask = null;
@@ -97,21 +99,21 @@ namespace AlfenNG9xx
                 {
                     try
                     {
-                        Console.WriteLine("Doing something usefull");
+                        Logger.Info("Doing something usefull");
                         //ShowStationStatus();
                         ShowSocketMeasurement();
                     }
                     catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
                     {
-                        Console.WriteLine("Partial Modbus packaged received, we try later again");
+                        Logger.Error("Partial Modbus packaged received, we try later again");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception {ex.GetType()}\n{ex.Message}, {ex.StackTrace}");
+                Logger.Error($"Exception {ex.GetType()}\n{ex.Message}, {ex.StackTrace}");
             }
-            Console.WriteLine("Done");
+            Logger.Info("Done");
             if (tokenSource.Token.IsCancellationRequested)
             {
                 throw new OperationCanceledException();
@@ -134,7 +136,7 @@ namespace AlfenNG9xx
         private void ShowProductInformation()
         {
             //Modbus TCP over socket
-            using (var master = ModbusMaster.TCP(alfenIp, alfenPort))
+            using (var master = ModbusMaster.TCP(alfenIp, alfenPort, 5000))
             {
                 ShowProductInformation(master);
             }
