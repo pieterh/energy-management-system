@@ -1,0 +1,17 @@
+from mcr.microsoft.com/dotnet/runtime
+
+RUN mkdir /app
+RUN mkdir /app/ems
+RUN chmod ugo+x /app
+RUN chmod ugo+x /app/ems
+RUN chmod ugo+r /app
+RUN chmod ugo+r /app/ems
+
+COPY EMS/bin/Release/net5.0/ /app/ems/
+RUN ls -la /app/ems
+
+COPY github_actions/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod ugo+x /usr/local/bin/entrypoint.sh
+RUN chmod ugo+r /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
