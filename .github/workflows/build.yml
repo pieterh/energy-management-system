@@ -1,0 +1,30 @@
+name: build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: [ '5.0.x' ]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core SDK ${{ matrix.dotnet }}
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+    - name: Build the Docker image
+      run: |
+        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
+        docker build . --file github_actions/docker/dockerfile --tag docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA
+        docker push docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:$GITHUB_SHA
+          echo test, and deploy your project.
