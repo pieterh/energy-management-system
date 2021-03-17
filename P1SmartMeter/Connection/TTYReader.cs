@@ -1,10 +1,13 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
+using System.IO.Ports;
+using static P1SmartMeter.Connection.IP1Interface;
 
-namespace EMS.Library
+namespace P1SmartMeter.Connection
 {
-    public abstract class BackgroundWorker : IBackgroundWorker
+    public class TTYReader : IP1Interface
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
@@ -14,9 +17,19 @@ namespace EMS.Library
 
         public Task BackgroundTask { get { return _backgroundTask; } }
 
-        public CancellationTokenSource TokenSource { get => _tokenSource; private set => _tokenSource = value; }
+        public string _usbPort;
+        public event EventHandler<IP1Interface.DataArrivedEventArgs> DataArrived;
 
-        protected abstract void DoBackgroundWork();
+        public TTYReader(string deviceName)
+        {
+            Logger.Info($"Availble ports ->");
+             
+            //SerialPort.GetPortNames().ToList().ForEach(x => {
+            //    Logger.Info($"Port '{x}'");
+            //});
+
+            _usbPort = deviceName;
+        }
 
         public void Dispose()
         {
@@ -80,6 +93,7 @@ namespace EMS.Library
                 _backgroundTask = null;
             }
         }
+
         private void WaitForBackgroundTaskToFinish()
         {
             var timeOut = 5000;
@@ -90,6 +104,7 @@ namespace EMS.Library
                 waitingTime += delayTime;
             }
         }
+
         private void DisposeTokenSource()
         {
             if (_tokenSource == null) return;
@@ -106,12 +121,12 @@ namespace EMS.Library
 
         public virtual void Start()
         {
-            Logger.Trace($"Starting");
+            Logger.Info($"Starting+++");
 
             _tokenSource = new CancellationTokenSource();
             _backgroundTask = Task.Run(() =>
             {
-                Logger.Trace($"BackgroundTask running");
+                Logger.Info($"BackgroundTask running +++");
                 try
                 {
                     Run();
@@ -122,7 +137,7 @@ namespace EMS.Library
                     Logger.Error(ex, "Unhandled exception in BackgroundTask");
                     throw;
                 }
-                Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
+                Logger.Info($"BackgroundTask++ stopped -> stop requested {StopRequested(0)}");
             }, _tokenSource.Token);
         }
 
@@ -133,9 +148,30 @@ namespace EMS.Library
 
         private void Run()
         {
-            while (!StopRequested(2500))
+            using (var str = new SerialPort(_usbPort))
             {
-                DoBackgroundWork();
+                str.BaudRate = 115200;
+                str.Parity = Parity.None;
+                str.StopBits = StopBits.One;
+                str.DataBits = 8;
+                str.ReadTimeout = 30000;
+                str.ReadBufferSize = 4096;
+                str.DataReceived += Str_DataReceived;
+                str.Open();
+
+                //char[] buffer = new char[4096];
+
+                Logger.Info($"BackgroundTask run---");
+                while (!StopRequested(250))
+                {
+                    //Logger.Info($"BackgroundTask reading!");
+                    //var nrCharsRead = str.Read(buffer, 0, buffer.Length);
+                    //Logger.Info($"BackgroundTask read {nrCharsRead} characters...");
+
+                    //OnDataArrived(new DataArrivedEventArgs() { Data = new string(buffer).Substring(0, nrCharsRead) });
+                }
+
+                str.Close();
             }
 
             if (_tokenSource.Token.IsCancellationRequested)
@@ -144,18 +180,37 @@ namespace EMS.Library
             }
         }
 
+        private void Str_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            Logger.Info($"DataReceived!");
+            SerialPort sp = (SerialPort)sender;
+            string indata = sp.ReadExisting();            
+            Logger.Info($"BackgroundTask read {indata.Length} characters...");
+
+            OnDataArrived(new DataArrivedEventArgs() { Data = indata });
+        }
+
         private bool StopRequested(int ms)
         {
             if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                 return true;
-            for (var i = 0; i < ms / 500; i++)
+            for (var i = 0; i < ms / 50; i++)
             {
-                Thread.Sleep(500);
+                Thread.Sleep(50);
                 if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                     return true;
             }
             return false;
         }
 
+        protected void OnDataArrived(DataArrivedEventArgs e)
+        {
+            Logger.Info($"data from stream!");
+            EventHandler<DataArrivedEventArgs> handler = DataArrived;
+            handler?.Invoke(this, e);
+        }
+
+
     }
+
 }
