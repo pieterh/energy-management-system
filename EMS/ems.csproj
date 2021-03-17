@@ -3,26 +3,37 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
-      <Project>{012f7d79-105a-4cb1-aa39-5545f82b4b1a}</Project>
-      <Name>AlfenNG9xx</Name>
     </ProjectReference>
-    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj"/>
+    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
+    <ProjectReference Include="..\P1SmartMeter\P1SmartMeter.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.6"/>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
-    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.13"/>
+    <PackageReference Include="NLog" Version="4.7.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.13" />
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest"/>
-    <None Update="config.json" CopyToOutputDirectory="PreserveNewest"/>
+    <None Remove="config.json" />
+    <None Remove="NLog.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Remove="config.schema.json"/>
+    <Content Remove="config.schema.json" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="config.schema.json"/>
+    <EmbeddedResource Include="config.schema.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
