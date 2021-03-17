@@ -8,25 +8,59 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using AlfenNG9xx;
 using EMS.Library;
+using CommandLine;
 
 namespace EMS
 {
     static class Program
     {
+        public class Options
+        {
+            [Option ('c', "config", Required = true, HelpText = "filename of config")]
+            public string ConfigFile { get; set; }
+            [Option('l', "nlogcfg", Required = false, HelpText = "filename of the nlog file")]
+            public string nlogcfg { get; set; }
+        }
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private static List<IBackgroundWorker> backgroundWorkers = new List<IBackgroundWorker>();
         static void Main(string[] args)
         {
-            Logger.Info("Hello world");
-            var c = new ConfigurationManager();
-            dynamic config = c.ReadConfig();
+            try
+            {
+                Logger.Info("Hello world");
 
-            StartInstances(config);
+                Parser.Default.ParseArguments<Options>(args).WithParsed<Options>(o =>
+                {
+                    if (!string.IsNullOrWhiteSpace(o.nlogcfg))
+                    {
+                        //NLog.LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(o.nlogcfg);
+                        NLog.LogManager.LoadConfiguration(o.nlogcfg);
+                        NLog.LogManager.ReconfigExistingLoggers();
+                        foreach (var t in NLog.LogManager.Configuration.AllTargets)
+                        {
+                            Logger.Info($"Available targets {t.Name}");
+                        }
+                    }
 
-            Thread.Sleep(10000);
+                    dynamic config = ConfigurationManager.ReadConfig(o.ConfigFile);
 
-            StopInstances();
+                    StartInstances(config);
+                    var startTime = DateTime.Now;
+                    while ((DateTime.Now - startTime).TotalMinutes <= (60 * 3))
+                    {
+                        Thread.Sleep(2500);
+                    }
+
+                    StopInstances();
+                });
+            }
+            finally
+            {
+                // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
+                NLog.LogManager.Shutdown();
+            }
         }
 
         private static void StartInstances(dynamic config)
@@ -43,7 +77,7 @@ namespace EMS
                 var adapterAssembly = Assembly.LoadFrom(assemblyFile);
                 var adapterType = adapterAssembly.GetType((string)adapter.driver.type);
                 Logger.Info($"Instance [{instance.name}], type {adapterType.FullName} loaded");
-                IBackgroundWorker adapterInstance = (IBackgroundWorker)Activator.CreateInstance(adapterType, (JObject)(config.instances[0].config));
+                IBackgroundWorker adapterInstance = (IBackgroundWorker)Activator.CreateInstance(adapterType, (JObject)(instance.config));
                 Logger.Info($"Instance [{instance.name}], created");
                 backgroundWorkers.Add(adapterInstance);
                 adapterInstance.Start();
