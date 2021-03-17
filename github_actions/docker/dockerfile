@@ -8,6 +8,8 @@ RUN chmod ugo+r /app
 RUN chmod ugo+r /app/ems
 
 COPY EMS/bin/Release/net5.0/ /app/ems/
+RUN rm /app/ems/NLog.config
+RUN rm /app/ems/config.json
 RUN ls -la /app/ems
 
 COPY github_actions/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
