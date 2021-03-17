@@ -61,12 +61,39 @@ namespace AlfenNG9xx
                 ShowSocketMeasurement();
 
                 if (_lastMaxCurrentUpdate == DateTime.MinValue || (DateTime.Now - _lastMaxCurrentUpdate).Seconds > 20){
-                    UpdateMaxCurrent(5.5f, Phases.Three);
+                    UpdateMaxCurrent(7.25f, Phases.One);
                 }
             }
             catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
             {
+                Logger.Error("Exception: " + e.Message);
                 Logger.Error("Partial Modbus packaged received, we try later again");
+            }catch (Exception e) when (e.Message.StartsWith("Broken pipe"))
+            {
+                Logger.Error("Exception: " + e.Message);
+                Logger.Error("Broken pipe, we try later again");
+                Logger.Error("Disposing connection");
+                try
+                {
+                    _modbusMaster.Dispose();
+                }
+                finally
+                {
+                    _modbusMaster = null;
+                }
+            }catch (Exception e) 
+            {
+                Logger.Error("Exception: " + e.Message);
+                Logger.Error("Unhandled, we try later again");
+                Logger.Error("Disposing connection");
+                try
+                {
+                    _modbusMaster.Dispose();
+                }
+                finally
+                {
+                    _modbusMaster = null;
+                }
             }
         }
         protected virtual void ShowProductInformation()
@@ -206,7 +233,8 @@ namespace AlfenNG9xx
             return sm;
         }
         private void UpdateMaxCurrent(float maxCurrent, Phases phases){
-            _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(5.5f));
+            Logger.Info($"UpdateMaxCurrent({maxCurrent},{phases})", maxCurrent, phases);
+            _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
             _modbusMaster.WriteRegister(1, 1215, (ushort)phases);
         }
         protected virtual ushort[] ReadHoldingRegisters(byte slave, ushort address, ushort count)

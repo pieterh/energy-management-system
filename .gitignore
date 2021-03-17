@@ -3,7 +3,8 @@ ems.suo
 **/obj
 **/bin
 .vscode/solution-explorer/
+.vs/
 **/TestResults
 coverage.opencover.xml
-
+EMS/ems.csproj.user
 

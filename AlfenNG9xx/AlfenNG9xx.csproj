@@ -4,11 +4,11 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SharpModbus" Version="1.0.12"/>
-    <PackageReference Include="NLog" Version="4.7.6"/>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+    <PackageReference Include="SharpModbus" Version="1.0.12" />
+    <PackageReference Include="NLog" Version="4.7.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj"/>
+    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
   </ItemGroup>
 </Project>
