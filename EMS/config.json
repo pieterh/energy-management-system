@@ -1,43 +1,43 @@
 {
-    "adapters": [
-      {
-        "id": "f5069b64-628e-4cd9-bfad-e665be55c8b7",
-        "type": "chargepoint",
-        "name": "Alfen NG9xx",
-        "driver": {
-          "assembly": "AlfenNG9xx.dll",
-          "type": "AlfenNG9xx.Alfen"
-        }
-      },
-      {
-        "id": "aab7376c-261a-4049-8c50-0e45e1d957c1",
-        "type": "smartmeter",
-        "name": "P1 Smartmeter",
-        "driver": {
-          "assembly": "P1SmartMeter.dll",
-          "type": "P1SmartMeter.P1SmartMeter"
-        }
+  "adapters": [
+    {
+      "id": "f5069b64-628e-4cd9-bfad-e665be55c8b7",
+      "type": "chargepoint",
+      "name": "Alfen NG9xx",
+      "driver": {
+        "assembly": "AlfenNG9xx, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+        "type": "AlfenNG9xx.Alfen"
       }
-    ],
-    "instances": [
-      {
-        "id": "36104380-b6a4-4dfe-821f-bb23005cd114",
-        "name": "Alfen NG910",
-        "adapterid": "f5069b64-628e-4cd9-bfad-e665be55c8b7",
-        "config": {
-          "host": "192.168.1.9",
-          "port": 502
-        }
-      },
-      {
-        "id": "3af78bca-5a28-40ac-9c9a-d23ae2d3b700",
-        "name": "SmartMeter - Iskra AM550",
-        "adapterid": "aab7376c-261a-4049-8c50-0e45e1d957c1",
-        "config": {
-          "type": "LAN",
-          "host": "192.168.1.7",
-          "port": 3010
-        }
+    },
+    {
+      "id": "aab7376c-261a-4049-8c50-0e45e1d957c1",
+      "type": "smartmeter",
+      "name": "P1 Smartmeter",
+      "driver": {
+        "assembly": "P1SmartMeter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+        "type": "P1SmartMeter.P1SmartMeter"
       }
-    ]
+    }
+  ],
+  "instances": [
+    {
+      "id": "36104380-b6a4-4dfe-821f-bb23005cd114",
+      "name": "Alfen NG910",
+      "adapterid": "f5069b64-628e-4cd9-bfad-e665be55c8b7",
+      "config": {
+        "host": "192.168.1.9",
+        "port": 502
+      }
+    },
+    {
+      "id": "3af78bca-5a28-40ac-9c9a-d23ae2d3b700",
+      "name": "SmartMeter - Iskra AM550",
+      "adapterid": "aab7376c-261a-4049-8c50-0e45e1d957c1",
+      "config": {
+        "type": "LAN",
+        "host": "192.168.1.7",
+        "port": 3010
+      }
+    }
+  ]
 }
