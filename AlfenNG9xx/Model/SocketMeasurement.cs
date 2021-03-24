@@ -37,8 +37,6 @@ namespace AlfenNG9xx.Model
         public UInt64 MeterTimestamp { get; set; }
         public MeterType MeterType { get; set; }
 
-
-
         public double RealEnergyDeliveredL1 { get; set; }
         public double RealEnergyDeliveredL2 { get; set; }
         public double RealEnergyDeliveredL3 { get; set; }
@@ -57,7 +55,7 @@ namespace AlfenNG9xx.Model
 
         public static MeterType ParseMeterType(ushort meterType)
         {
-            if (Enum.IsDefined(typeof(MeterType), (System.Int32)meterType))
+            if (Enum.IsDefined(typeof(MeterType), (Int32)meterType))
             {
                 return (MeterType)meterType;
             }
@@ -68,25 +66,29 @@ namespace AlfenNG9xx.Model
 
         public static Mode3State ParseMode3State(string mode3State)
         {
-            Object mode3StateEnum;
-            if (Enum.TryParse(typeof(Mode3State), mode3State, out mode3StateEnum))
+            if (Enum.TryParse(typeof(Mode3State), mode3State, out object mode3StateEnum))
             {
                 return (Mode3State)mode3StateEnum;
             }
-
+            
             Logger.Error($"Unknown Mode 3 state received -> {mode3State}");
             return Mode3State.UnknownState;
         }
 
         public static Phases ParsePhases(ushort phases)
         {
-            if (Enum.IsDefined(typeof(Phases), (System.Int32)phases))
+            if (Enum.IsDefined(typeof(Phases), (Int32)phases))
             {
                 return (Phases)phases;
             }
 
             Logger.Error($"Unknown number of phases received -> {phases}");
             return Phases.Unknown;
+        }
+
+        public override string ToString()
+        {
+            return $"Meter state: {MeterState}; Available: {Availability}; Safe current: {ActiveLBSafeCurrent}A; State: {Mode3State}; Phases: {(Int16)Phases}; Max: {MaxCurrent}A; Applied: {AppliedMaxCurrent}A; Valid: {MaxCurrentValidTime}S";
         }
     }
 }

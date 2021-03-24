@@ -34,19 +34,18 @@ namespace P1SmartMeter.Telegram
                 TelegramField field;
                 if (!m.Success)
                 {
-                    if (line[0] == '/')
+                    switch (line[0])
                     {
-                        header = line;
-                    }
-                    else
-                    if (line[0] == '!')
-                    {
-                        crc16 = line.Substring(1);
-                    }
-                    else
-                    {
-                        field = new TelegramField(TelegramFieldDefinition.Invalid);
-                        field.AddValue(line);
+                        case '/':
+                            header = line;
+                            break;
+                        case '!':
+                            crc16 = line[1..];
+                            break;
+                        default:
+                            field = new TelegramField(TelegramFieldDefinition.Invalid);
+                            field.AddValue(line);
+                            break;
                     }
                 }
                 else
@@ -70,7 +69,7 @@ namespace P1SmartMeter.Telegram
         {
             var field = Fields.FirstOrDefault(x => x.IsField(fieldCode));
 
-            return field == null ? new object[0] : field.Values;
+            return field == null ? Array.Empty<object>() : field.Values;
         }
 
         protected T GetValue<T>(string fieldCode)
