@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Text;
 
 namespace P1SmartMeter
@@ -10,100 +9,87 @@ namespace P1SmartMeter
         private static readonly NLog.Logger LoggerP1Stream = NLog.LogManager.GetLogger("p1stream");
         private static readonly NLog.Logger LoggerP1Messages = NLog.LogManager.GetLogger("p1messages");
 
-        private readonly CRC16 crc16 = new CRC16();
+        private static readonly CRC16 crc16 = new();
 
         public event EventHandler<DataErrorEventArgs> DataError;
 
-        private static int bufferCapicity = 2048;
-        private byte[] buffer = new byte[bufferCapicity];
-        private int position = 0;             
+        private readonly static int bufferCapacity = 2560; 
+        private readonly byte[] buffer = new byte[bufferCapacity];
+        private int position = 0;
+
+        public int BufferCapacity { get => bufferCapacity; }
+        
+        public int BufferUsed { get => position; private set => position = value; }
+
+        public bool IsEmpty {  get => position == 0; }
 
         public int Add(string data)
+        {
+            
+            var sb = new StringBuilder(data);
+            while(sb.Length > 0)
+            {
+                var chrs = sb.Length < 512 ? sb.Length : 512;
+                AddInternal(sb.ToString().Substring(0, chrs));
+                sb.Remove(0, chrs);
+            }
+            return position;
+        }
+
+        /// <summary>
+        /// Internal function to add chunks of data to the buffer. The length of the string
+        /// should never exceed the maximum length the buffer can contain
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        protected int AddInternal(string data)
         {
             LoggerP1Stream.Info($"---------- start ----------{Environment.NewLine}{data}");
             LoggerP1Stream.Info($"---------- end   ----------");
 
+            if (data.Length == 0) return position;
+            if (data.Length > bufferCapacity) throw new ArgumentOutOfRangeException(nameof(data));
+
             Encoding ascii = Encoding.ASCII;
-            int spaceAvailable = bufferCapicity - position;
-            int nrToCopy = spaceAvailable > data.Length ? data.Length : spaceAvailable; // todo check buffer overflowing!
-            if (nrToCopy > 0)
+
+            while (bufferCapacity - position < data.Length)
             {
-                Buffer.BlockCopy(ascii.GetBytes(data), 0, buffer, position, nrToCopy);
-                position += nrToCopy;
+                if (!TryTake(out string removedMessage))
+                {
+                    position = 0;
+                }
+                OnDataError(new DataErrorEventArgs() { Message = "buffer overflow", Data = "Data purged from buffer" });
             }
+
+            Buffer.BlockCopy(ascii.GetBytes(data), 0, buffer, position, data.Length);
+            position += data.Length;
+
             Logger.Debug($"bytes in buffer after adding {position}, ");
             RemovePartialMessage();
-
-            //while (RetrieveMessageFromBuffer()) ;
-
+            
             return position;
         }
 
         public bool TryTake(out string msg)
-        {
-            while (RetrieveMessageFromBuffer(out msg) && string.IsNullOrWhiteSpace(msg));
-            return !string.IsNullOrWhiteSpace(msg);
+        {           
+            return RetrieveMessageFromBuffer(out msg);
         }
 
         private bool RetrieveMessageFromBuffer(out string msg)
         {
             msg = null;
-            bool bufferChanged = false;                   
+            bool bufferChanged;                   
             do
             {
                 if (position == 0) return false;
                 RemovePartialMessage();
 
                 bufferChanged = false;
-                int s = 0;
-                while (buffer[s] != '!' && (s == 0 || (buffer[s] != '/' && s > 0)) && s < position)
-                    s++;
-
-                // <!><#><#><#><#><CR><LF> -> 7 bytes
-                if (s + 7 <= position)
+                int s = FindEndOfMessage();
+                
+                if (s > 0)
                 {
-                    if (buffer[s] == '!')
-                    {
-                        var mbytes = new byte[s + 7];
-                        var checksumbytes = new byte[4];
-                        Buffer.BlockCopy(buffer, 0, mbytes, 0, s + 7);
-                        Buffer.BlockCopy(buffer, s + 1, checksumbytes, 0, 4);
-
-                        if (position > s + 7)
-                        {
-                            Buffer.BlockCopy(buffer, s + 7, buffer, 0, position - s - 7);
-                            position -= s + 7;
-                            RemovePartialMessage();
-                        }
-                        else
-                        {
-                            // buffer is now empty
-                            position = 0;
-                        }
-
-                        var msgChecksum = Encoding.ASCII.GetString(checksumbytes);
-                        var calculatedChecksum = crc16.ComputeChecksumAsString(mbytes, mbytes.Length - 6);
-
-
-
-                        if (string.Equals(msgChecksum, calculatedChecksum, StringComparison.OrdinalIgnoreCase))
-                        {
-                            msg = Encoding.ASCII.GetString(mbytes);
-                            LoggerP1Messages.Debug($"---------- start ----------{Environment.NewLine}{msg}");
-                            LoggerP1Messages.Debug($"---------- end   ----------");
-                        }
-                        else
-                        {
-                            var logmsg = Encoding.ASCII.GetString(mbytes);
-                            LoggerP1Messages.Error($"---------- start ---------- crc {msgChecksum} != {calculatedChecksum}{Environment.NewLine}{logmsg}");
-                            LoggerP1Messages.Error($"---------- end   ----------");
-                            // crc error
-                            OnDataError(new DataErrorEventArgs() { Message = $"crc {msgChecksum} != {calculatedChecksum}" });
-                        }
-                        bufferChanged = true;
-                    }
-                    else
-                    if (buffer[s] == '/' && s > 0)
+                    if (buffer[s-1] == '/')
                     {
                         // we have a partial start of a message, followed with a new start of a message
                         // get rid of first partial message
@@ -113,17 +99,75 @@ namespace P1SmartMeter
                         OnDataError(new DataErrorEventArgs() { Message = "partial" });
                         bufferChanged = true;
                     }
+                    else { 
+                        msg = HandleMessageInBuffer(msg, s);
+                        bufferChanged = true;
+                    }
                 }
             } while (bufferChanged && string.IsNullOrWhiteSpace(msg));
             return !string.IsNullOrWhiteSpace(msg);
         }
 
-        private bool RemovePartialMessage()
+        private int FindEndOfMessage()
+        {
+            int s = 0;
+            while (buffer[s] != '!' && (s == 0 || (buffer[s] != '/' && s > 0)) && s < position)
+                s++;
+
+            // <!><#><#><#><#><CR><LF> -> 7 bytes
+            if (buffer[s] == '!' && s + 7 <= position)
+                return s+7;   
+            if (buffer[s] == '/' && s > 0 && s <position)
+                return s;
+
+             return -1;
+        }
+
+        private string HandleMessageInBuffer(string msg, int msgLength)
+        {
+            var mbytes = new byte[msgLength ];
+            var checksumbytes = new byte[4];
+            Buffer.BlockCopy(buffer, 0, mbytes, 0, msgLength );             // get message
+            Buffer.BlockCopy(buffer, msgLength - 6, checksumbytes, 0, 4);   // get checksum
+
+            if (position > msgLength )
+            {
+                Buffer.BlockCopy(buffer, msgLength , buffer, 0, position - msgLength );
+                position -= msgLength ;
+                RemovePartialMessage();
+            }
+            else
+            {
+                // buffer is now empty
+                position = 0;
+            }
+
+            var msgChecksum = Encoding.ASCII.GetString(checksumbytes);
+            var calculatedChecksum = crc16.ComputeChecksumAsString(mbytes, mbytes.Length - 6);
+
+            if (string.Equals(msgChecksum, calculatedChecksum, StringComparison.OrdinalIgnoreCase))
+            {
+                msg = Encoding.ASCII.GetString(mbytes);
+                LoggerP1Messages.Debug($"---------- start ----------{Environment.NewLine}{msg}");
+                LoggerP1Messages.Debug($"---------- end   ----------");
+            }
+            else
+            {
+                var logmsg = Encoding.ASCII.GetString(mbytes);
+                LoggerP1Messages.Error($"---------- start ---------- crc {msgChecksum} != {calculatedChecksum}{Environment.NewLine}{logmsg}");
+                LoggerP1Messages.Error($"---------- end   ----------");
+                // crc error
+                OnDataError(new DataErrorEventArgs() { Message = $"crc {msgChecksum} != {calculatedChecksum}" });
+            }
+
+            return msg;
+        }
+
+        private void RemovePartialMessage()
         {
             // check if buffer is empty
-            if (position == 0) return false;
+            if (position == 0) return;
 
-            bool bufferChanged = false;
             int start = 0;
             while (buffer[start] != '/' && start < position)
                 start++;
@@ -138,7 +182,6 @@ namespace P1SmartMeter
                 position -= start;
                 Logger.Debug($"bytes in buffer {position}, ");
                 OnDataError(new DataErrorEventArgs() { Message = "partial" });
-                bufferChanged = true;
             }
             else if (start == position)
             {
@@ -147,10 +190,7 @@ namespace P1SmartMeter
                 Buffer.BlockCopy(buffer, 0, tmp, 0, position);
                 OnDataError(new DataErrorEventArgs() { Message = "partial", Data = Encoding.ASCII.GetString(tmp)});
                 position = 0;
-                bufferChanged = true;
-            }
-
-            return bufferChanged;
+            }            
         }
 
         protected void OnDataError(DataErrorEventArgs e)

@@ -1,8 +1,8 @@
 ﻿using System;
+using System.IO.Ports;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.IO;
-using System.IO.Ports;
 using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
@@ -17,16 +17,16 @@ namespace P1SmartMeter.Connection
 
         public Task BackgroundTask { get { return _backgroundTask; } }
 
-        public string _usbPort;
+        private readonly string _usbPort;
         public event EventHandler<IP1Interface.DataArrivedEventArgs> DataArrived;
 
         public TTYReader(string deviceName)
         {
-            Logger.Info($"Availble ports ->");
+            Logger.Trace($"Availble ports ->");
              
-            //SerialPort.GetPortNames().ToList().ForEach(x => {
-            //    Logger.Info($"Port '{x}'");
-            //});
+            SerialPort.GetPortNames().ToList().ForEach(x => {
+                Logger.Trace($"Port '{x}'");
+            });
 
             _usbPort = deviceName;
         }
@@ -67,7 +67,7 @@ namespace P1SmartMeter.Connection
                     _tokenSource.Cancel();
                     WaitForBackgroundTaskToFinish();
                 }
-                catch (System.OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */}
+                catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */}
                 catch (Exception ex)
                 {
                     Logger.Error(ex, $"There was an error while performing an cancel on the background task {ex.ToString()}");
@@ -108,15 +108,8 @@ namespace P1SmartMeter.Connection
         private void DisposeTokenSource()
         {
             if (_tokenSource == null) return;
-
-            try
-            {
-                _tokenSource.Cancel();
-            }
-            finally
-            {
-                _tokenSource = null;
-            }
+            _tokenSource?.Cancel();
+            _tokenSource = null;
         }
 
         public virtual void Start()
@@ -131,7 +124,7 @@ namespace P1SmartMeter.Connection
                 {
                     Run();
                 }
-                catch (System.OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
+                catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "Unhandled exception in BackgroundTask");
@@ -159,17 +152,14 @@ namespace P1SmartMeter.Connection
                 str.DataReceived += Str_DataReceived;
                 str.Open();
 
-                //char[] buffer = new char[4096];
-
                 Logger.Info($"BackgroundTask run---");
-                while (!StopRequested(250))
-                {
-                    //Logger.Info($"BackgroundTask reading!");
-                    //var nrCharsRead = str.Read(buffer, 0, buffer.Length);
-                    //Logger.Info($"BackgroundTask read {nrCharsRead} characters...");
 
-                    //OnDataArrived(new DataArrivedEventArgs() { Data = new string(buffer).Substring(0, nrCharsRead) });
+                bool stopRequested;
+                do
+                {
+                    stopRequested = !StopRequested(250);
                 }
+                while (!stopRequested);                
 
                 str.Close();
             }
@@ -209,8 +199,5 @@ namespace P1SmartMeter.Connection
             EventHandler<DataArrivedEventArgs> handler = DataArrived;
             handler?.Invoke(this, e);
         }
-
-
     }
-
 }

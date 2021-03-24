@@ -17,6 +17,8 @@ namespace EMS.Library
         public CancellationTokenSource TokenSource { get => _tokenSource; private set => _tokenSource = value; }
 
         protected abstract void DoBackgroundWork();
+        protected abstract void Start();
+        protected abstract void Stop();
 
         public void Dispose()
         {
@@ -54,7 +56,7 @@ namespace EMS.Library
                     _tokenSource.Cancel();
                     WaitForBackgroundTaskToFinish();
                 }
-                catch (System.OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */}
+                catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */}
                 catch (Exception ex)
                 {
                     Logger.Error(ex, $"There was an error while performing an cancel on the background task {ex.ToString()}");
@@ -104,9 +106,10 @@ namespace EMS.Library
             }
         }
 
-        public virtual void Start()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.Trace($"Starting");
+            this.Start();
 
             _tokenSource = new CancellationTokenSource();
             _backgroundTask = Task.Run(() =>
@@ -116,7 +119,7 @@ namespace EMS.Library
                 {
                     Run();
                 }
-                catch (System.OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
+                catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "Unhandled exception in BackgroundTask");
@@ -124,12 +127,17 @@ namespace EMS.Library
                 }
                 Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
             }, _tokenSource.Token);
+
+            return Task.CompletedTask;
         }
 
-        public virtual void Stop()
+        public Task StopAsync(CancellationToken cancellationToken)
         {
+            this.Stop();
             _tokenSource?.Cancel();
+            return Task.CompletedTask;
         }
+
 
         private void Run()
         {
@@ -156,6 +164,7 @@ namespace EMS.Library
             }
             return false;
         }
+
 
     }
 }
