@@ -12,5 +12,10 @@ namespace AlfenNG9xx.Model
         public float Temparature { get; set; }
         public OccpState OCCPState { get; set; }
         public uint NrOfSockets { get; set; }
+
+        public override string ToString()
+        {
+            return $"{ActiveMaxCurrent}; {Temparature}; {OCCPState}; {NrOfSockets}";
+        }
     }
 }
