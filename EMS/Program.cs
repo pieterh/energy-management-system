@@ -1,14 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using AlfenNG9xx;
-using EMS.Library;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using CommandLine;
+using NLog.Extensions.Logging;
+using EMS.Library.Configuration;
 
 namespace EMS
 {
@@ -16,45 +17,26 @@ namespace EMS
     {
         public class Options
         {
-            [Option ('c', "config", Required = true, HelpText = "filename of config")]
+            [Option('c', "config", Required = true, HelpText = "filename of config")]
             public string ConfigFile { get; set; }
             [Option('l', "nlogcfg", Required = false, HelpText = "filename of the nlog file")]
-            public string nlogcfg { get; set; }
+            public string NLogConfig { get; set; }
         }
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static List<IBackgroundWorker> backgroundWorkers = new List<IBackgroundWorker>();
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
+            Options options = new();
+
+            Parser.Default.ParseArguments<Options>(args).WithParsed<Options>(o =>
+            {
+                options = o;
+            });
+
             try
             {
-                Logger.Info("Hello world");
-
-                Parser.Default.ParseArguments<Options>(args).WithParsed<Options>(o =>
-                {
-                    if (!string.IsNullOrWhiteSpace(o.nlogcfg))
-                    {
-                        //NLog.LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(o.nlogcfg);
-                        NLog.LogManager.LoadConfiguration(o.nlogcfg);
-                        NLog.LogManager.ReconfigExistingLoggers();
-                        foreach (var t in NLog.LogManager.Configuration.AllTargets)
-                        {
-                            Logger.Info($"Available targets {t.Name}");
-                        }
-                    }
-
-                    dynamic config = ConfigurationManager.ReadConfig(o.ConfigFile);
-
-                    StartInstances(config);
-                    var startTime = DateTime.Now;
-                    while ((DateTime.Now - startTime).TotalMinutes <= (60 * 3))
-                    {
-                        Thread.Sleep(2500);
-                    }
-
-                    StopInstances();
-                });
+                await CreateHost(options).RunAsync();
             }
             finally
             {
@@ -63,71 +45,85 @@ namespace EMS
             }
         }
 
-        private static void StartInstances(dynamic config)
+        static IHost CreateHost(Options options)
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            Logger.Trace($"looking for resources in {assembly.Location}");
 
-            foreach (var instance in config.instances)
-            {
-                Logger.Info($"Instance [{instance.name}]");
-                var adapter = GetAdapter(config, instance.adapterid);
-                string assemblyFile = Path.Combine(Path.GetDirectoryName(assembly.Location), (string)adapter.driver.assembly);
-                Logger.Info($"Instance [{instance.name}], loading instance from {assemblyFile}");
-                var adapterAssembly = Assembly.LoadFrom(assemblyFile);
-                var adapterType = adapterAssembly.GetType((string)adapter.driver.type);
-                Logger.Info($"Instance [{instance.name}], type {adapterType.FullName} loaded");
-                IBackgroundWorker adapterInstance = (IBackgroundWorker)Activator.CreateInstance(adapterType, (JObject)(instance.config));
-                Logger.Info($"Instance [{instance.name}], created");
-                backgroundWorkers.Add(adapterInstance);
-                adapterInstance.Start();
-                Logger.Info($"Instance [{instance.name}], started");
-            }
-        }
-
-        static void StopInstances()
-        {
-            Console.WriteLine("== Stopping all background workers and waiting for them to finish. ==");
-            var bgTasks = new List<Task>();
-            backgroundWorkers.ForEach((backgroundWorker) =>
-            {
-                backgroundWorker.Stop();
-                if (backgroundWorker.BackgroundTask != null)
+            var t = Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration((hostingContext, configuration) =>
                 {
-                    bgTasks.Add(backgroundWorker.BackgroundTask);
-                }
-            });
-
-            try
-            {
-                Task.WaitAll(bgTasks.ToArray());
-            }
-            catch (System.AggregateException ae)
-            {
-                foreach (var ie in ae.InnerExceptions)
-                {
-                    if (typeof(System.OperationCanceledException) != ie.GetType())
+                    if (ConfigurationManager.ValidateConfig(options.ConfigFile))
                     {
-                        Console.WriteLine($"There was a task with an error");
+                        configuration.Sources.Clear();
+
+                        IHostEnvironment env = hostingContext.HostingEnvironment;
+
+                        configuration
+                           .AddJsonFile("config.json", optional: false, reloadOnChange: false)
+                           .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
                     }
-                }
-            }
-            Console.WriteLine("== Disposing all background workers ==");
-            backgroundWorkers.ForEach((backgroundWorker) =>
+                    else
+                        Logger.Error("There was an error with the configuration file");
+
+                })
+            .ConfigureLogging((ILoggingBuilder logBuilder) =>
             {
-                backgroundWorker.Dispose();
-            });
-            backgroundWorkers.Clear();
+                logBuilder.ClearProviders();
+                logBuilder.SetMinimumLevel(LogLevel.Trace);
+                logBuilder.AddNLog(options.NLogConfig);
+            })
+            .ConfigureServices((hostContext, services) =>
+             {
+
+                 services.Configure<List<Adapter>>(hostContext.Configuration.GetSection("adapters"));
+                 services.Configure<List<EMS.Library.Configuration.Instance>>(hostContext.Configuration.GetSection("instances"));
+
+                 ConfigureInstances(hostContext, services);
+
+                 services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<HEMSCore>(x));
+                 services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<TimedHostedService>(x, (double)10000));
+                 services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<TimedHostedService2>(x, (double)5000));
+             }).Build();
+
+            return t;
         }
 
-        public static dynamic GetAdapter(dynamic config, dynamic adapterid)
+        private static void ConfigureInstances(HostBuilderContext hostContext, IServiceCollection services)
         {
-            foreach (var adapter in config.adapters)
+            var adapters = new List<Adapter>();
+            hostContext.Configuration.GetSection("adapters").Bind(adapters);
+
+            var instances = new List<Instance>();
+            hostContext.Configuration.GetSection("instances").Bind(instances);
+
+            foreach (var instance in instances)
             {
-                if (adapter.id == adapterid)
+                Logger.Debug($"Instance [{instance.Name}]");
+                var adapter = GetAdapter(adapters, instance.AdapterId);
+                Logger.Debug($"Instance [{instance.Name}], loading assembly {adapter.Driver.Assembly}");
+
+                var adapterAssembly = Assembly.Load(adapter.Driver.Assembly);
+                Logger.Debug($"Instance [{instance.Name}], loaded assembly from location {adapterAssembly.Location}");
+
+                var adapterType = adapterAssembly.GetType(adapter.Driver.Type);
+                Logger.Debug($"Instance [{instance.Name}], type {adapterType.FullName} loaded");
+
+                Logger.Debug($"Instance [{instance.Name}], configuring services");
+                adapterType.GetMethod("ConfigureServices", BindingFlags.Static | BindingFlags.Public)
+                                .Invoke(null, new object[] { hostContext, services, instance });
+                Logger.Debug($"Instance [{instance.Name}], configuring services done");
+            }
+        }
+
+        public static Adapter GetAdapter(List<Adapter> adapters, Guid adapterid)
+        {
+            foreach (var adapter in adapters)
+            {
+                if (adapter.Id == adapterid)
                     return adapter;
             }
             return null;
         }
     }
 }
+
+

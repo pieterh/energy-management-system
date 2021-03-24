@@ -1,122 +1,152 @@
 using System;
+using System.Threading.Tasks;
+using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SharpModbus;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using AlfenNG9xx.Model;
 using EMS.Library;
+using EMS.Library.Configuration;
+using AlfenNG9xx.Model;
 
 namespace AlfenNG9xx
 {
-    public class Alfen : BackgroundWorker
+    public class Alfen : BackgroundService, IChargePoint
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private bool _disposed = false;
 
         ModbusMaster _modbusMaster = null;
-        private readonly string _alfenIp ;
+        private readonly string _alfenIp;
         private readonly int _alfenPort;
 
         private DateTime _lastMaxCurrentUpdate = DateTime.MinValue;
 
-        public Alfen(JObject config)
+        public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
+
+        public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
+        {
+            services.AddSingleton(typeof(IChargePoint), x =>
+            {
+                var s = ActivatorUtilities.CreateInstance(x, typeof(Alfen), instance.Config);
+                Logger.Info($"Instance [{instance.Name}], created");
+                return s;
+            });
+            services.AddSingleton<IHostedService>(x =>
+            {
+                var s = x.GetService(typeof(IChargePoint)) as IHostedService;
+                return s;
+            });
+        }
+
+        public Alfen(Config config)
         {
             dynamic cfg = config;
             Logger.Info($"Alfen({config.ToString().Replace(Environment.NewLine, " ")})");
-            _alfenIp = cfg.host;
-            _alfenPort  = cfg.port;
+            _alfenIp = cfg.Host;
+            _alfenPort = cfg.Port;
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            base.Dispose(disposing);
-            DisposeModbusMaster();
+            Grind(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);  // Suppress finalization.
         }
+
+        protected void Grind(bool disposing)
+        {
+            Logger.Trace($"Dispose({disposing}) _disposed {_disposed}");
+
+            if (_disposed) return;
+
+            if (disposing)
+            {
+                DisposeModbusMaster();
+            }
+
+            _disposed = true;
+            Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
+        }
+
         private void DisposeModbusMaster()
         {
-            if (_modbusMaster == null) return;
-
-            try
-            {
-                _modbusMaster.Dispose();
-            }
-            finally
-            {
-                _modbusMaster = null;
-            }
-
+            _modbusMaster?.Dispose();
+            _modbusMaster = null;
         }
 
-        public override void Start()
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Logger.Trace($"Starting");
-            base.Start();
+            Logger.Info($"Alfen Starting");
+
             ShowProductInformation();
-        }
+            ShowStationStatus();
+            ShowSocketMeasurement();
 
-        protected override void DoBackgroundWork()
-        {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                Logger.Info("Doing something usefull");
-                ShowStationStatus();
-                ShowSocketMeasurement();
-
-                if (_lastMaxCurrentUpdate == DateTime.MinValue || (DateTime.Now - _lastMaxCurrentUpdate).Seconds > 20){
-                    UpdateMaxCurrent(7.25f, Phases.One);
-                }
-            }
-            catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
-            {
-                Logger.Error("Exception: " + e.Message);
-                Logger.Error("Partial Modbus packaged received, we try later again");
-            }catch (Exception e) when (e.Message.StartsWith("Broken pipe"))
-            {
-                Logger.Error("Exception: " + e.Message);
-                Logger.Error("Broken pipe, we try later again");
-                Logger.Error("Disposing connection");
                 try
                 {
-                    _modbusMaster.Dispose();
+                    var sm = ReadSocketMeasurement(1);
+                    Logger.Debug($"{sm}");
+
+                    if (_lastMaxCurrentUpdate == DateTime.MinValue || (DateTime.Now - _lastMaxCurrentUpdate).Seconds > 20)
+                    {
+                        UpdateMaxCurrent(12f, (ushort)Phases.One);
+                        _lastMaxCurrentUpdate = DateTime.Now;
+                    }
+                    await Task.Delay(5000, stoppingToken);
                 }
-                finally
+                catch (TaskCanceledException tce)
                 {
-                    _modbusMaster = null;
+                    if (!stoppingToken.IsCancellationRequested)
+                    {
+                        Logger.Error("Exception: " + tce.Message);
+                    }
                 }
-            }catch (Exception e) 
-            {
-                Logger.Error("Exception: " + e.Message);
-                Logger.Error("Unhandled, we try later again");
-                Logger.Error("Disposing connection");
-                try
+                catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
                 {
-                    _modbusMaster.Dispose();
+                    Logger.Error("Exception: " + e.Message);
+                    Logger.Error("Partial Modbus packaged received, we try later again");
                 }
-                finally
+                catch (Exception e) when (e.Message.StartsWith("Broken pipe"))
                 {
-                    _modbusMaster = null;
+                    Logger.Error("Exception: " + e.Message);
+                    Logger.Error("Broken pipe, we try later again");
+                    Logger.Error("Disposing connection");
+                    DisposeModbusMaster();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error("Exception: " + e.Message);
+                    Logger.Error("Unhandled, we try later again");
+                    Logger.Error("Disposing connection");
+                    DisposeModbusMaster();
                 }
             }
+            Logger.Info($"Canceled");
         }
+
         protected virtual void ShowProductInformation()
         {
             //Modbus TCP over socket
             try
             {
                 var pi = ReadProductIdentification();
-                Console.WriteLine("Name                       : {0}", pi.Name);
-                Console.WriteLine("Manufacterer               : {0}", pi.Manufacterer);
-                Console.WriteLine("Table version              : {0}", pi.TableVersion);
-                Console.WriteLine("Firmware version           : {0}", pi.FirmwareVersion);
-                Console.WriteLine("Platform type              : {0}", pi.PlatformType);
-                Console.WriteLine("Station serial             : {0}", pi.StationSerial);
-                Console.WriteLine("Date Local                 : {0}", pi.DateTimeLocal.ToString("O"));
-                Console.WriteLine("Date UTC                   : {0}", pi.DateTimeUtc.ToString("O"));
-                Console.WriteLine("Uptime                     : {0}", pi.Uptime);
-                Console.WriteLine("Up since                   : {0}", pi.UpSinceUtc.ToString("O"));
-                Console.WriteLine("Timezone                   : {0}", pi.StationTimezone);
+                Logger.Info("Name                       : {0}", pi.Name);
+                Logger.Info("Manufacterer               : {0}", pi.Manufacterer);
+                Logger.Info("Table version              : {0}", pi.TableVersion);
+                Logger.Info("Firmware version           : {0}", pi.FirmwareVersion);
+                Logger.Info("Platform type              : {0}", pi.PlatformType);
+                Logger.Info("Station serial             : {0}", pi.StationSerial);
+                Logger.Info("Date Local                 : {0}", pi.DateTimeLocal.ToString("O"));
+                Logger.Info("Date UTC                   : {0}", pi.DateTimeUtc.ToString("O"));
+                Logger.Info("Uptime                     : {0}", pi.Uptime);
+                Logger.Info("Up since                   : {0}", pi.UpSinceUtc.ToString("O"));
+                Logger.Info("Timezone                   : {0}", pi.StationTimezone);
             }
             catch (Exception e)
             {
-                Console.WriteLine("{0}", e.ToString());
+                Logger.Error(e, "{0}", e.ToString());
             }
         }
 
@@ -124,36 +154,33 @@ namespace AlfenNG9xx
         {
             var status = ReadStationStatus();
 
-            Console.WriteLine($"Station Active Max Current : {status.ActiveMaxCurrent}");
-            Console.WriteLine($"Temparature                : {status.Temparature}");
-            Console.WriteLine($"OCCP                       : {status.OCCPState}");
-            Console.WriteLine($"Nr of sockets              : {status.NrOfSockets}");
-
-            //Logger.Trace(HexDumper.ConvertToHexDump(status.Temparature));
-            //Logger.Trace(HexDumper.ConvertToHexDump((float)19.875));
+            Logger.Info($"Station Active Max Current : {status.ActiveMaxCurrent}");
+            Logger.Info($"Temparature                : {status.Temparature}");
+            Logger.Info($"OCCP                       : {status.OCCPState}");
+            Logger.Info($"Nr of sockets              : {status.NrOfSockets}");
         }
 
         private void ShowSocketMeasurement()
         {
             var sm = ReadSocketMeasurement(1);
-            Console.WriteLine($"Meter State                : {sm.MeterState}");
-            Console.WriteLine($"Meter Timestamp            : {sm.MeterTimestamp}");
-            Console.WriteLine($"Meter Type                 : {sm.MeterType}");
+            Logger.Info($"Meter State                : {sm.MeterState}");
+            Logger.Info($"Meter Timestamp            : {sm.MeterTimestamp}");
+            Logger.Info($"Meter Type                 : {sm.MeterType}");
 
-            Console.WriteLine($"Real Energy Delivered L1   : {sm.RealEnergyDeliveredL1}");
-            Console.WriteLine($"Real Energy Delivered L2   : {sm.RealEnergyDeliveredL2}");
-            Console.WriteLine($"Real Energy Delivered L3   : {sm.RealEnergyDeliveredL3}");
-            Console.WriteLine($"Real Energy Delivered Sum  : {sm.RealEnergyDeliveredSum}");
+            Logger.Info($"Real Energy Delivered L1   : {sm.RealEnergyDeliveredL1}");
+            Logger.Info($"Real Energy Delivered L2   : {sm.RealEnergyDeliveredL2}");
+            Logger.Info($"Real Energy Delivered L3   : {sm.RealEnergyDeliveredL3}");
+            Logger.Info($"Real Energy Delivered Sum  : {sm.RealEnergyDeliveredSum}");
 
-            Console.WriteLine($"Availability               : {sm.Availability}");
-            Console.WriteLine($"Mode 3 State               : {sm.Mode3State}");
+            Logger.Info($"Availability               : {sm.Availability}");
+            Logger.Info($"Mode 3 State               : {sm.Mode3State}");
 
-            Console.WriteLine($"Actual Applied Max Current : {sm.AppliedMaxCurrent}");
-            Console.WriteLine($"Max Current Valid Time     : {sm.MaxCurrentValidTime}");
-            Console.WriteLine($"Max Current                : {sm.MaxCurrent}");
-            Console.WriteLine($"Active Load Bl safe current: {sm.ActiveLBSafeCurrent}");
-            Console.WriteLine($"Setpoint accounted for     : {sm.SetPointAccountedFor}");
-            Console.WriteLine($"Using # phases             : {sm.Phases}");
+            Logger.Info($"Actual Applied Max Current : {sm.AppliedMaxCurrent}");
+            Logger.Info($"Max Current Valid Time     : {sm.MaxCurrentValidTime}");
+            Logger.Info($"Max Current                : {sm.MaxCurrent}");
+            Logger.Info($"Active Load Bl safe current: {sm.ActiveLBSafeCurrent}");
+            Logger.Info($"Setpoint accounted for     : {sm.SetPointAccountedFor}");
+            Logger.Info($"Using # phases             : {sm.Phases}");
         }
 
         public ProductIdentification ReadProductIdentification()
@@ -222,26 +249,25 @@ namespace AlfenNG9xx
             sm.AppliedMaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 6);
             sm.MaxCurrentValidTime = Converters.ConvertRegistersUInt32(sm_part2, 8);
             sm.MaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 10);
-            sm.ActiveLBSafeCurrent= Converters.ConvertRegistersFloat(sm_part2, 12);
+            sm.ActiveLBSafeCurrent = Converters.ConvertRegistersFloat(sm_part2, 12);
             sm.SetPointAccountedFor = Converters.ConvertRegistersShort(sm_part2, 14) == 1;
             sm.Phases = SocketMeasurement.ParsePhases(Converters.ConvertRegistersShort(sm_part2, 15));
 
-            //Console.WriteLine(HexDumper.ConvertToHexDump(sm.MeterTimestamp));
-            //Console.WriteLine(HexDumper.ConvertToHexDump((UInt64)1500));  
-            //Console.WriteLine(HexDumper.ConvertToHexDump(sm.RealEnergyDeliveredSum));
-            //Console.WriteLine(HexDumper.ConvertToHexDump((double)149290));                      
             return sm;
         }
-        private void UpdateMaxCurrent(float maxCurrent, Phases phases){
-            Logger.Info($"UpdateMaxCurrent({maxCurrent},{phases})", maxCurrent, phases);
-            _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
-            _modbusMaster.WriteRegister(1, 1215, (ushort)phases);
-        }
+
         protected virtual ushort[] ReadHoldingRegisters(byte slave, ushort address, ushort count)
         {
             if (_modbusMaster == null)
                 _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
             return _modbusMaster.ReadHoldingRegisters(slave, address, count);
+        }
+
+        public void UpdateMaxCurrent(float maxCurrent, ushort phases)
+        {
+            Logger.Info($"UpdateMaxCurrent({maxCurrent},{phases})", maxCurrent, phases);
+            _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
+            _modbusMaster.WriteRegister(1, 1215, phases);
         }
     }
 }

@@ -3,21 +3,19 @@
 namespace P1SmartMeter
 {
     /**
-     * CRC-16-IBM with a reverse polynomial representation (0xA001)
+     * CRC-16-IBM with a reverse polynomial representation (polynomial 0xA001)
      */
     public class CRC16
     {
         private const ushort polynomial = 0xA001;
-        private readonly ushort[] lookupTable = new ushort[256];
+        private readonly ushort[] _lookupTable = new ushort[256];
 
         public CRC16()
         {
-            ushort value;
-            ushort temp;
-            for (ushort i = 0; i < lookupTable.Length; ++i)
+            for (ushort i = 0; i < _lookupTable.Length; ++i)
             {
-                value = 0;
-                temp = i;
+                ushort value = 0;
+                ushort temp = i;
                 for (byte j = 0; j < 8; ++j)
                 {
                     if (((value ^ temp) & 0x0001) != 0)
@@ -30,7 +28,7 @@ namespace P1SmartMeter
                     }
                     temp >>= 1;
                 }
-                lookupTable[i] = value;
+                _lookupTable[i] = value;
             }
         }
 
@@ -51,7 +49,7 @@ namespace P1SmartMeter
             for (int i = 0; i < length; ++i)
             {
                 byte index = (byte)(crc16 ^ bytes[i]);
-                crc16 = (ushort)((crc16 >> 8) ^ lookupTable[index]);
+                crc16 = (ushort)((crc16 >> 8) ^ _lookupTable[index]);
             }
             return crc16;
         }
