@@ -7,4 +7,5 @@ ems.suo
 **/TestResults
 coverage.opencover.xml
 EMS/ems.csproj.user
+**/mono_crash.*json
 

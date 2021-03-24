@@ -7,17 +7,9 @@ using Newtonsoft.Json.Schema;
 
 namespace EMS
 {
-    public class ConfigurationManager
+    public static class ConfigurationManager
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
-        public static JObject ReadConfig()
-        {
-            var cb = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            var dir = Path.GetDirectoryName(cb);
-            var cfgn = Path.Combine(dir, "config.json");
-            return ReadConfig(cfgn);
-        }
 
         public static JObject ReadConfig(string filename)
         {
@@ -33,9 +25,22 @@ namespace EMS
                     Logger.Error(message);
 
                 }
-                throw new ApplicationException("The configuration file has not a valid format.");
+                throw new ArgumentException("The configuration file has not a valid format.", nameof(filename));
             }
             return o2;
+        }
+
+        public static bool ValidateConfig(string filename)
+        {
+            try
+            {
+                return ReadConfig(filename) != null;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "There was an error validating the config file.");
+            }
+            return false;
         }
 
         private static StreamReader GetConfigFile(string cfgn)
@@ -52,7 +57,7 @@ namespace EMS
             {
                 Logger.Trace($"resource file {s}");
             }
-            Stream resource = assembly.GetManifestResourceStream("ems.config.schema.json");
+            Stream resource = assembly.GetManifestResourceStream("EMS.config.schema.json");
             var r = new StreamReader(resource);
             var schema = r.ReadToEnd();
             return JSchema.Parse(schema);

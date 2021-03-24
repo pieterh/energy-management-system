@@ -17,7 +17,8 @@
         public const string PowerReturnedL3 = "1-0:62.7.0";
 
         public const string TariffIndicator = "0-0:96.14.0";
-        public const string ActualPower = "1-0:1.7.0";
+        public const string ActualPowerUse = "1-0:1.7.0";
+        public const string ActualPowerReturn = "1-0:2.7.0";
         public const string TextMessage = "0-0:96.13.0";
 
         private TelegramDefinition()
@@ -30,8 +31,8 @@
             DefineField(Electricity1FromClient, "Electricity Generated 1 - to grid");
             DefineField(Electricity2FromClient, "Electricity Generated 2 - to grid");
             DefineField(TariffIndicator, "Tariff indicator", TelegramFieldType.Numeric);
-            DefineField(ActualPower, "Actual power");
-            DefineField("1-0:2.7.0", "Actual generated");
+            DefineField(ActualPowerUse, "Actual power usage");
+            DefineField(ActualPowerReturn, "Actual power return");
             DefineField("0-0:96.7.21", "Number of power failures", TelegramFieldType.Numeric);
             DefineField("0-0:96.7.9", "Number of long power failures", TelegramFieldType.Numeric);
             DefineField("1-0:99.97.0", "Long power failure log", TelegramFieldType.Timestamp, TelegramFieldType.Numeric);
