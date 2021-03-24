@@ -21,7 +21,8 @@ namespace P1SmartMeter.Telegram.DSMR
             PowerReturnedL3 = GetValue<(double, string)?>(TelegramDefinition.PowerReturnedL3)?.Item1;
 
             TariffIndicator = GetValue<int?>(TelegramDefinition.TariffIndicator);
-            ActualPower = GetValue<(double, string)?>(TelegramDefinition.ActualPower)?.Item1;
+            ActualPowerUse = GetValue<(double, string)?>(TelegramDefinition.ActualPowerUse)?.Item1;
+            ActualPowerReturn = GetValue<(double, string)?>(TelegramDefinition.ActualPowerReturn)?.Item1;
             TextMessage = GetValue<string>(TelegramDefinition.TextMessage);
         }
 
@@ -29,7 +30,8 @@ namespace P1SmartMeter.Telegram.DSMR
 
         public string TextMessage { get; }
 
-        public double? ActualPower { get; }
+        public double? ActualPowerUse { get; }
+        public double? ActualPowerReturn { get; }
 
         public int? TariffIndicator { get; }
 
@@ -51,7 +53,7 @@ namespace P1SmartMeter.Telegram.DSMR
 
         public override string ToString()
         {
-            return $"Timestamp: {Timestamp}\nE1: {Electricity1FromGrid}\nE2: {Electricity1FromGrid}\nTariff: {TariffIndicator}\nActualPower: {ActualPower}\nTextMessage: {TextMessage}";
+            return $"Timestamp: {Timestamp}\nE1: {Electricity1FromGrid}\nE2: {Electricity1FromGrid}\nTariff: {TariffIndicator}\nActualPower: {ActualPowerUse}\nTextMessage: {TextMessage}";
         }
     }
 }

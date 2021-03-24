@@ -23,17 +23,14 @@ namespace P1SmartMeter
         {            
         }
 
-        public override void Start()
-        {
-            base.Start();
+        protected override void Start()
+        {           
             _listener = new TcpListener(IPAddress.Any, 8080);
             _listener.Start();
         }
 
-        public override void Stop()
-        {
-            base.Stop();
-
+        protected override void Stop()
+        {           
             _listener?.Stop();
             _listener = null;
         }

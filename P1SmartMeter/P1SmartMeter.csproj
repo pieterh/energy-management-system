@@ -7,14 +7,14 @@
   <ItemGroup>
     <Folder Include="Telegram\" />
     <Folder Include="Telegram\DSMR\" />
-    <Folder Include="Reading\" />
     <Folder Include="Connection\" />
+    <Folder Include="Reading\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.IO.Ports" Version="5.0.1" />
   </ItemGroup>
 </Project>

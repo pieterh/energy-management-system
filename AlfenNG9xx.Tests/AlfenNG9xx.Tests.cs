@@ -7,12 +7,27 @@ using Moq.Protected;
 using Newtonsoft.Json.Linq;
 using AlfenNG9xx;
 using AlfenNG9xx.Model;
+using EMS.Library.Configuration;
 
 namespace AlfenNG9xx.Tests
 {
     public class AlfenTests
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+
+        [Fact]
+        public void DisposesProperly()
+        {
+            //var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
+            //mock.Protected()
+            //    .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
+            //    .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
+            //mock.Object.Dispose();
+
+            var alf = new AlfenNG9xx.Alfen(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
+            alf.Dispose();
+        }
 
         [Fact]
         public void ReadProductIdentification()
@@ -31,8 +46,8 @@ namespace AlfenNG9xx.Tests
                 };
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
-
-            var mock = new Mock<AlfenNG9xx.Alfen>(JObject.Parse("{\"host\": \"192.168.1.9\", \"port\": 502}"));
+            
+            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
@@ -60,7 +75,7 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(JObject.Parse("{\"host\": \"192.168.1.9\", \"port\": 502}"));
+            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
@@ -80,7 +95,7 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters_300 = ConvertBytesToRegisters(piBytes_300);
             ushort[] piRegisters_1200 = ConvertBytesToRegisters(piBytes_1200);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(JObject.Parse("{\"host\": \"192.168.1.9\", \"port\": 502}"));
+            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) =>
