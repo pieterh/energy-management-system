@@ -23,7 +23,4 @@
   <ItemGroup>
     <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>  
 </Project>

@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using AlfenNG9xx;
 using AlfenNG9xx.Model;
 using EMS.Library.Configuration;
+using EMS.Library.Adapter.EVSE;
 
 namespace AlfenNG9xx.Tests
 {

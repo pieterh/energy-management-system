@@ -3,9 +3,14 @@ using System.Linq;
 
 namespace P1SmartMeter.Telegram
 {
-    public class TelegramDefinitionBase
+    public interface ITelegramDefinition
     {
-        private readonly List<TelegramFieldDefinition> _fieldDefinitions = new List<TelegramFieldDefinition>();
+        IList<TelegramFieldDefinition> GetFieldDefinitions();
+    }
+
+    public class TelegramDefinitionBase : ITelegramDefinition
+    {
+        private readonly List<TelegramFieldDefinition> _fieldDefinitions = new();
 
         protected void DefineField(string code, string name, params TelegramFieldType[] types)
         {
@@ -15,12 +20,7 @@ namespace P1SmartMeter.Telegram
                 types = new[] { TelegramFieldType.NumericWithUnit };
             }
 
-            _fieldDefinitions.Add(new TelegramFieldDefinition
-            {
-                Code = code,
-                Name = name,
-                Types = types
-            });
+            _fieldDefinitions.Add(new TelegramFieldDefinition(code, name, types));
         }
 
         public IList<TelegramFieldDefinition> GetFieldDefinitions()
