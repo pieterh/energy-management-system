@@ -80,8 +80,6 @@ namespace EMS
                  ConfigureInstances(hostContext, services);
 
                  services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<HEMSCore>(x));
-                 services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<TimedHostedService>(x, (double)10000));
-                 services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<TimedHostedService2>(x, (double)5000));
              }).Build();
 
             return t;

@@ -7,6 +7,7 @@ using SharpModbus;
 using EMS.Library;
 using EMS.Library.Configuration;
 using AlfenNG9xx.Model;
+using EMS.Library.Adapter.EVSE;
 
 namespace AlfenNG9xx
 {
@@ -19,7 +20,8 @@ namespace AlfenNG9xx
         private readonly string _alfenIp;
         private readonly int _alfenPort;
 
-        private DateTime _lastMaxCurrentUpdate = DateTime.MinValue;
+        public SocketMeasurementBase LastSocketMeasurement { get; private set; }
+
 
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
 
@@ -85,15 +87,12 @@ namespace AlfenNG9xx
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
-                {
+                {                   
                     var sm = ReadSocketMeasurement(1);
                     Logger.Debug($"{sm}");
+                    LastSocketMeasurement = sm;                    
+                    StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
 
-                    if (_lastMaxCurrentUpdate == DateTime.MinValue || (DateTime.Now - _lastMaxCurrentUpdate).Seconds > 20)
-                    {
-                        UpdateMaxCurrent(12f, (ushort)Phases.One);
-                        _lastMaxCurrentUpdate = DateTime.Now;
-                    }
                     await Task.Delay(5000, stoppingToken);
                 }
                 catch (TaskCanceledException tce)
@@ -238,6 +237,14 @@ namespace AlfenNG9xx
             sm.MeterTimestamp = Converters.ConvertRegistersLong(sm_part1, 1);
 
             sm.MeterType = SocketMeasurement.ParseMeterType(Converters.ConvertRegistersShort(sm_part1, 5));
+            sm.VoltageL1 = Converters.ConvertRegistersFloat(sm_part1, 6);
+            sm.VoltageL2 = Converters.ConvertRegistersFloat(sm_part1, 8);
+            sm.VoltageL3 = Converters.ConvertRegistersFloat(sm_part1, 10);
+
+            sm.CurrentL1 = Converters.ConvertRegistersFloat(sm_part1, 20);
+            sm.CurrentL2 = Converters.ConvertRegistersFloat(sm_part1, 22);
+            sm.CurrentL3 = Converters.ConvertRegistersFloat(sm_part1, 24);
+
             sm.RealEnergyDeliveredL1 = Converters.ConvertRegistersDouble(sm_part1, 62);
             sm.RealEnergyDeliveredL2 = Converters.ConvertRegistersDouble(sm_part1, 66);
             sm.RealEnergyDeliveredL3 = Converters.ConvertRegistersDouble(sm_part1, 70);
@@ -260,14 +267,35 @@ namespace AlfenNG9xx
         {
             if (_modbusMaster == null)
                 _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
-            return _modbusMaster.ReadHoldingRegisters(slave, address, count);
+
+            lock (_modbusMaster) { 
+                return _modbusMaster.ReadHoldingRegisters(slave, address, count);
+            }
         }
 
-        public void UpdateMaxCurrent(float maxCurrent, ushort phases)
+        
+        public void UpdateMaxCurrent(float maxL1, float maxL2, float maxL3)
         {
-            Logger.Info($"UpdateMaxCurrent({maxCurrent},{phases})", maxCurrent, phases);
-            _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
-            _modbusMaster.WriteRegister(1, 1215, phases);
+            Logger.Info($"UpdateMaxCurrent({maxL1},{maxL2},{maxL3})");
+            lock (_modbusMaster)
+            {
+                if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return;
+                ushort phases;
+                float maxCurrent;
+                if (maxL2 < 0f || maxL3 < 0f)
+                {
+                    phases = 1;
+                    maxCurrent = maxL1;
+                }
+                else
+                {
+                    phases = 3;
+                    maxCurrent = Math.Min(maxL1, Math.Min(maxL2, maxL3));
+                }
+
+                _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
+                _modbusMaster.WriteRegister(1, 1215, phases);
+            }
         }
     }
 }

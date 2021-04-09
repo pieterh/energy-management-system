@@ -25,6 +25,13 @@ namespace P1SmartMeter.Tests.Telegram
             t.PowerReturnedL1.Should().Be(0.9);
             t.PowerReturnedL2.Should().Be(0);
             t.PowerReturnedL3.Should().Be(0);
+            t.VoltageL1.Should().Be(233.7);
+            t.VoltageL2.Should().Be(233.6);
+            t.VoltageL3.Should().Be(230.9);
+
+            t.CurrentL1.Should().Be(3);
+            t.CurrentL2.Should().Be(1);
+            t.CurrentL3.Should().Be(0);
             t.Electricity1FromGrid.Should().Be(2236.186);
             t.Electricity1ToGrid.Should().Be(781.784);
             t.Electricity2FromGrid.Should().Be(1755.06);
@@ -48,6 +55,12 @@ namespace P1SmartMeter.Tests.Telegram
             t.PowerReturnedL1.Should().Be(0);
             t.PowerReturnedL2.Should().BeNull();
             t.PowerReturnedL3.Should().BeNull();
+            t.VoltageL1.Should().Be(229.0);
+            t.VoltageL2.Should().BeNull();
+            t.VoltageL3.Should().BeNull();
+            t.CurrentL1.Should().Be(1);
+            t.CurrentL2.Should().BeNull();
+            t.CurrentL3.Should().BeNull();
             t.Electricity1FromGrid.Should().Be(51.775);
             t.Electricity1ToGrid.Should().Be(24.413);
             t.Electricity2FromGrid.Should().Be(0);

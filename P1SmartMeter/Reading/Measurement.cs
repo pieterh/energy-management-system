@@ -16,6 +16,10 @@ namespace P1SmartMeter.Reading
             PowerReturningL2 = t.PowerReturnedL2;
             PowerReturningL3 = t.PowerReturnedL3;
 
+            CurrentL1 = t.CurrentL1;
+            CurrentL2 = t.CurrentL2;
+            CurrentL3 = t.CurrentL3;
+
             Electricity1FromGrid = t.Electricity1FromGrid;
             Electricity1ToGrid = t.Electricity1ToGrid;
             Electricity2FromGrid = t.Electricity2FromGrid;

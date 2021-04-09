@@ -21,6 +21,14 @@
         public const string ActualPowerReturn = "1-0:2.7.0";
         public const string TextMessage = "0-0:96.13.0";
 
+        public const string VoltageL1 = "1-0:32.7.0";
+        public const string VoltageL2 = "1-0:52.7.0";
+        public const string VoltageL3 = "1-0:72.7.0";
+
+        public const string CurrentL1 = "1-0:31.7.0";
+        public const string CurrentL2 = "1-0:51.7.0";
+        public const string CurrentL3 = "1-0:71.7.0";
+
         private TelegramDefinition()
         {
             DefineField("1-3:0.2.8", "Version information", TelegramFieldType.String);
@@ -43,12 +51,12 @@
             DefineField("1-0:52.36.0", "Num voltage swells L2", TelegramFieldType.Numeric);
             DefineField("1-0:72.36.0", "Num voltage swells L3", TelegramFieldType.Numeric);
             DefineField(TextMessage, "Text message", TelegramFieldType.String);
-            DefineField("1-0:32.7.0", "Voltage L1");
-            DefineField("1-0:52.7.0", "Voltage L2");
-            DefineField("1-0:72.7.0", "Voltage L3");
-            DefineField("1-0:31.7.0", "Current L1");
-            DefineField("1-0:51.7.0", "Current L2");
-            DefineField("1-0:71.7.0", "Current L3");
+            DefineField(VoltageL1, "Voltage L1");
+            DefineField(VoltageL2, "Voltage L2");
+            DefineField(VoltageL3, "Voltage L3");
+            DefineField(CurrentL1, "Current L1");
+            DefineField(CurrentL2, "Current L2");
+            DefineField(CurrentL3, "Current L3");
             DefineField(PowerUsedL1, "Power Used L1", TelegramFieldType.NumericWithUnit);
             DefineField(PowerUsedL2, "Power Used L2", TelegramFieldType.NumericWithUnit);
             DefineField(PowerUsedL3, "Power Used L3", TelegramFieldType.NumericWithUnit);
