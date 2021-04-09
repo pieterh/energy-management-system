@@ -9,12 +9,13 @@ namespace P1SmartMeter.Telegram
 {
     public class TelegramBase
     {
-        private static readonly Regex KeyValueParser = new Regex(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$");
-        public IList<TelegramField> Fields { get; } = new List<TelegramField>();
-        public string header { get; private set; }
-        public string crc16 { get; private set; }
+        private static readonly Regex KeyValueParser = new(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$");
 
-        public TelegramBase(TelegramDefinition definition, string raw)
+        public IList<TelegramField> Fields { get; } = new List<TelegramField>();
+        public string Header { get; private set; }
+        public string Crc16 { get; private set; }
+
+        public TelegramBase(ITelegramDefinition definition, string raw)
         {
             var fieldDefinitions = definition.GetFieldDefinitions();
 
@@ -31,20 +32,21 @@ namespace P1SmartMeter.Telegram
             foreach (var line in lines)
             {
                 var m = KeyValueParser.Match(line);
-                TelegramField field;
+                
                 if (!m.Success)
                 {
                     switch (line[0])
                     {
                         case '/':
-                            header = line;
+                            Header = line;
                             break;
                         case '!':
-                            crc16 = line[1..];
+                            Crc16 = line[1..];
                             break;
                         default:
-                            field = new TelegramField(TelegramFieldDefinition.Invalid);
+                            var field = new TelegramField(TelegramFieldDefinition.Invalid);
                             field.AddValue(line);
+                            Fields.Add(field);
                             break;
                     }
                 }
@@ -53,7 +55,7 @@ namespace P1SmartMeter.Telegram
                     var key = m.Groups["key"].Value;
                     var def = fieldDefinitions.SingleOrDefault(x => x.Code == key) ?? TelegramFieldDefinition.Unknown(key);
 
-                    field = new TelegramField(def);
+                    var field = new TelegramField(def);
 
                     foreach (Capture valueMatch in m.Groups["value"].Captures)
                     {

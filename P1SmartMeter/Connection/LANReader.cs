@@ -7,7 +7,7 @@ using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
 {
-    public class LANReader : IP1Interface
+    public class LANReader : IP1Interface                                   //NOSONAR
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;

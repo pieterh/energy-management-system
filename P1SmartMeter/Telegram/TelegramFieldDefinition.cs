@@ -9,12 +9,21 @@ namespace P1SmartMeter.Telegram
     {
         public string Code { get; set; }
         public string Name { get; set; }
-        public IList<TelegramFieldType> Types { get; set; }
+        public IList<TelegramFieldType> Types { get; set; } = new List<TelegramFieldType>();
 
-        public static TelegramFieldDefinition Invalid => new TelegramFieldDefinition
+        public TelegramFieldDefinition() { }
+
+        public TelegramFieldDefinition(string code, string name, IList<TelegramFieldType> types)
+        {
+            Code = code;
+            Name = name;
+            Types = types;
+        }
+        
+        public static TelegramFieldDefinition Invalid => new()
         {
             Code = "invalid",
-            Name = "",
+            Name = string.Empty,
             Types = new[] { TelegramFieldType.Plain }
         };
 
@@ -23,7 +32,7 @@ namespace P1SmartMeter.Telegram
             return new TelegramFieldDefinition
             {
                 Code = code,
-                Name = "",
+                Name = string.Empty,
                 Types = new[] { TelegramFieldType.Plain }
             };
         }
