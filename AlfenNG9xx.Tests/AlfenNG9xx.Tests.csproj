@@ -25,7 +25,4 @@
     <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj">
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
 </Project>

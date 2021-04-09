@@ -2,7 +2,7 @@
 
 namespace P1SmartMeter.Telegram.DSMR
 {
-    public class DSMRTelegram : TelegramBase
+    public class DSMRTelegram : TelegramBase                                //NOSONAR
     {
         public DSMRTelegram(string raw) : base(TelegramDefinition.Instance, raw)
         {
@@ -24,6 +24,14 @@ namespace P1SmartMeter.Telegram.DSMR
             ActualPowerUse = GetValue<(double, string)?>(TelegramDefinition.ActualPowerUse)?.Item1;
             ActualPowerReturn = GetValue<(double, string)?>(TelegramDefinition.ActualPowerReturn)?.Item1;
             TextMessage = GetValue<string>(TelegramDefinition.TextMessage);
+
+            VoltageL1 = GetValue<(double, string)?>(TelegramDefinition.VoltageL1)?.Item1;
+            VoltageL2 = GetValue<(double, string)?>(TelegramDefinition.VoltageL2)?.Item1;
+            VoltageL3 = GetValue<(double, string)?>(TelegramDefinition.VoltageL3)?.Item1;
+
+            CurrentL1 = GetValue<(int, string)?>(TelegramDefinition.CurrentL1)?.Item1;
+            CurrentL2 = GetValue<(int, string)?>(TelegramDefinition.CurrentL2)?.Item1;
+            CurrentL3 = GetValue<(int, string)?>(TelegramDefinition.CurrentL3)?.Item1;
         }
 
         public DateTime? Timestamp { get; }
@@ -50,6 +58,14 @@ namespace P1SmartMeter.Telegram.DSMR
         public double? PowerReturnedL1 { get; }
         public double? PowerReturnedL2 { get; }
         public double? PowerReturnedL3 { get; }
+
+        public double? VoltageL1 { get; }
+        public double? VoltageL2 { get; }
+        public double? VoltageL3 { get; }
+
+        public int? CurrentL1 { get; }
+        public int? CurrentL2 { get; }
+        public int? CurrentL3 { get; }
 
         public override string ToString()
         {
