@@ -1,7 +1,7 @@
 ﻿using System;
 namespace P1SmartMeter.Connection
 {
-    public interface IP1Interface: IDisposable
+    public interface IP1Interface: IDisposable                              //NOSONAR
     {
         void Start();
         void Stop();
