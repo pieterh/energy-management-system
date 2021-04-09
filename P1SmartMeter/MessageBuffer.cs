@@ -14,11 +14,11 @@ namespace P1SmartMeter
         public event EventHandler<DataErrorEventArgs> DataError;
 
         private readonly static int bufferCapacity = 2560; 
-        private readonly byte[] buffer = new byte[bufferCapacity];
+        private readonly byte[] buffer = new byte[BufferCapacity];
         private int position = 0;
 
-        public int BufferCapacity { get => bufferCapacity; }
-        
+        public static int BufferCapacity => bufferCapacity;
+
         public int BufferUsed { get => position; private set => position = value; }
 
         public bool IsEmpty {  get => position == 0; }
@@ -48,17 +48,17 @@ namespace P1SmartMeter
             LoggerP1Stream.Info($"---------- end   ----------");
 
             if (data.Length == 0) return position;
-            if (data.Length > bufferCapacity) throw new ArgumentOutOfRangeException(nameof(data));
+            if (data.Length > BufferCapacity) throw new ArgumentOutOfRangeException(nameof(data));
 
             Encoding ascii = Encoding.ASCII;
 
-            while (bufferCapacity - position < data.Length)
+            while (BufferCapacity - position < data.Length)
             {
                 if (!TryTake(out string removedMessage))
                 {
                     position = 0;
                 }
-                OnDataError(new DataErrorEventArgs() { Message = "buffer overflow", Data = "Data purged from buffer" });
+                OnDataError(new DataErrorEventArgs() { Message = "buffer overflow, data purged from buffer" });
             }
 
             Buffer.BlockCopy(ascii.GetBytes(data), 0, buffer, position, data.Length);
@@ -195,7 +195,9 @@ namespace P1SmartMeter
 
         protected void OnDataError(DataErrorEventArgs e)
         {
-            Logger.Error($"data error {e.Message}{Environment.NewLine}{e.Data}");
+            Logger.Error($"data error {e.Message}");
+            if (!string.IsNullOrWhiteSpace(e.Data))
+                Logger.Error($"{Environment.NewLine}{e.Data}");
 
             EventHandler<DataErrorEventArgs> handler = DataError;
 
