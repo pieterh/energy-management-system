@@ -6,7 +6,8 @@ namespace EMS.Library
 {
     public class Status
     {
-        public bool IsCharging { get; set; }
+        public bool IsCharging { get { return Measurement.VehicleIsCharging; } }
+
         public SocketMeasurementBase Measurement { get; set; }
         public Status(SocketMeasurementBase m)
         {
@@ -30,5 +31,17 @@ namespace EMS.Library
         }
 
         public event EventHandler<StatusUpdateEventArgs> StatusUpdate;
+
+        public class ChargingStateEventArgs : EventArgs
+        {
+            public Status Status { get; set; }
+
+            public ChargingStateEventArgs(SocketMeasurementBase measurement)
+            {
+                Status = new Status(measurement);
+            }
+        }
+
+        public event EventHandler<ChargingStateEventArgs> ChargingStateUpdate;
     }
 }

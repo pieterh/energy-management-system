@@ -28,9 +28,6 @@ namespace EMS
 
         private const int _interval = 10000; //ms
 
-        private const float MinimumChargeCurrent = 6.0f;        // IEC 61851 minimum current
-
-
         public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeter smartMeter, IChargePoint chargePoint)
         {
             Logger = logger;
@@ -53,15 +50,15 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            //c.Mode = Compute.ChargingMode.MaxSolar;
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 var measurememt = _chargePoint.LastSocketMeasurement;
 
                 var ci = new ChargingInfo(
                     measurememt.CurrentL1, measurememt.CurrentL2, measurememt.CurrentL3,
-                    measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);
-
-                c.Mode = Compute.ChargingMode.MaxCharge;
+                    measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);                
 
                 (float l1, float l2, float l3) = c.Charging(Logger, ci);
 
@@ -82,14 +79,16 @@ namespace EMS
         {
             Logger.LogInformation("2. OnStarted has been called.");
 
-            _smartMeter.MeasurementAvailable += _smartMeter_MeasurementAvailable;
+            _smartMeter.MeasurementAvailable += SmartMeter_MeasurementAvailable;
+            _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
         }
 
         private void OnStopping()
         {
             Logger.LogInformation("3. OnStopping has been called.");
 
-            _smartMeter.MeasurementAvailable -= _smartMeter_MeasurementAvailable;
+            _smartMeter.MeasurementAvailable -= SmartMeter_MeasurementAvailable;
+            _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -105,11 +104,15 @@ namespace EMS
             Logger.LogInformation("5. OnStopped has been called.");
         }
 
-        private void _smartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
+        private void SmartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
         {
             Logger.LogInformation($"- {e.Measurement}");
             c.AddMeasurement(e.Measurement);
         }
 
+        private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
+        {
+            Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}");
+        }
     }
 }

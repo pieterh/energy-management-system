@@ -58,7 +58,7 @@ namespace P1SmartMeter
                 {
                     position = 0;
                 }
-                OnDataError(new DataErrorEventArgs() { Message = "buffer overflow", Data = "Data purged from buffer" });
+                OnDataError(new DataErrorEventArgs() { Message = "buffer overflow, data purged from buffer" });
             }
 
             Buffer.BlockCopy(ascii.GetBytes(data), 0, buffer, position, data.Length);
@@ -195,7 +195,9 @@ namespace P1SmartMeter
 
         protected void OnDataError(DataErrorEventArgs e)
         {
-            Logger.Error($"data error {e.Message}{Environment.NewLine}{e.Data}");
+            Logger.Error($"data error {e.Message}");
+            if (!string.IsNullOrWhiteSpace(e.Data))
+                Logger.Error($"{Environment.NewLine}{e.Data}");
 
             EventHandler<DataErrorEventArgs> handler = DataError;
 

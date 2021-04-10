@@ -24,6 +24,7 @@ namespace AlfenNG9xx
 
 
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
+        public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
@@ -90,10 +91,15 @@ namespace AlfenNG9xx
                 {                   
                     var sm = ReadSocketMeasurement(1);
                     Logger.Debug($"{sm}");
-                    LastSocketMeasurement = sm;                    
-                    StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
+                    var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
 
-                    await Task.Delay(5000, stoppingToken);
+                    LastSocketMeasurement = sm;                    
+
+                    StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
+                    if (chargingStateChanged)
+                        ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm));
+
+                    await Task.Delay(2500, stoppingToken);
                 }
                 catch (TaskCanceledException tce)
                 {

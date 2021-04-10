@@ -87,7 +87,7 @@ namespace EMS
             }
             else
             {
-                retval = res <= MinimumChargeCurrent ? MinimumChargeCurrent : res;
+                retval = res <= MinimumChargeCurrent ? 0 : res;
             }
             return retval;
         }
