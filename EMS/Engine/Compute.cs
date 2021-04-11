@@ -22,6 +22,10 @@ namespace EMS
         private const float MaxCurrentMain = 25.0f;
         private const float MaxCurrentChargePoint = 16.0f;
 
+        private ChargingStateMachine _state = new ();
+
+        //private DateTime _lastSolarMax = DateTime.Now;
+
         public Compute()
         {
         }
@@ -72,6 +76,41 @@ namespace EMS
             float retval1 = (float)Math.Round(LimitCurrentSolar(ci.CurrentL1, ci.VoltageL1, avgPowerL1), 2);
             float retval2 = (float)Math.Round(LimitCurrentSolar(ci.CurrentL2, ci.VoltageL2, avgPowerL2), 2);
             float retval3 = (float)Math.Round(LimitCurrentSolar(ci.CurrentL3, ci.VoltageL3, avgPowerL3), 2);
+            
+            if (retval1 < MinimumChargeCurrent)
+            {
+                if (_state.Current != ChargingStateMachine.State.NotCharging)
+                {
+                    if (_state.Pause() == ChargingStateMachine.State.ChargingPaused)
+                    {
+                        retval1 = 0.0f;
+                        Logger?.LogInformation($"Not enough solar power... Stop charging...");
+                    }
+                    else
+                    {
+                        Logger?.LogInformation($"Not enough solar power... Keep charging...");
+                        retval1 = MinimumChargeCurrent;
+                    }
+                }
+                else
+                {
+                    retval1 = 0.0f;
+                }
+            }
+            else {
+                if (_state.Current == ChargingStateMachine.State.ChargingPaused)
+                {
+                    _state.Unpause();
+                }
+                else
+                {
+                    _state.Start();
+                }
+                if (_state.Current != ChargingStateMachine.State.Charging)
+                {
+                    retval1 = 0.0f;
+                }
+            }
 
             Logger?.LogInformation($"{avgPowerL1}, {avgPowerL2}, {avgPowerL3} => {retval1}, {retval2}, {retval3}");
             return (retval1, 0f, 0f);

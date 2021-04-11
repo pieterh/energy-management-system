@@ -288,7 +288,7 @@ namespace AlfenNG9xx
                 if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return;
                 ushort phases;
                 float maxCurrent;
-                if (maxL2 < 0f || maxL3 < 0f)
+                if (maxL2 <= 0f || maxL3 <= 0f)
                 {
                     phases = 1;
                     maxCurrent = maxL1;
@@ -299,6 +299,7 @@ namespace AlfenNG9xx
                     maxCurrent = Math.Min(maxL1, Math.Min(maxL2, maxL3));
                 }
 
+                Logger.Info($"UpdateMaxCurrent {maxCurrent}, {phases}");
                 _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
                 _modbusMaster.WriteRegister(1, 1215, phases);
             }

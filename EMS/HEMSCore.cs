@@ -47,7 +47,7 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //c.Mode = Compute.ChargingMode.MaxSolar;
+            c.Mode = Compute.ChargingMode.MaxSolar;
 
             while (!stoppingToken.IsCancellationRequested)
             {

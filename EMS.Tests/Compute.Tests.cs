@@ -28,7 +28,7 @@ namespace EMS.Test
             mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
         [Fact]
-        public void MaxSolarNotEnoughProduction()
+        public void MaxSolarNotEnoughProduction1()
         {
             var mock = new Mock<Compute>(ChargingMode.MaxSolar);
 
@@ -62,8 +62,44 @@ namespace EMS.Test
             mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.975, 0.212, 0.212, 0, 0, 0));
 
             mock.Object.Charging(null, new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((8.64f, 0, 0));  //4A?
+        }
+        [Fact]
+        public void MaxSolarNotEnoughProduction2()
+        {
+            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
+
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 0, 0, 0.225, 0.165, 0.755, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.219, 0.216, 0.754, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.218, 0.208, 0.752, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.224, 0.208, 0.75, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.222, 0.214, 0.746, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.225, 0.264, 0.701, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.232, 0.272, 0.715, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(2, 1, 1, 0, 0.224, 0.218, 0.375, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(2, 1, 0, 0.341, 0.224, 0.17, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(4, 1, 1, 1.057, 0.216, 0.213, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(7, 1, 0, 1.758, 0.219, 0.162, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(10, 1, 1, 2.495, 0.222, 0.22, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(13, 1, 1, 2.984, 0.217, 0.214, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(13, 1, 1, 2.981, 0.215, 0.21, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(13, 1, 1, 2.984, 0.218, 0.213, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.937, 0.218, 0.29, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.939, 0.217, 0.246, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.945, 0.22, 0.171, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.942, 0.219, 0.191, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.94, 0.217, 0.222, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.938, 0.213, 0.091, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.928, 0.214, 0.102, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.923, 0.215, 0.096, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.972, 0.217, 0.098, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.929, 0.217, 0.218, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.975, 0.214, 0.275, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.976, 0.215, 0.189, 0, 0, 0));
+            mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.975, 0.212, 0.212, 0, 0, 0));
+
             mock.Object.Charging(null, new ChargingInfo(8.64f, 0f, 0f, 230f, 230f, 230f)).Should().Be((0f, 0, 0));
         }
+
         [Fact]
         public void MaxSolarTest2()
         {
