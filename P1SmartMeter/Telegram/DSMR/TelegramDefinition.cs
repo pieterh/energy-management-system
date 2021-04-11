@@ -29,7 +29,7 @@
         public const string CurrentL2 = "1-0:51.7.0";
         public const string CurrentL3 = "1-0:71.7.0";
 
-        private TelegramDefinition()
+        private TelegramDefinition()                                        //NOSONAR
         {
             DefineField("1-3:0.2.8", "Version information", TelegramFieldType.String);
             DefineField(Timestamp, "Timestamp", TelegramFieldType.Timestamp);
@@ -71,7 +71,7 @@
                 DefineField(DeviceXLastReading(device), $"no {device}: Last reading timestamp and value", TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit);
             }
         }
-        public static TelegramDefinition Instance => new TelegramDefinition();
+        public static TelegramDefinition Instance => new();
 
         public static string DeviceXLastReading(int x)
         {

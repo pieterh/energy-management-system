@@ -2,7 +2,7 @@
 
 namespace P1SmartMeter.Telegram.DSMR
 {
-    public class DSMRTelegram : TelegramBase
+    public class DSMRTelegram : TelegramBase                                //NOSONAR
     {
         public DSMRTelegram(string raw) : base(TelegramDefinition.Instance, raw)
         {

@@ -5,7 +5,7 @@ namespace P1SmartMeter
     /**
      * CRC-16-IBM with a reverse polynomial representation (polynomial 0xA001)
      */
-    public class CRC16
+    public class CRC16                                                      //NOSONAR
     {
         private const ushort polynomial = 0xA001;
         private readonly ushort[] _lookupTable = new ushort[256];
@@ -18,7 +18,7 @@ namespace P1SmartMeter
                 ushort temp = i;
                 for (byte j = 0; j < 8; ++j)
                 {
-                    if (((value ^ temp) & 0x0001) != 0)
+                    if (((value ^ temp) & 0x0001) != 0)                     //NOSONAR
                     {
                         value = (ushort)((value >> 1) ^ polynomial);
                     }
@@ -48,7 +48,7 @@ namespace P1SmartMeter
             ushort crc16 = 0;
             for (int i = 0; i < length; ++i)
             {
-                byte index = (byte)(crc16 ^ bytes[i]);
+                byte index = (byte)(crc16 ^ bytes[i]);                      //NOSONAR
                 crc16 = (ushort)((crc16 >> 8) ^ _lookupTable[index]);
             }
             return crc16;

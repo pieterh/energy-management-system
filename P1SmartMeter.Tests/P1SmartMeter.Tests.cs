@@ -177,7 +177,7 @@ namespace P1SmartMeter.Tests
             };
 
             var msg = MsgToString(message_1);
-            while(mock.Object.BufferUsed + msg.Length < mock.Object.BufferCapacity)
+            while(mock.Object.BufferUsed + msg.Length < MessageBuffer.BufferCapacity)
             {
                 mock.Object.Add(msg);
             }
@@ -216,7 +216,7 @@ namespace P1SmartMeter.Tests
             };
             mock.Object.Add(MsgToString(message_1));
             var msg2 = MsgToString(message_2);
-            while (mock.Object.BufferUsed + msg2.Length < mock.Object.BufferCapacity)
+            while (mock.Object.BufferUsed + msg2.Length < MessageBuffer.BufferCapacity)
             {
                 mock.Object.Add(msg2);
             }

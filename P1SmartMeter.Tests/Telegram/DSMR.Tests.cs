@@ -36,7 +36,7 @@ namespace P1SmartMeter.Tests.Telegram
             t.Electricity1ToGrid.Should().Be(781.784);
             t.Electricity2FromGrid.Should().Be(1755.06);
             t.Electricity2ToGrid.Should().Be(1871.581);
-            t.crc16.Should().Be("E1FA");
+            t.Crc16.Should().Be("E1FA");
         }
 
         [Fact]
@@ -65,7 +65,7 @@ namespace P1SmartMeter.Tests.Telegram
             t.Electricity1ToGrid.Should().Be(24.413);
             t.Electricity2FromGrid.Should().Be(0);
             t.Electricity2ToGrid.Should().Be(0);
-            t.crc16.Should().Be("8F46");
+            t.Crc16.Should().Be("8F46");
         }
 
         private static string MsgToString(string[] message)

@@ -1,26 +1,23 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using EMS.Library;
-using System.Collections.Generic;
-using Microsoft.Extensions.Options;
-using EMS.Library.Configuration;
-using System;
-using System.Linq;
 using EMS.Library.Adapter.EVSE;
 
 namespace EMS
 {
 
-    public interface IHEMSCore
+    public interface IHEMSCore                                              //NOSONAR
     {
 
     }
 
-    public class HEMSCore : BackgroundService, IHEMSCore, IHostedService
+    public class HEMSCore : BackgroundService, IHEMSCore, IHostedService    //NOSONAR
     {
-        private readonly Compute c = new (Compute.ChargingMode.MaxCharge);
+        private readonly Compute c = new(Compute.ChargingMode.MaxCharge);
 
         private readonly ILogger Logger;
         private readonly ISmartMeter _smartMeter;
@@ -58,18 +55,18 @@ namespace EMS
 
                 var ci = new ChargingInfo(
                     measurememt.CurrentL1, measurememt.CurrentL2, measurememt.CurrentL3,
-                    measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);                
+                    measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);
 
                 (float l1, float l2, float l3) = c.Charging(Logger, ci);
 
                 try
                 {
-                    _chargePoint.UpdateMaxCurrent( l1,  l2,  l3);
+                    _chargePoint.UpdateMaxCurrent(l1, l2, l3);
                 }
                 catch (Exception e)
                 {
                     Logger.LogError(e, "while update max current");
-                }                
+                }
 
                 await Task.Delay(_interval, stoppingToken);
             }
