@@ -1,0 +1,159 @@
+﻿using System;
+using System.Linq;
+using EMS.Engine;
+using EMS.Library;
+using EMS.Library.Adapter.EVSE;
+using Microsoft.Extensions.Logging;
+
+namespace EMS
+{
+    public class Compute
+    {
+        public enum ChargingMode { MaxCharge, MaxSolar };
+
+        private static readonly NLog.Logger LoggerState = NLog.LogManager.GetLogger("chargingstate");
+
+        private readonly ILogger Logger;
+        public ChargingMode Mode { get; set; } = ChargingMode.MaxCharge;
+
+        private readonly Measurements _measurements = new();
+
+        public const ushort MinimumDataPoints = 10;
+
+        private const double MinimumChargeCurrent = 6.0f;            // IEC 61851 minimum current
+        private const double MaxCurrentMain = 25.0f;
+        private const double MaxCurrentChargePoint = 16.0f;
+
+        private readonly ChargingStateMachine _state = new ();
+
+        public Compute(ILogger logger, ChargingMode mode)
+        {
+            Logger = logger;
+            Mode = mode;
+        }
+
+        public (double, double, double) Charging(ChargingInfo ci)
+        {
+            switch (Mode)
+            {
+                case ChargingMode.MaxCharge:
+                    return MaxCharging(ci);                
+                case ChargingMode.MaxSolar:
+                    return MaxSolar(ci);
+                default:
+                    return (-1, -1, -1);
+            }
+        }
+
+        private (double, double, double) MaxCharging(ChargingInfo ci)
+        {
+            var m = _measurements.Get();
+            if (ci == null || m.Length < MinimumDataPoints) return ( -1, -1, -1);
+
+            var avgCurrentUsingL1 = m.Average(x => x.CurrentL1).Value;
+            var avgCurrentUsingL2 = m.Average(x => x.CurrentL2).Value;
+            var avgCurrentUsingL3 = m.Average(x => x.CurrentL3).Value;
+
+            var retval1 = (float)Math.Round(LimitCurrent(ci.CurrentL1, avgCurrentUsingL1), 2);
+            var retval2 = (float)Math.Round(LimitCurrent(ci.CurrentL2, avgCurrentUsingL2), 2);
+            var retval3 = (float)Math.Round(LimitCurrent(ci.CurrentL3, avgCurrentUsingL3), 2);
+
+            Logger?.LogInformation($"{(float)Math.Round(avgCurrentUsingL1, 2)}, {(float)Math.Round(avgCurrentUsingL2, 2)}, {(float)Math.Round(avgCurrentUsingL3, 2)} => {retval1}, {retval2}, {retval3}");
+            return (retval1, retval2, retval3);
+        }
+
+        private (double, double, double) MaxSolar(ChargingInfo ci)
+        {
+            var m = _measurements.Get();
+            if (ci == null || m.Length < MinimumDataPoints) return (-1, -1, -1);
+
+            var stateHasChanged = false;
+
+            var avgCurrentUsingL1 = m.Average(x => x.CurrentL1).Value;
+            var avgCurrentUsingL2 = m.Average(x => x.CurrentL2).Value;
+            var avgCurrentUsingL3 = m.Average(x => x.CurrentL3).Value;
+
+            var avgCurrent = avgCurrentUsingL1 + avgCurrentUsingL2 + avgCurrentUsingL3;
+
+            var retval = Math.Round(LimitCurrentSolar(ci.CurrentL1, avgCurrent), 2);
+            
+            if (retval < MinimumChargeCurrent)
+            {
+                if (_state.Current != ChargingStateMachine.State.NotCharging)
+                {                   
+                    if ((_state.Current == ChargingStateMachine.State.ChargingPaused) || (stateHasChanged = _state.Pause()))
+                    {
+                        retval = 0.0;
+                        Logger?.LogInformation($"Not enough solar power... Stop charging...");
+                        //stateHasChanged = true;
+                    }
+                    else
+                    {
+                        Logger?.LogInformation($"Not enough solar power... Keep charging...");
+                        retval = MinimumChargeCurrent;
+                    }
+                }
+                else
+                {
+                    retval = 0.0;
+                }
+            }
+            else {
+                if (_state.Current == ChargingStateMachine.State.ChargingPaused)
+                {
+                    stateHasChanged = _state.Unpause();
+                }
+                else
+                {
+                    stateHasChanged = _state.Start();
+                }
+                if (_state.Current != ChargingStateMachine.State.Charging)
+                {
+                    retval = 0.0;
+                }
+            }
+
+            Logger?.LogInformation($"{(float)Math.Round(avgCurrentUsingL1, 2)}, {(float)Math.Round(avgCurrentUsingL2, 2)}, {(float)Math.Round(avgCurrentUsingL3, 2)} => {retval}, {stateHasChanged}, {_state.Current}");
+
+            if (stateHasChanged)
+            {
+                LoggerState.Info($"State changed {_state.Current}");
+            }
+            
+            return ((float)Math.Round(retval, 2), 0, 0);
+        }
+
+        private static double LimitCurrent(double c, double avgCurrentUsing)
+        {
+            var res = c + (MaxCurrentMain - avgCurrentUsing);
+            double retval;
+            if (res >= MaxCurrentChargePoint)
+            {
+                retval = MaxCurrentChargePoint;
+            }
+            else
+            {
+                retval = res <= MinimumChargeCurrent ? 0.0 : res;
+            }
+            return retval;
+        }
+
+        private static double LimitCurrentSolar(float c, double avgCurrentFromGrid)
+        {
+            var res = c - avgCurrentFromGrid;
+
+            double retval;
+            if (res >= MaxCurrentChargePoint) {
+                retval = MaxCurrentChargePoint;
+            } else {
+                retval = res <= MinimumChargeCurrent ? 0.0 : res;
+            }
+            return retval;
+        }
+
+        public void AddMeasurement(MeasurementBase m)
+        {
+            _measurements.Add(m);
+        }
+    }
+}
