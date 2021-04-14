@@ -82,6 +82,7 @@ namespace EMS.Library
                 _backgroundTask = null;
             }
         }
+
         private void WaitForBackgroundTaskToFinish()
         {
             var timeOut = 5000;
@@ -92,18 +93,12 @@ namespace EMS.Library
                 waitingTime += delayTime;
             }
         }
+
         private void DisposeTokenSource()
         {
-            if (_tokenSource == null) return;
-
-            try
-            {
-                _tokenSource.Cancel();
-            }
-            finally
-            {
-                _tokenSource = null;
-            }
+            _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
+            _tokenSource = null;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

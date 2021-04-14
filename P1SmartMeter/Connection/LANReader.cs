@@ -104,8 +104,8 @@ namespace P1SmartMeter.Connection
 
         private void DisposeTokenSource()
         {
-            if (_tokenSource == null) return;
             _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
             _tokenSource = null;
         }
 
@@ -133,7 +133,10 @@ namespace P1SmartMeter.Connection
 
         public virtual void Stop()
         {
+            if (_tokenSource == null) return;
             _tokenSource?.Cancel();
+            // wait for background task to finish. but not to long...
+            Task.WaitAll(new Task[] { BackgroundTask }, 500);
         }
 
         private void Run()

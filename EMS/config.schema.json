@@ -70,6 +70,12 @@
           ]
         }
       ]
+    },
+    "web": {
+      "type": "object",
+      "port": {
+        "type": "number"
+      }
     }
   },
   "required": [

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using EMS.Library;
 using EMS.Library.Adapter.EVSE;
+using EMS.Engine;
 
 namespace EMS
 {
@@ -17,7 +18,8 @@ namespace EMS
 
     public class HEMSCore : BackgroundService, IHEMSCore, IHostedService    //NOSONAR
     {
-        private readonly Compute c = new(Compute.ChargingMode.MaxCharge);
+        private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
+        private readonly Compute _compute;
 
         private readonly ILogger Logger;
         private readonly ISmartMeter _smartMeter;
@@ -31,6 +33,8 @@ namespace EMS
 
             _smartMeter = smartMeter;
             _chargePoint = chargePoint;
+
+            _compute = new(logger, Compute.ChargingMode.MaxCharge);
 
             appLifetime.ApplicationStarted.Register(OnStarted);
             appLifetime.ApplicationStopping.Register(OnStopping);
@@ -47,7 +51,7 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            c.Mode = Compute.ChargingMode.MaxSolar;
+            _compute.Mode = Compute.ChargingMode.MaxSolar;
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -57,8 +61,8 @@ namespace EMS
                     measurememt.CurrentL1, measurememt.CurrentL2, measurememt.CurrentL3,
                     measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);
 
-                (float l1, float l2, float l3) = c.Charging(Logger, ci);
-
+                (float l1, float l2, float l3) = _compute.Charging(ci);
+               
                 try
                 {
                     _chargePoint.UpdateMaxCurrent(l1, l2, l3);
@@ -104,12 +108,13 @@ namespace EMS
         private void SmartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
         {
             Logger.LogInformation($"- {e.Measurement}");
-            c.AddMeasurement(e.Measurement);
+            _compute.AddMeasurement(e.Measurement);
         }
 
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
         {
             Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}");
+            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3StateMessage}");
         }
     }
 }

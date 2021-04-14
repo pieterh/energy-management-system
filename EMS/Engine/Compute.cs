@@ -11,10 +11,12 @@ namespace EMS
     {
         public enum ChargingMode { MaxCharge, MaxSolar };
 
+        private static readonly NLog.Logger LoggerState = NLog.LogManager.GetLogger("chargingstate");
+
+        private readonly ILogger Logger;
+        public ChargingMode Mode { get; set; } = ChargingMode.MaxCharge;
 
         private readonly Measurements _measurements = new();
-
-        public ChargingMode Mode { get; set; } = ChargingMode.MaxCharge;
 
         public const ushort MinimumDataPoints = 10;
 
@@ -22,33 +24,28 @@ namespace EMS
         private const float MaxCurrentMain = 25.0f;
         private const float MaxCurrentChargePoint = 16.0f;
 
-        private ChargingStateMachine _state = new ();
+        private readonly ChargingStateMachine _state = new ();
 
-        //private DateTime _lastSolarMax = DateTime.Now;
-
-        public Compute()
+        public Compute(ILogger logger, ChargingMode mode)
         {
-        }
-
-        public Compute(ChargingMode mode)
-        {
+            Logger = logger;
             Mode = mode;
         }
 
-        public (float, float, float) Charging(ILogger Logger, ChargingInfo ci)
+        public (float, float, float) Charging(ChargingInfo ci)
         {
             switch (Mode)
             {
                 case ChargingMode.MaxCharge:
-                    return MaxCharging(Logger, ci);                
+                    return MaxCharging(ci);                
                 case ChargingMode.MaxSolar:
-                    return MaxSolar(Logger, ci);
+                    return MaxSolar(ci);
                 default:
                     return (-1, -1, -1);
             }
         }
 
-        private (float, float, float) MaxCharging(ILogger Logger,  ChargingInfo ci)
+        private (float, float, float) MaxCharging(ChargingInfo ci)
         {
             var m = _measurements.Get();
             if (ci == null || m.Length < MinimumDataPoints) return ( -1, -1, -1);
@@ -64,10 +61,12 @@ namespace EMS
             return (retval1, retval2, retval3);
         }
 
-        private (float, float, float) MaxSolar(ILogger Logger, ChargingInfo ci)
+        private (float, float, float) MaxSolar(ChargingInfo ci)
         {
             var m = _measurements.Get();
             if (ci == null || m.Length < MinimumDataPoints) return (-1, -1, -1);
+
+            var stateHasChanged = false;
 
             var avgPowerL1 = (float)m.Average(x => x.PowerL1).Value;
             var avgPowerL2 = (float)m.Average(x => x.PowerL2).Value;
@@ -80,11 +79,12 @@ namespace EMS
             if (retval1 < MinimumChargeCurrent)
             {
                 if (_state.Current != ChargingStateMachine.State.NotCharging)
-                {
-                    if (_state.Pause() == ChargingStateMachine.State.ChargingPaused)
+                {                   
+                    if (stateHasChanged = _state.Pause())
                     {
                         retval1 = 0.0f;
                         Logger?.LogInformation($"Not enough solar power... Stop charging...");
+                        //stateHasChanged = true;
                     }
                     else
                     {
@@ -100,11 +100,11 @@ namespace EMS
             else {
                 if (_state.Current == ChargingStateMachine.State.ChargingPaused)
                 {
-                    _state.Unpause();
+                    stateHasChanged = _state.Unpause();
                 }
                 else
                 {
-                    _state.Start();
+                    stateHasChanged = _state.Start();
                 }
                 if (_state.Current != ChargingStateMachine.State.Charging)
                 {
@@ -112,7 +112,12 @@ namespace EMS
                 }
             }
 
-            Logger?.LogInformation($"{avgPowerL1}, {avgPowerL2}, {avgPowerL3} => {retval1}, {retval2}, {retval3}");
+            Logger?.LogInformation($"{avgPowerL1}, {avgPowerL2}, {avgPowerL3} => {retval1}, {retval2}, {retval3}, {stateHasChanged}, {_state.Current}");
+            if (stateHasChanged)
+            {
+                LoggerState.Info($"State changed {_state.Current}");
+            }
+
             return (retval1, 0f, 0f);
         }
 

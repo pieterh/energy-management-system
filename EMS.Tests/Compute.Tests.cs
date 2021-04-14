@@ -14,23 +14,23 @@ namespace EMS.Test
         [Fact]
         public void SolarHandlesMeasurementArrayNull()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
-            mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
+            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            mock.Object.Charging(new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
         [Fact]
         public void SolarHandlesLessThenMinimum()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
 
             for (int i = 0; i < Compute.MinimumDataPoints - 1; i++)
                 mock.Object.AddMeasurement(new MeasurementBase(10, 0, 0, 0, 0, 0, 0, 0, 0));
 
-            mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
+            mock.Object.Charging(new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
         [Fact]
         public void MaxSolarNotEnoughProduction1()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
 
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 0, 0, 0.225, 0.165, 0.755, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.219, 0.216, 0.754, 0, 0));
@@ -61,12 +61,12 @@ namespace EMS.Test
             mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.976, 0.215, 0.189, 0, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.975, 0.212, 0.212, 0, 0, 0));
 
-            mock.Object.Charging(null, new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((8.64f, 0, 0));  //4A?
+            mock.Object.Charging(new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((8.64f, 0, 0));  //4A?
         }
         [Fact]
         public void MaxSolarNotEnoughProduction2()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
 
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 0, 0, 0.225, 0.165, 0.755, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 1, 0, 0.219, 0.216, 0.754, 0, 0));
@@ -97,13 +97,13 @@ namespace EMS.Test
             mock.Object.AddMeasurement(new MeasurementBase(12, 1, 0, 2.976, 0.215, 0.189, 0, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(12, 1, 1, 2.975, 0.212, 0.212, 0, 0, 0));
 
-            mock.Object.Charging(null, new ChargingInfo(8.64f, 0f, 0f, 230f, 230f, 230f)).Should().Be((0f, 0, 0));
+            mock.Object.Charging(new ChargingInfo(8.64f, 0f, 0f, 230f, 230f, 230f)).Should().Be((0f, 0, 0));
         }
 
         [Fact]
         public void MaxSolarTest2()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
 
             mock.Object.AddMeasurement(new MeasurementBase(11, 0, 0, 0, 0.146, 0.096, 2.822, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(11, 0, 0, 0, 0.146, 0.096, 2.822, 0, 0));
@@ -119,12 +119,12 @@ namespace EMS.Test
             mock.Object.AddMeasurement(new MeasurementBase(11, 0, 0, 0, 0.146, 0.096, 2.822, 0, 0));
 
 
-            mock.Object.Charging(null, new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((12.27f, 0, 0));
+            mock.Object.Charging(new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((12.27f, 0, 0));
         }
         [Fact]
         public void MaxSolarTest3()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxSolar);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
 
             mock.Object.AddMeasurement(new MeasurementBase(3, 0, 0, 0, 0.146, 0.096, 0.750, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(3, 0, 0, 0, 0.146, 0.096, 0.750, 0, 0));
@@ -140,13 +140,13 @@ namespace EMS.Test
             mock.Object.AddMeasurement(new MeasurementBase(3, 0, 0, 0, 0.146, 0.096, 0.750, 0, 0));
 
 
-            mock.Object.Charging(null, new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((0.0f, 0, 0), "we are not charging and return is not enough to charge");
-            mock.Object.Charging(null, new ChargingInfo(6f, 0f, 0f, 230f, 230f, 230f)).Should().Be((9.26f, 0, 0), "we are charging at 6A, so we can increase charging");
-            mock.Object.Charging(null, new ChargingInfo(8f, 0f, 0f, 230f, 230f, 230f)).Should().Be((11.26f, 0, 0), "we are charging at 8A, so we can increase charging");
-            mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((13.26f, 0, 0), "we are charging at 10A, so we can increase charging");
-            mock.Object.Charging(null, new ChargingInfo(12f, 0f, 0f, 230f, 230f, 230f)).Should().Be((15.26f, 0, 0), "we are charging at 12A, so we can increase charging");
-            mock.Object.Charging(null, new ChargingInfo(14f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16.0f, 0, 0), "we are charging at 14A, so we can increase charging to the max");
-            mock.Object.Charging(null, new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16.0f, 0, 0), "we are charging at 16A, so we are already at the max");
+            mock.Object.Charging(new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((0.0f, 0, 0), "we are not charging and return is not enough to charge");
+            mock.Object.Charging(new ChargingInfo(6f, 0f, 0f, 230f, 230f, 230f)).Should().Be((9.26f, 0, 0), "we are charging at 6A, so we can increase charging");
+            mock.Object.Charging(new ChargingInfo(8f, 0f, 0f, 230f, 230f, 230f)).Should().Be((11.26f, 0, 0), "we are charging at 8A, so we can increase charging");
+            mock.Object.Charging(new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((13.26f, 0, 0), "we are charging at 10A, so we can increase charging");
+            mock.Object.Charging(new ChargingInfo(12f, 0f, 0f, 230f, 230f, 230f)).Should().Be((15.26f, 0, 0), "we are charging at 12A, so we can increase charging");
+            mock.Object.Charging(new ChargingInfo(14f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16.0f, 0, 0), "we are charging at 14A, so we can increase charging to the max");
+            mock.Object.Charging(new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16.0f, 0, 0), "we are charging at 16A, so we are already at the max");
         }
     }
     public class ComputeMaxCharge
@@ -155,24 +155,24 @@ namespace EMS.Test
         [Fact]
         public void MaxChargeHandlesMeasurementArrayNull()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
-            mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            mock.Object.Charging(new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
         [Fact]
         public void MaxChargeHandlesLessThenMinimum()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
 
             for (int i = 0; i < Compute.MinimumDataPoints - 1; i++)
                 mock.Object.AddMeasurement(new MeasurementBase(10, 0, 0, 0, 0, 0, 0, 0, 0));
 
-            mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
+            mock.Object.Charging(new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
 
         [Fact]
         public void MaxChargeNotChargingYet()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
 
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 9, 0, 0.221, 2.158, 0.778, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 9, 0, 0.221, 2.169, 0.778, 0, 0));
@@ -203,53 +203,53 @@ namespace EMS.Test
             mock.Object.AddMeasurement(new MeasurementBase(2, 1, 9, 0.473, 0.222, 2.146, 0, 0, 0));
             mock.Object.AddMeasurement(new MeasurementBase(3, 1, 9, 0, 0.226, 2.177, 0.785, 0, 0));
 
-            mock.Object.Charging(null, new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f), "Because that is the maximum we can charge");
+            mock.Object.Charging(new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f), "Because that is the maximum we can charge");
         }
 
         [Fact]
         public void MaxChargingTest1()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
 
             AddSamplesLoadSinglePhase1(mock.Object);
 
-            mock.Object.Charging(null, new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f));
+            mock.Object.Charging(new ChargingInfo(16f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f));
         }
 
         [Fact]
         public void MaxChargingTest2()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
 
             AddSamplesLoadSinglePhase2(mock.Object);
 
-            mock.Object.Charging(null, new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((7.43f, 16f, 16f));
-            mock.Object.Charging(null, new ChargingInfo(4f, 0f, 0f, 230f, 230f, 230f)).Should().Be((11.43f, 16f, 16f));
-            mock.Object.Charging(null, new ChargingInfo(8f, 0f, 0f, 230f, 230f, 230f)).Should().Be((15.43f, 16f, 16f));
-            mock.Object.Charging(null, new ChargingInfo(9f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f));
-            mock.Object.Charging(null, new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f));
+            mock.Object.Charging(new ChargingInfo(0f, 0f, 0f, 230f, 230f, 230f)).Should().Be((7.43f, 16f, 16f));
+            mock.Object.Charging(new ChargingInfo(4f, 0f, 0f, 230f, 230f, 230f)).Should().Be((11.43f, 16f, 16f));
+            mock.Object.Charging(new ChargingInfo(8f, 0f, 0f, 230f, 230f, 230f)).Should().Be((15.43f, 16f, 16f));
+            mock.Object.Charging(new ChargingInfo(9f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f));
+            mock.Object.Charging(new ChargingInfo(10f, 0f, 0f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f));
         }
 
         [Fact]
         public void MaxChargingHandlesLoad()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
 
             AddSamplesLoad(mock.Object);
-            mock.Object.Charging(null, new ChargingInfo(16f, 16f, 16f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f), "a");
-            mock.Object.Charging(null, new ChargingInfo(10f, 10f, 10f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f), "b");
-            mock.Object.Charging(null, new ChargingInfo(8f, 8f, 8f, 230f, 230f, 230f)).Should().Be((14f, 16f, 16f), "c");
-            mock.Object.Charging(null, new ChargingInfo(6f, 6f, 6f, 230f, 230f, 230f)).Should().Be((12f, 16f, 16f), "d");
+            mock.Object.Charging(new ChargingInfo(16f, 16f, 16f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f), "a");
+            mock.Object.Charging(new ChargingInfo(10f, 10f, 10f, 230f, 230f, 230f)).Should().Be((16f, 16f, 16f), "b");
+            mock.Object.Charging(new ChargingInfo(8f, 8f, 8f, 230f, 230f, 230f)).Should().Be((14f, 16f, 16f), "c");
+            mock.Object.Charging(new ChargingInfo(6f, 6f, 6f, 230f, 230f, 230f)).Should().Be((12f, 16f, 16f), "d");
         }
 
         [Fact]
         public void MaxChargingHandlesOverloading()
         {
-            var mock = new Mock<Compute>(ChargingMode.MaxCharge);
+            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
 
             AddSamplesOverload(mock.Object);
-            mock.Object.Charging(null, new ChargingInfo(16f, 16f, 16f, 230f, 230f, 230f)).Should().Be((16f, 16f, 0f));
-            mock.Object.Charging(null, new ChargingInfo(10f, 10f, 10f, 230f, 230f, 230f)).Should().Be((16f, 16f, 0f));
+            mock.Object.Charging(new ChargingInfo(16f, 16f, 16f, 230f, 230f, 230f)).Should().Be((16f, 16f, 0f));
+            mock.Object.Charging(new ChargingInfo(10f, 10f, 10f, 230f, 230f, 230f)).Should().Be((16f, 16f, 0f));
         }
 
 

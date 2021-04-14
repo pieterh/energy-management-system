@@ -102,6 +102,7 @@ namespace P1SmartMeter
 
         private void DisposeReader()
         {
+            _reader?.Stop();
             _reader?.Dispose();
             _reader = null;
         }

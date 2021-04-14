@@ -1,8 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using NLog.Extensions.Logging;
 using EMS.Library.Configuration;
+using EMS.WebHost;
 
 namespace EMS
 {
@@ -47,15 +48,16 @@ namespace EMS
 
         static IHost CreateHost(Options options)
         {
-
+            
             var t = Host.CreateDefaultBuilder()
-                .ConfigureAppConfiguration((hostingContext, configuration) =>
+                .ConfigureAppConfiguration((builderContext, configuration) =>
                 {
+                    IHostEnvironment env = builderContext.HostingEnvironment;
+                    Logger.Info($"Hosting environment: {env.EnvironmentName}");
+
                     if (ConfigurationManager.ValidateConfig(options.ConfigFile))
                     {
                         configuration.Sources.Clear();
-
-                        IHostEnvironment env = hostingContext.HostingEnvironment;
 
                         configuration
                            .AddJsonFile("config.json", optional: false, reloadOnChange: false)
@@ -65,33 +67,53 @@ namespace EMS
                         Logger.Error("There was an error with the configuration file");
 
                 })
-            .ConfigureLogging((ILoggingBuilder logBuilder) =>
-            {
-                logBuilder.ClearProviders();
-                logBuilder.SetMinimumLevel(LogLevel.Trace);
-                logBuilder.AddNLog(options.NLogConfig);
-            })
-            .ConfigureServices((hostContext, services) =>
-             {
+                .ConfigureLogging((ILoggingBuilder logBuilder) =>
+                {
+                    logBuilder.ClearProviders();
+                    logBuilder.SetMinimumLevel(LogLevel.Trace);
+                    logBuilder.AddNLog(options.NLogConfig);
+                })
+                .ConfigureServices((builderContext, services) =>
+                {
 
-                 services.Configure<List<Adapter>>(hostContext.Configuration.GetSection("adapters"));
-                 services.Configure<List<EMS.Library.Configuration.Instance>>(hostContext.Configuration.GetSection("instances"));
+                    //services.Configure<List<Adapter>>(hostingContext.Configuration.GetSection("adapters"));
+                    //services.Configure<List<Instance>>(hostingContext.Configuration.GetSection("instances"));
+                    //services.Configure<WebConfig>(hostingContext.Configuration.GetSection("web"));
 
-                 ConfigureInstances(hostContext, services);
 
-                 services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<HEMSCore>(x));
-             }).Build();
+                    ConfigureInstances(builderContext, services);
+
+                    services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<HEMSCore>(x));
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseKestrel((builderContext, kestrelOptions) =>
+                    {
+                        //kestrelOptions.Configure(
+                        // builderContext.Configuration.GetSection("Kestrel"), reloadOnChange: false);
+
+                        WebConfig wc = new();
+                        builderContext.Configuration.GetSection("web").Bind(wc);
+
+                        kestrelOptions.ListenLocalhost(wc.Port, builder =>
+                        {
+                            builder.UseHttps();
+                        });
+                    });
+
+                    webBuilder.UseStartup<Startup>();
+                }).Build();
 
             return t;
         }
 
-        private static void ConfigureInstances(HostBuilderContext hostContext, IServiceCollection services)
+        private static void ConfigureInstances(HostBuilderContext hostingContext, IServiceCollection services)
         {
             var adapters = new List<Adapter>();
-            hostContext.Configuration.GetSection("adapters").Bind(adapters);
+            hostingContext.Configuration.GetSection("adapters").Bind(adapters);
 
             var instances = new List<Instance>();
-            hostContext.Configuration.GetSection("instances").Bind(instances);
+            hostingContext.Configuration.GetSection("instances").Bind(instances);
 
             foreach (var instance in instances)
             {
@@ -107,7 +129,7 @@ namespace EMS
 
                 Logger.Debug($"Instance [{instance.Name}], configuring services");
                 adapterType.GetMethod("ConfigureServices", BindingFlags.Static | BindingFlags.Public)
-                                .Invoke(null, new object[] { hostContext, services, instance });
+                                .Invoke(null, new object[] { hostingContext, services, instance });
                 Logger.Debug($"Instance [{instance.Name}], configuring services done");
             }
         }
@@ -122,6 +144,7 @@ namespace EMS
             return null;
         }
     }
+
 }
 
 
