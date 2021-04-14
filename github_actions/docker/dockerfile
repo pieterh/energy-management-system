@@ -1,4 +1,5 @@
-from mcr.microsoft.com/dotnet/runtime
+
+from mcr.microsoft.com/dotnet/aspnet:latest
 
 RUN mkdir /app
 RUN mkdir /app/ems
@@ -7,10 +8,13 @@ RUN chmod ugo+x /app/ems
 RUN chmod ugo+r /app
 RUN chmod ugo+r /app/ems
 
-COPY EMS/bin/Release/net5.0/ /app/ems/
+COPY backend/EMS/bin/Release/net5.0/ /app/ems/
 RUN rm /app/ems/NLog.config
 RUN rm /app/ems/config.json
 RUN ls -la /app/ems
+COPY frontend/EMS.ReactApp/dist/ /app/ems/dist/
+RUN ls -la /app/ems/dist
+RUN ls -la /app/ems/dist/app
 
 COPY github_actions/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "adapters": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [ "chargepoint", "smartmeter" ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "driver": {
+              "type": "object",
+              "properties": {
+                "assembly": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assembly",
+                "type"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "name",
+            "driver"
+          ]
+        }
+      ]
+    },
+    "instances": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "adapterid": {
+              "type": "string"
+            },
+            "config": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "adapterid",
+            "config"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "type": "object",
+      "port": {
+        "type": "number"
+      }
+    }
+  },
+  "required": [
+    "adapters",
+    "instances"
+  ]
+}
