@@ -2,8 +2,9 @@ ems.suo
 .DS_Store
 **/obj
 **/bin
-.vscode/solution-explorer/
-.vs/
+**/dist
+**/.vscode/solution-explorer/
+**/.vs/
 **/TestResults
 coverage.opencover.xml
 EMS/ems.csproj.user

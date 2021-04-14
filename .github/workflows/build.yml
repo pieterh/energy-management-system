@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -12,19 +11,38 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '15.x'
+        registry-url: 'https://registry.npmjs.org'
     - name: Setup .NET Core SDK ${{ matrix.dotnet }}
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Install dependencies
       run: dotnet restore
+      working-directory: backend
     - name: Build
       run: dotnet build --configuration Release --no-restore
+      working-directory: backend
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-    - name: Build the Docker image $GITHUB_SHA
+      working-directory: backend
+    - name: Install yarn
+      run: npm install --global yarn
+      working-directory: frontend/EMS.ReactApp
+    - name: Upgrade packages using yarn
+      run: yarn upgrade
+      working-directory: frontend/EMS.ReactApp
+    - name: Build  
+      run: npm run build
+      working-directory: frontend/EMS.ReactApp
+    - name: Build the docker image $GITHUB_SHA
       run: |
         echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
         docker build . --file github_actions/docker/dockerfile --tag docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
+    - name: Push the docker image $GITHUB_SHA
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io       
         docker push docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
-          echo test, and deploy your project.
