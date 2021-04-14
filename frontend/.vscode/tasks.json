@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "start",
+			"path": "EMS.ReactApp/",
+			"problemMatcher": [],
+			"label": "npm: start - EMS.ReactApp",
+			"detail": "webpack serve --config webpack.dev.js"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "EMS.ReactApp/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - EMS.ReactApp",
+			"detail": "webpack --config webpack.prod.js"
+		}
+	]
+}
