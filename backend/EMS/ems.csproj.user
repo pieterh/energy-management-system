@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
+    <StartAction>Project</StartAction>
+    <StartArguments>--config config.json --nlogcfg NLog.config</StartArguments>
+    <ExternalConsole>true</ExternalConsole>
+    <EnvironmentVariables>
+      <Variable name="ASPNETCORE_ENVIRONMENT" value="Development" xmlns="" />
+    </EnvironmentVariables>
+    <MonoDebugMode>false</MonoDebugMode>
+    <MonoDebugCasts>false</MonoDebugCasts>
+    <MonoDebugMdbOptimizations>false</MonoDebugMdbOptimizations>
+    <MonoGdbInfo>false</MonoGdbInfo>
+    <MonoProfile></MonoProfile>
+    <MonoVerboseLevel>0</MonoVerboseLevel>
+    <MonoRuntimeVersion></MonoRuntimeVersion>
+    <MonoSecurityMode>Disabled</MonoSecurityMode>
+    <MonoVerifyAll>false</MonoVerifyAll>
+    <MonoTraceExpressions></MonoTraceExpressions>
+    <MonoLogLevel>Default</MonoLogLevel>
+    <MonoLogMask>None</MonoLogMask>
+    <MonoXmlSerializerGeneration></MonoXmlSerializerGeneration>
+    <MonoConfigDir></MonoConfigDir>
+    <MonoConfigFile></MonoConfigFile>
+    <MonoDisableAIO>false</MonoDisableAIO>
+    <MonoDisableManagedCollation>false</MonoDisableManagedCollation>
+    <MonoExternalEncodings></MonoExternalEncodings>
+    <MonoGacPrefix></MonoGacPrefix>
+    <MonoStripDriveLetters>false</MonoStripDriveLetters>
+    <MonoCaseInsensitivePaths>false</MonoCaseInsensitivePaths>
+    <MonoManagedWatcher>false</MonoManagedWatcher>
+    <MonoNoSmp>false</MonoNoSmp>
+    <MonoPath></MonoPath>
+    <MonoWindowsFormsTheme></MonoWindowsFormsTheme>
+    <MonoThreadsPerCpu></MonoThreadsPerCpu>
+    <MonoAspNetNoDelete>false</MonoAspNetNoDelete>
+    <MonoTraceListener></MonoTraceListener>
+    <MonoXExceptions>false</MonoXExceptions>
+  </PropertyGroup>
+</Project>
