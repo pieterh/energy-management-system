@@ -58,9 +58,9 @@ namespace EMS
                     if (ConfigurationManager.ValidateConfig(options.ConfigFile))
                     {
                         configuration.Sources.Clear();
-
+                        
                         configuration
-                           .AddJsonFile("config.json", optional: false, reloadOnChange: false)
+                           .AddJsonFile(options.ConfigFile, optional: false, reloadOnChange: false)
                            .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
                     }
                     else
@@ -97,7 +97,8 @@ namespace EMS
 
                         kestrelOptions.ListenLocalhost(wc.Port, builder =>
                         {
-                            builder.UseHttps();
+                            if (!builderContext.HostingEnvironment.IsDevelopment())
+                                builder.UseHttps();
                         });
                     });
 

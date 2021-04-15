@@ -45,11 +45,11 @@ namespace EMS.WebHost
 
             services.AddControllers();
 
-            // In production, the React files will be served from this directory
-            //services.AddSpaStaticFiles(configuration =>
-            //{
-            //    configuration.RootPath = "ClientApp/dist";
-            //});
+            //In production, the React files will be served from this directory
+            services.AddSpaStaticFiles(configuration =>
+            {
+                configuration.RootPath = "dist";
+            });
 
             //services
             //  .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)              
@@ -99,7 +99,9 @@ namespace EMS.WebHost
 
             var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
 
-            app.UseHttpsRedirection();
+            if (!Env.IsDevelopment())
+                app.UseHttpsRedirection();
+
             app.UseDefaultFiles();
 
             app.UseStaticFiles();
@@ -120,8 +122,8 @@ namespace EMS.WebHost
             {
                 if (Env.IsDevelopment())
                 {
-                    // Make sure you have started the frontend with npm run dev on port 4000
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
+                    // Make sure you have started the frontend with npm run dev on port 5010
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
                 }
             });
 
