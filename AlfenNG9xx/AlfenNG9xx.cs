@@ -19,9 +19,10 @@ namespace AlfenNG9xx
         ModbusMaster _modbusMaster = null;
         private readonly string _alfenIp;
         private readonly int _alfenPort;
+        private bool _isConnected = false;
+        private double _meterReadingStart = 0;
 
         public SocketMeasurementBase LastSocketMeasurement { get; private set; }
-
 
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
         public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
@@ -93,11 +94,23 @@ namespace AlfenNG9xx
                     Logger.Debug($"{sm}");
                     var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
 
+                    double _energyDelivered = 0;
+                    if (!_isConnected && sm.VehicleConnected)
+                    {
+                        _isConnected = true;
+                        _meterReadingStart = sm.RealEnergyDeliveredSum;
+                    }                  
+                    if (_isConnected && !sm.VehicleConnected)
+                    {
+                        _isConnected = false;
+                        _energyDelivered = sm.RealEnergyDeliveredSum - _meterReadingStart;
+                    }
+
                     LastSocketMeasurement = sm;                    
 
                     StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
                     if (chargingStateChanged)
-                        ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm));
+                        ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, _energyDelivered != 0, _energyDelivered));
 
                     await Task.Delay(2500, stoppingToken);
                 }
@@ -280,9 +293,9 @@ namespace AlfenNG9xx
         }
 
         
-        public void UpdateMaxCurrent(float maxL1, float maxL2, float maxL3)
+        public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
         {
-            Logger.Info($"UpdateMaxCurrent({maxL1},{maxL2},{maxL3})");
+            Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
             lock (_modbusMaster)
             {
                 if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return;
@@ -291,12 +304,12 @@ namespace AlfenNG9xx
                 if (maxL2 <= 0f || maxL3 <= 0f)
                 {
                     phases = 1;
-                    maxCurrent = maxL1;
+                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero); ;
                 }
                 else
                 {
                     phases = 3;
-                    maxCurrent = Math.Min(maxL1, Math.Min(maxL2, maxL3));
+                    maxCurrent = (float)Math.Round(Math.Min(maxL1, Math.Min(maxL2, maxL3)), 1, MidpointRounding.ToZero);
                 }
 
                 Logger.Info($"UpdateMaxCurrent {maxCurrent}, {phases}");

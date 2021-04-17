@@ -29,7 +29,7 @@ namespace EMS.Engine
                     if (_measurements.TryPeek(out MeasurementBase m))
                     {
                         var t = DateTime.Now - m.Received;
-                        if (t.Seconds > 25)
+                        if (t.Seconds > 30)
                         {
                             _measurements.Dequeue();
                         }

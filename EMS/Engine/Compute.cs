@@ -20,9 +20,9 @@ namespace EMS
 
         public const ushort MinimumDataPoints = 10;
 
-        private const float MinimumChargeCurrent = 6.0f;        // IEC 61851 minimum current
-        private const float MaxCurrentMain = 25.0f;
-        private const float MaxCurrentChargePoint = 16.0f;
+        private const double MinimumChargeCurrent = 6.0f;            // IEC 61851 minimum current
+        private const double MaxCurrentMain = 25.0f;
+        private const double MaxCurrentChargePoint = 16.0f;
 
         private readonly ChargingStateMachine _state = new ();
 
@@ -32,7 +32,7 @@ namespace EMS
             Mode = mode;
         }
 
-        public (float, float, float) Charging(ChargingInfo ci)
+        public (double, double, double) Charging(ChargingInfo ci)
         {
             switch (Mode)
             {
@@ -45,56 +45,57 @@ namespace EMS
             }
         }
 
-        private (float, float, float) MaxCharging(ChargingInfo ci)
+        private (double, double, double) MaxCharging(ChargingInfo ci)
         {
             var m = _measurements.Get();
             if (ci == null || m.Length < MinimumDataPoints) return ( -1, -1, -1);
 
-            var avgCurrentUsingL1 = (float)Math.Round(m.Average(x => x.CurrentL1).Value, 2);
-            var avgCurrentUsingL2 = (float)Math.Round(m.Average(x => x.CurrentL2).Value, 2);
-            var avgCurrentUsingL3 = (float)Math.Round(m.Average(x => x.CurrentL3).Value, 2);
+            var avgCurrentUsingL1 = m.Average(x => x.CurrentL1).Value;
+            var avgCurrentUsingL2 = m.Average(x => x.CurrentL2).Value;
+            var avgCurrentUsingL3 = m.Average(x => x.CurrentL3).Value;
 
-            float retval1 = (float)Math.Round(LimitCurrent(ci.CurrentL1, avgCurrentUsingL1), 2);
-            float retval2 = (float)Math.Round(LimitCurrent(ci.CurrentL2, avgCurrentUsingL2), 2);
-            float retval3 = (float)Math.Round(LimitCurrent(ci.CurrentL3, avgCurrentUsingL3), 2);
-            Logger?.LogInformation($"{avgCurrentUsingL1}, {avgCurrentUsingL2}, {avgCurrentUsingL3} => {retval1}, {retval2}, {retval3}");
+            var retval1 = (float)Math.Round(LimitCurrent(ci.CurrentL1, avgCurrentUsingL1), 2);
+            var retval2 = (float)Math.Round(LimitCurrent(ci.CurrentL2, avgCurrentUsingL2), 2);
+            var retval3 = (float)Math.Round(LimitCurrent(ci.CurrentL3, avgCurrentUsingL3), 2);
+
+            Logger?.LogInformation($"{(float)Math.Round(avgCurrentUsingL1, 2)}, {(float)Math.Round(avgCurrentUsingL2, 2)}, {(float)Math.Round(avgCurrentUsingL3, 2)} => {retval1}, {retval2}, {retval3}");
             return (retval1, retval2, retval3);
         }
 
-        private (float, float, float) MaxSolar(ChargingInfo ci)
+        private (double, double, double) MaxSolar(ChargingInfo ci)
         {
             var m = _measurements.Get();
             if (ci == null || m.Length < MinimumDataPoints) return (-1, -1, -1);
 
             var stateHasChanged = false;
 
-            var avgPowerL1 = (float)m.Average(x => x.PowerL1).Value;
-            var avgPowerL2 = (float)m.Average(x => x.PowerL2).Value;
-            var avgPowerL3 = (float)m.Average(x => x.PowerL3).Value;
+            var avgCurrentUsingL1 = m.Average(x => x.CurrentL1).Value;
+            var avgCurrentUsingL2 = m.Average(x => x.CurrentL2).Value;
+            var avgCurrentUsingL3 = m.Average(x => x.CurrentL3).Value;
 
-            float retval1 = (float)Math.Round(LimitCurrentSolar(ci.CurrentL1, ci.VoltageL1, avgPowerL1), 2);
-            float retval2 = (float)Math.Round(LimitCurrentSolar(ci.CurrentL2, ci.VoltageL2, avgPowerL2), 2);
-            float retval3 = (float)Math.Round(LimitCurrentSolar(ci.CurrentL3, ci.VoltageL3, avgPowerL3), 2);
+            var avgCurrent = avgCurrentUsingL1 + avgCurrentUsingL2 + avgCurrentUsingL3;
+
+            var retval = Math.Round(LimitCurrentSolar(ci.CurrentL1, avgCurrent), 2);
             
-            if (retval1 < MinimumChargeCurrent)
+            if (retval < MinimumChargeCurrent)
             {
                 if (_state.Current != ChargingStateMachine.State.NotCharging)
                 {                   
-                    if (stateHasChanged = _state.Pause())
+                    if ((_state.Current == ChargingStateMachine.State.ChargingPaused) || (stateHasChanged = _state.Pause()))
                     {
-                        retval1 = 0.0f;
+                        retval = 0.0;
                         Logger?.LogInformation($"Not enough solar power... Stop charging...");
                         //stateHasChanged = true;
                     }
                     else
                     {
                         Logger?.LogInformation($"Not enough solar power... Keep charging...");
-                        retval1 = MinimumChargeCurrent;
+                        retval = MinimumChargeCurrent;
                     }
                 }
                 else
                 {
-                    retval1 = 0.0f;
+                    retval = 0.0;
                 }
             }
             else {
@@ -108,44 +109,44 @@ namespace EMS
                 }
                 if (_state.Current != ChargingStateMachine.State.Charging)
                 {
-                    retval1 = 0.0f;
+                    retval = 0.0;
                 }
             }
 
-            Logger?.LogInformation($"{avgPowerL1}, {avgPowerL2}, {avgPowerL3} => {retval1}, {retval2}, {retval3}, {stateHasChanged}, {_state.Current}");
+            Logger?.LogInformation($"{(float)Math.Round(avgCurrentUsingL1, 2)}, {(float)Math.Round(avgCurrentUsingL2, 2)}, {(float)Math.Round(avgCurrentUsingL3, 2)} => {retval}, {stateHasChanged}, {_state.Current}");
+
             if (stateHasChanged)
             {
                 LoggerState.Info($"State changed {_state.Current}");
             }
-
-            return (retval1, 0f, 0f);
+            
+            return ((float)Math.Round(retval, 2), 0, 0);
         }
 
-        private static float LimitCurrent(float c, float avgCurrentUsing)
+        private static double LimitCurrent(double c, double avgCurrentUsing)
         {
-            float res = c + (MaxCurrentMain - avgCurrentUsing);
-            float retval;
+            var res = c + (MaxCurrentMain - avgCurrentUsing);
+            double retval;
             if (res >= MaxCurrentChargePoint)
             {
                 retval = MaxCurrentChargePoint;
             }
             else
             {
-                retval = res <= MinimumChargeCurrent ? 0 : res;
+                retval = res <= MinimumChargeCurrent ? 0.0 : res;
             }
             return retval;
         }
 
-        private static float LimitCurrentSolar(float c, float u, float avgPower)
+        private static double LimitCurrentSolar(float c, double avgCurrentFromGrid)
         {
-            float current = (avgPower * 1000.0f) / u;
+            var res = c - avgCurrentFromGrid;
 
-            float res = c + current;
-            float retval;
+            double retval;
             if (res >= MaxCurrentChargePoint) {
                 retval = MaxCurrentChargePoint;
             } else {
-                retval = res <= MinimumChargeCurrent ? 0.0f : res;
+                retval = res <= MinimumChargeCurrent ? 0.0 : res;
             }
             return retval;
         }

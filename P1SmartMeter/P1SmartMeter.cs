@@ -145,6 +145,7 @@ namespace P1SmartMeter
             {
                 Logger.Debug($"read transformed message{Environment.NewLine}{x}");
                 var m = new Reading.Measurement(x) { Received = DateTime.Now };
+
                 Logger.Debug($"Message {m}");
                 Measurement = m;
             });

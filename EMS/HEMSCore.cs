@@ -61,7 +61,7 @@ namespace EMS
                     measurememt.CurrentL1, measurememt.CurrentL2, measurememt.CurrentL3,
                     measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);
 
-                (float l1, float l2, float l3) = _compute.Charging(ci);
+                (var l1, var l2, var l3) = _compute.Charging(ci);
                
                 try
                 {
@@ -113,8 +113,8 @@ namespace EMS
 
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
         {
-            Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}");
-            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3StateMessage}");
+            Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered} ");
+            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}");
         }
     }
 }

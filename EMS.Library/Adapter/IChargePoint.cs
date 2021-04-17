@@ -18,7 +18,7 @@ namespace EMS.Library
     public interface IChargePoint : IAdapter, IHostedService
     {
         SocketMeasurementBase LastSocketMeasurement { get; }
-        void UpdateMaxCurrent(float maxL1, float maxL2, float maxL3);
+        void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3);
 
         public class StatusUpdateEventArgs : EventArgs
         {
@@ -35,10 +35,13 @@ namespace EMS.Library
         public class ChargingStateEventArgs : EventArgs
         {
             public Status Status { get; set; }
-
-            public ChargingStateEventArgs(SocketMeasurementBase measurement)
+            public bool SessionEnded { get; set; }
+            public double? EnergyDelivered { get; set; }
+            public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered)
             {
                 Status = new Status(measurement);
+                SessionEnded = sessionEnded;
+                EnergyDelivered = sessionEnded ? energyDelivered.Value : null;
             }
         }
 
