@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,16 +21,19 @@ jobs:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: Install dependencies
       run: dotnet restore
+      working-directory: backend
     - name: Build
       run: dotnet build --configuration Release --no-restore
+      working-directory: backend
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+      working-directory: backend
     - name: Install npm
       run: npm install
-      working-directory: EMS.ReactApp
+      working-directory: frontend/EMS.ReactApp
     - name: Build  
       run: npm run build
-      working-directory: EMS.ReactApp
+      working-directory: frontend/EMS.ReactApp
     - name: Build the Docker image $GITHUB_SHA
       run: |
         echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
