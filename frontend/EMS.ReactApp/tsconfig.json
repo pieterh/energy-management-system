@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+      "outDir": "./dist/",      
+      "module": "esnext",
+      "target": "es5",
+      "jsx": "react-jsx",
+      "allowJs": true,
+      "allowSyntheticDefaultImports": true,
+    },
+    "include": ["src/custom.d.ts"]
+  }
