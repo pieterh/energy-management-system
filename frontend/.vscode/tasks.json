@@ -8,6 +8,15 @@
 			"problemMatcher": [],
 			"label": "npm: start - EMS.ReactApp",
 			"detail": "webpack serve"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "EMS.ReactApp/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - EMS.ReactApp",
+			"detail": "webpack"
 		}
 	]
 }

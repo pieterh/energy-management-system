@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -7,9 +8,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -107,6 +110,27 @@ namespace EMS.WebHost
             app.UseStaticFiles();
             //app.UseSpaStaticFiles();
 
+            app.Use(async (context, next) =>
+            {
+                Logger.LogInformation($"{context.Request.Path}");
+                var path = context.Request.Path;
+                if (path.StartsWithSegments(new PathString("/app")))
+                {
+                    if (string.IsNullOrEmpty(Path.GetExtension(path)))
+                    {
+                        context.Response.ContentType = "text/html";
+                        context.Request.Path = Path.Combine("/app", "index.html");
+                    }
+                }
+
+                if (path.Equals(new PathString("/")))
+                {
+                    context.Response.ContentType = "text/html";
+                    context.Request.Path = Path.Combine("/app", "index.html");
+                }
+                await next.Invoke();
+            });
+
             app.UseRouting();
 
             // put this between UseRouting and UseEndpoints
@@ -118,20 +142,21 @@ namespace EMS.WebHost
                 endpoints.MapControllers();
             });
 
+            //app.Use(FallbackMiddlewareHandler);
             app.UseSpa(spa =>
             {
                 if (Env.IsDevelopment())
                 {
                     // Make sure you have started the frontend with npm run dev on port 5010
                     spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
-                }
+                }                
             });
+
 
             app.Use((context, next) => {
                 Logger.LogInformation($"{context.Request.Path}");
                 return next.Invoke();
             });
-        }
-
+        } 
     }
 }
