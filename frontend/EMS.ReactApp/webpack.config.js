@@ -3,31 +3,33 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const InterpolateHtmlPlugin = require('interpolate-html-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-const publicUrl = '';
+const publicUrl = '/app';
 
 module.exports = {
     entry: {
         index: './src/index.tsx',
     },
-    plugins: [        
+    plugins: [       
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'public/logo192.png', to: '' },
+                { from: 'public/logo512.png', to: '' },
+                { from: 'public/manifest.json', to: '' },
+            ]
+        }),
         new InterpolateHtmlPlugin({
             PUBLIC_URL: publicUrl,
-        }),
+        }),        
         new HtmlWebpackPlugin({
             title: 'ReactApp',
             favicon: 'public/favicon.ico',
             template: 'public/index.html',
-        }),
-        new CopyWebpackPlugin({
-            patterns: [
-                { from: 'public/logo192.png', to: 'dist' },
-            ]
         })
     ],
     output: {
         filename: '[name].bundle.[chunkhash].js',
-        path: path.resolve(__dirname, 'dist'),
-        publicPath: "/",
+        path: path.resolve(__dirname, 'dist/app'),
+        publicPath: "/app/",
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
@@ -81,6 +83,12 @@ module.exports = {
         contentBase: path.join(__dirname, 'dist'),
         compress: true,
         port: 5010,
-        https: false,
+        https: false,       
+        before: function (app, server, compiler) {
+            app.use('/', function (req, res,next) {
+                console.log(`${(new Date()).toLocaleTimeString()} - from ${req.ip} - ${req.method} - ${req.originalUrl}`);
+                next();
+            });
+        }
     },
 };

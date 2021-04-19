@@ -35,6 +35,7 @@ namespace EMS.WebHosts
         [HttpGet]
         public ActionResult<string> Get([FromQuery][BindRequired] int id)
         {
+            //http://127.0.0.1:5000/api/MyDemo?id=12
             Logger.LogInformation($"got request with {id}");
             return $"id ...{id}";
         }
