@@ -30,6 +30,7 @@ module.exports = {
         filename: '[name].bundle.[chunkhash].js',
         path: path.resolve(__dirname, 'dist/app'),
         publicPath: "/app/",
+        clean: true
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
