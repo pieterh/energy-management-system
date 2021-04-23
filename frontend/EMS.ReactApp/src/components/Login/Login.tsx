@@ -1,32 +1,30 @@
 import React from 'react';
+import { compose, Dispatch } from 'redux';
+import { connect, useDispatch } from "react-redux"
+import { ThunkDispatch} from 'redux-thunk';
+import { AnyAction } from '@reduxjs/toolkit';
+
 import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
-import { createStyles, withStyles, Theme } from '@material-ui/core/styles';
-
+import Button from '@material-ui/core/Button';
+import Checkbox from '@material-ui/core/Checkbox';
 import Container from '@material-ui/core/Container';
-import './Login.css';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Grid from '@material-ui/core/Grid';
+import Link from '@material-ui/core/Link';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
 
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright © '}
-      <Link color="inherit" href="https://material-ui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
+import { createStyles, withStyles, Theme } from '@material-ui/core/styles';
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+
+import { RootState } from '../../App/store';
+import { loginAsync, logoutAsync, increment } from '../../App/authenticationSlice';
+
+import  Credits from '../Credits/Credits';
+
+import './Login.css';
 
 const styles = ({ palette, spacing }: Theme) => createStyles({
   paper: {
@@ -49,19 +47,63 @@ const styles = ({ palette, spacing }: Theme) => createStyles({
 });
 
 interface ILoginProps {
-  classes: any
+  classes: any,
 }
 
 interface ILoginState {
+  username: string,
+  password: string
 }
 
-class Login extends React.Component<ILoginProps, ILoginState> {
-  constructor(props: ILoginProps) {
+interface IPropsFromDispatch {
+  login: typeof loginAsync,
+  logout: typeof logoutAsync,
+  increment: typeof increment,
+  dispatch: Dispatch,
+  thunkDispatch: ThunkDispatch<{}, any, AnyAction>
+}
+
+// Combine both state + dispatch props - as well as any props we want to pass - in a union type.
+type AllProps = ILoginProps & ILoginState & IPropsFromDispatch;// & RouteComponentProps<RouteParams>
+
+class Login extends React.Component<AllProps, ILoginState> {
+  state: ILoginState;
+
+  constructor(props: AllProps, state: ILoginState) {
       super(props);
+      this.state = state;
 
       this.state = {
-          materialUIclasses: {}
-      }
+           username : '',
+           password: ''
+       }
+  }
+
+  increment = (event: React.MouseEvent<HTMLButtonElement>) => {
+    console.log("click increment");
+    this.props.dispatch(this.props.increment());
+  }
+
+  loginClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    console.log("click ->");
+    await this.props.thunkDispatch(loginAsync({username: this.state.username, secret: this.state.password})).then((x) =>
+    {
+      console.log("then " + x.payload);
+    });    
+    console.log("click <-");
+  }
+
+  handleSubmit(event: React.FormEvent<HTMLFormElement>){
+    console.log("form");
+    event.preventDefault();
+  }
+
+  handleUserNameFieldChange = (event: React.ChangeEvent<HTMLInputElement>) =>{
+    this.setState({ username: event.target.value});
+  }
+
+  handlePasswordFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ password: event.target.value});
   }
 
   render() {
@@ -75,17 +117,19 @@ class Login extends React.Component<ILoginProps, ILoginState> {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <form className={this.props.classes.form} noValidate>
+          <form className={this.props.classes.form} noValidate onSubmit={this.handleSubmit}>
             <TextField
               variant="outlined"
               margin="normal"
               required
               fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
+              id="username"
+              label="Username"
+              name="username"
+              autoComplete="username"
               autoFocus
+              value={this.state.username}
+              onChange={this.handleUserNameFieldChange}
             />
             <TextField
               variant="outlined"
@@ -97,6 +141,8 @@ class Login extends React.Component<ILoginProps, ILoginState> {
               type="password"
               id="password"
               autoComplete="current-password"
+              value={this.state.password}
+              onChange={this.handlePasswordFieldChange}
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
@@ -108,6 +154,7 @@ class Login extends React.Component<ILoginProps, ILoginState> {
               variant="contained"
               color="primary"
               className={this.props.classes.submit}
+              onClick={this.loginClick}
             >
               Sign In
             </Button>
@@ -117,20 +164,34 @@ class Login extends React.Component<ILoginProps, ILoginState> {
                   Forgot password?
                 </Link>
               </Grid>
-              <Grid item>
-                <Link href="#" variant="body2">
-                  {"Don't have an account? Sign Up"}
-                </Link>
-              </Grid>
             </Grid>
           </form>
         </div>
         <Box mt={8}>
-          <Copyright />
+          <Credits />
         </Box>
       </Container>
     )
   }
 }
 
-export default withStyles(styles)(Login)
+function mapStateToProps (state: RootState, ownProps: {}) {
+  return {
+    authentication: state.authentication
+  };
+};
+
+function mapDispatchToProps (dispatch: Dispatch) {
+  return {
+    login : loginAsync,
+    logout: logoutAsync,
+    increment: increment,
+    dispatch: dispatch,
+    thunkDispatch: dispatch as ThunkDispatch<{}, any, AnyAction>
+  }
+}
+
+export default compose(
+    connect(mapStateToProps, mapDispatchToProps),
+    withStyles(styles)
+  )(Login);
