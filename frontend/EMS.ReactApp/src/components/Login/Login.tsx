@@ -1,6 +1,6 @@
 import React from 'react';
 import { compose, Dispatch } from 'redux';
-import { connect, useDispatch } from "react-redux"
+import { connect } from "react-redux"
 import { ThunkDispatch} from 'redux-thunk';
 import { AnyAction } from '@reduxjs/toolkit';
 
@@ -47,6 +47,9 @@ const styles = ({ palette, spacing }: Theme) => createStyles({
 });
 
 interface ILoginProps {
+  //
+}
+interface ILoginTheme {
   classes: any,
 }
 
@@ -64,15 +67,15 @@ interface IPropsFromDispatch {
 }
 
 // Combine both state + dispatch props - as well as any props we want to pass - in a union type.
-type AllProps = ILoginProps & ILoginState & IPropsFromDispatch;// & RouteComponentProps<RouteParams>
+type AllProps = ILoginProps & ILoginTheme & ILoginState & IPropsFromDispatch;// & RouteComponentProps<RouteParams>
 
-class Login extends React.Component<AllProps, ILoginState> {
+export class Login extends React.Component<AllProps, ILoginState> {
   state: ILoginState;
-
+  allProps: AllProps;
   constructor(props: AllProps, state: ILoginState) {
       super(props);
       this.state = state;
-
+      this.allProps = props;
       this.state = {
            username : '',
            password: ''
@@ -81,14 +84,14 @@ class Login extends React.Component<AllProps, ILoginState> {
 
   increment = (event: React.MouseEvent<HTMLButtonElement>) => {
     console.log("click increment");
-    this.props.dispatch(this.props.increment());
+    this.allProps.dispatch(this.allProps.increment());
   }
 
   loginClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     console.log("click ->");
-    await this.props.thunkDispatch(loginAsync({username: this.state.username, secret: this.state.password})).then((x) =>
+    await this.allProps.thunkDispatch(loginAsync({username: this.state.username, secret: this.state.password})).then((x) =>
     {
-      console.log("then " + x.payload);
+      console.log("then " + JSON.stringify(x.payload));
     });    
     console.log("click <-");
   }
@@ -107,17 +110,17 @@ class Login extends React.Component<AllProps, ILoginState> {
   }
 
   render() {
-    return(
+    return (
       <Container component="main" maxWidth="xs">
         <CssBaseline />
-        <div className={this.props.classes.paper}>
-          <Avatar className={this.props.classes.avatar}>
+        <div className={this.allProps.classes.paper}>
+          <Avatar className={this.allProps.classes.avatar}>
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
-          <form className={this.props.classes.form} noValidate onSubmit={this.handleSubmit}>
+          <form className={this.allProps.classes.form} noValidate onSubmit={this.handleSubmit}>
             <TextField
               variant="outlined"
               margin="normal"
@@ -153,7 +156,7 @@ class Login extends React.Component<AllProps, ILoginState> {
               fullWidth
               variant="contained"
               color="primary"
-              className={this.props.classes.submit}
+              className={this.allProps.classes.submit}
               onClick={this.loginClick}
             >
               Sign In
