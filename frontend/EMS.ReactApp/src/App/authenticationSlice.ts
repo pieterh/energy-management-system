@@ -11,13 +11,18 @@ export interface LoginState {
     state: 'logged_out',
   };
   
-  export const loginAsync = createAsyncThunk<boolean, {username: string, secret: string}>(
+  export const loginAsync = createAsyncThunk<Promise<any>, {username: string, secret: string}>(
     'authentication/login',
-    async ({username, secret}: {username: string, secret: string}, thunkAPI) => {
-      console.info(`login(${username}, ${secret}) ->`);   
-      const response = await login(username, secret);
-      console.info("login <- "+ response.data);  
-      return response.data;
+    async ({username, secret}: {username: string, secret: string}, /* thunkApi */ { rejectWithValue }) => {
+      try{
+        console.info(`login(${username}, ${secret}) ->`);   
+        const response = login(username, secret);
+        console.info("login <- "+ JSON.stringify(response));  
+        return response;
+      }catch(err){
+        var resp = {ok: false, message: 'oeps'};
+        return rejectWithValue(err);
+      }
     }
   );
 
@@ -48,18 +53,18 @@ export const authenticationSlice = createSlice({
         })
         .addCase(loginAsync.fulfilled, (state, action) => {
           state.state = 'logged_in';
-          console.info(`loginAsync.fulfilled - ${state.state} - ${action.payload}`);  
+          console.info(`loginAsync.fulfilled - ${state.state} - ${JSON.stringify(action.payload)}`);  
         })
         .addCase(loginAsync.rejected, (state, action) => {
           state.state = 'logged_out';
-          console.info("login rejected " + action.payload);  
+          console.info(`login rejected - ${state.state} - ${JSON.stringify(action.payload)}`);  
         })        
         .addCase(logoutAsync.pending, (state) => {
           state.state = 'log_out';
         })
         .addCase(logoutAsync.fulfilled, (state, action) => {
           state.state = 'logged_out';
-          console.info("logged_out " + action.payload);  
+          console.info(`logged_out - ${state.state} - ${JSON.stringify(action.payload)}`);  
         })
         ;
     },

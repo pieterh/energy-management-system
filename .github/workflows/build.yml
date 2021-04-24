@@ -28,8 +28,11 @@ jobs:
     - name: Test
       run: dotnet test --no-restore --verbosity normal
       working-directory: backend
-    - name: Install npm
-      run: npm install
+    - name: Install yarn
+      run: npm install --global yarn
+      working-directory: frontend/EMS.ReactApp
+    - name: Upgrade packages using yarn
+      run: yarn upgrade
       working-directory: frontend/EMS.ReactApp
     - name: Build  
       run: npm run build
