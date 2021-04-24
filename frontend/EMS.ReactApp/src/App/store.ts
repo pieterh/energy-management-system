@@ -1,4 +1,5 @@
 //import { combineReducers } from 'redux';
+import { useDispatch } from 'react-redux'
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
 
 import authenticationReducer from './authenticationSlice';
@@ -18,6 +19,7 @@ export type RootState = ReturnType<typeof store.getState>
 
 // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch
+export const useAppDispatch = () => useDispatch<AppDispatch>() // Export a hook that can be reused to resolve types
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,

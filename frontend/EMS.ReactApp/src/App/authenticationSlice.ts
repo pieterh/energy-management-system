@@ -11,14 +11,14 @@ export interface LoginState {
     state: 'logged_out',
   };
   
-  export const loginAsync = createAsyncThunk<any, {username: string, secret: string}>(
+  export const loginAsync = createAsyncThunk<Promise<any>, {username: string, secret: string}>(
     'authentication/login',
     async ({username, secret}: {username: string, secret: string}, /* thunkApi */ { rejectWithValue }) => {
       try{
         console.info(`login(${username}, ${secret}) ->`);   
-        const response = await login(username, secret);
-        console.info("login <- "+ JSON.stringify(response.data));  
-        return response.data;
+        const response = login(username, secret);
+        console.info("login <- "+ JSON.stringify(response));  
+        return response;
       }catch(err){
         var resp = {ok: false, message: 'oeps'};
         return rejectWithValue(err);
