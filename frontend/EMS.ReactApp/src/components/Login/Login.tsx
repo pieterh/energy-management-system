@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Redirect } from 'react-router-dom';
 
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
@@ -16,8 +17,10 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
 import { useForm, Controller } from "react-hook-form";
 
-import { RootState, useAppDispatch } from '../../App/store';
-import { loginAsync, logoutAsync, increment } from '../../App/authenticationSlice';
+import { loginAsync, isLoggedIn } from '../../App/authenticationSlice';
+
+import { useAppSelector, useAppDispatch } from '../../App/hooks';
+
 
 import  Credits from '../Credits/Credits';
 
@@ -67,8 +70,10 @@ type FormInputs = {
 };
 
 export function Login() {
+  const loggedIn = useAppSelector(isLoggedIn);
   const dispatch = useAppDispatch()
   const classes = useStyles(); 
+  
   const { register, handleSubmit, watch, control, reset, formState: { errors } } = useForm<FormInputs>();
 
   const [isBusy, setIsBusy] = useState(false);
@@ -76,7 +81,7 @@ export function Login() {
   async function onSubmit(data : FormInputs){
     console.log(`form -> ${JSON.stringify(data)}`);
     setIsBusy(true);    
-    console.log();
+
     dispatch(loginAsync({username: data.username, secret: data.password})).then((x) =>{
       console.log("form <-");
     }).finally(() =>{
@@ -84,9 +89,9 @@ export function Login() {
       console.log("form <- finally");
     });  
   }
-
+  if (loggedIn) { return (<Redirect to='/'/>); } else
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="xs">     
       <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
@@ -146,15 +151,15 @@ export function Login() {
             Sign In
             {/* className={classes.spinner} */}
             { isBusy && <CircularProgress size={20} /> }
-          </Button>          
+          </Button>
         </form>
       </div>
       <Box mt={8}>
         <Credits />
       </Box>
-    </Container>
+    </Container>    
   )
 }
 
- export default Login;
+export default Login;
 
