@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
 import { Provider } from "react-redux";
+import { useLocation, useHistory } from 'react-router-dom';
 import { makeStyles, Theme } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -12,6 +13,10 @@ import Button from '@material-ui/core/Button';
 import green from "@material-ui/core/colors/green";
 
 import { store, RootState } from '../../App/store';
+
+import { useAppSelector, useAppDispatch } from '../../App/hooks';
+
+import { isLoggedIn } from '../../App/authenticationSlice';
 
 interface IAppHeaderProps {
 }
@@ -40,6 +45,21 @@ const useStyles = makeStyles((theme: Theme) =>({
 
 export function AppHeader(){       
     const classes = useStyles(); 
+    const location = useLocation();  
+    const history = useHistory();
+
+    const loggedIn = useAppSelector(isLoggedIn);
+    const showLoginButton = !loggedIn && location.pathname != '/login' && location.pathname != '/logout';
+    const showLogoutButton = loggedIn && location.pathname != '/login' && location.pathname != '/logout';
+
+    function onLogoutClick(event: React.MouseEvent<HTMLButtonElement, MouseEvent>)  {
+      history.push('/logout');
+    }
+
+    function onLoginClick(event: React.MouseEvent<HTMLButtonElement, MouseEvent>)  {
+      history.push('/login');
+    }
+
     return (
         <Provider store={store}>    
             <AppBar position="static">
@@ -50,12 +70,12 @@ export function AppHeader(){
                     <Typography variant="h6" className={classes.title}>
                     News
                     </Typography>
-                    {/* <div>
-                    {authentication.state == 'logged_in'} && <Button color="inherit">Logout</Button>
+                    <div>
+                    {showLogoutButton && <Button onClick={(event) => onLogoutClick(event)} color="inherit">Logout</Button> }
                     </div>
                     <div>
-                    {authentication.state == 'logged_out'} &&  <Button color="inherit">Login</Button>
-                    </div> */}
+                    {showLoginButton && <Button onClick={(event) => onLoginClick(event)}color="inherit">Login</Button> }
+                    </div>
                 </Toolbar>
             </AppBar> 
         </Provider>

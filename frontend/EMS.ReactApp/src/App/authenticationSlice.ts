@@ -1,4 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+import { RootState, AppThunk } from '../App/store';
+
 import { login, logout } from './authenticationAPI';
 
 export interface LoginState {
@@ -71,5 +74,8 @@ export const authenticationSlice = createSlice({
   });
 
 export const { increment } = authenticationSlice.actions;  
+
+export const isLoggedIn = (state: RootState) => state.authentication.state == 'logged_in';
+
 
 export default authenticationSlice.reducer;      
