@@ -14,6 +14,8 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
+import { useForm, Controller } from "react-hook-form";
+
 import { RootState, useAppDispatch } from '../../App/store';
 import { loginAsync, logoutAsync, increment } from '../../App/authenticationSlice';
 
@@ -58,20 +60,24 @@ interface ILoginTheme {
 interface ILoginState {
 }
 
+type FormInputs = {
+  username: string,
+  password: string,
+  doRemember: string
+};
+
 export function Login() {
   const dispatch = useAppDispatch()
   const classes = useStyles(); 
+  const { register, handleSubmit, watch, control, reset, formState: { errors } } = useForm<FormInputs>();
 
   const [isBusy, setIsBusy] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>){
-    console.log("form ->");
-    event.preventDefault();
+  async function onSubmit(data : FormInputs){
+    console.log(`form -> ${JSON.stringify(data)}`);
     setIsBusy(true);    
-
-    dispatch(loginAsync({username: username, secret: password})).then((x) =>{
+    console.log();
+    dispatch(loginAsync({username: data.username, secret: data.password})).then((x) =>{
       console.log("form <-");
     }).finally(() =>{
       setIsBusy(false); 
@@ -89,7 +95,7 @@ export function Login() {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
-        <form className={classes.form} noValidate onSubmit={handleSubmit}>
+        <form className={classes.form} onSubmit={handleSubmit(onSubmit)}>
           <TextField
             disabled={isBusy}
             variant="outlined"
@@ -98,30 +104,36 @@ export function Login() {
             fullWidth
             id="username"
             label="Username"
-            name="username"
             autoComplete="username"
             autoFocus
-            value={username}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setUsername(event.target.value)}
+            {...register("username", { required: true })}
           />
+          {errors.username && <span>This username field is required</span>}
           <TextField
             disabled={isBusy}
             variant="outlined"
             margin="normal"
             required
             fullWidth
-            name="password"
             label="Password"
             type="password"
             id="password"
             autoComplete="current-password"
-            value={password}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setPassword(event.target.value)}      
+            {...register("password", { required: true })}  
           />
-          <FormControlLabel
-            disabled={isBusy}
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"            
+          {errors.password && <span>This password field is required</span>}
+          <Controller
+            name="doRemember"
+            control={control}
+            defaultValue={false}
+            rules={{ required: false }}
+            render={({ field }) => {
+              return <FormControlLabel
+                        disabled={isBusy}
+                        control={<Checkbox  color="primary" {...field}/>}
+                        label="Remember me"
+                    />
+            }}            
           />
           <Button
             disabled={isBusy}
@@ -145,25 +157,4 @@ export function Login() {
 }
 
  export default Login;
- //export default withStyles(styles)(Login);
 
-// function mapStateToProps (state: RootState, ownProps: {}) {
-//   return {
-//     authentication: state.authentication
-//   };
-// };
-
-// function mapDispatchToProps (dispatch: Dispatch) {
-//   return {
-//     login : loginAsync,
-//     logout: logoutAsync,
-//     increment: increment,
-//     dispatch: dispatch,
-//     thunkDispatch: dispatch as ThunkDispatch<{}, any, AnyAction>
-//   }
-// }
-
-// export default compose(
-//     connect(mapStateToProps, mapDispatchToProps),
-//     withStyles(styles)
-//   )(Login);
