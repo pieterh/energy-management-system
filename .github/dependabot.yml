@@ -1,0 +1,14 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/frontend/EMS.ReactApp"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: "@material-ui/styles"
+    versions:
+    - 4.11.4
+  - dependency-name: react-hook-form
+    versions:
+    - 7.3.3
