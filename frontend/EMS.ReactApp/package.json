@@ -32,8 +32,8 @@
     "semantic-ui-react": "^2.0.3"
   },
   "scripts": {
-    "start": "webpack serve",
-    "build": "webpack",
+    "start": "webpack serve --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -72,6 +72,7 @@
     "typescript": "^4.2.4",
     "webpack": "^5.36.0",
     "webpack-cli": "^4.6.0",
-    "webpack-dev-server": "^3.11.1"
+    "webpack-dev-server": "^3.11.1",
+    "webpack-merge": "^5.7.3"
   }
 }
