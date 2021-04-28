@@ -1,17 +1,17 @@
-//import { combineReducers } from 'redux';
+import { combineReducers } from 'redux';
 import { useDispatch } from 'react-redux'
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
 
 import authenticationReducer from './authenticationSlice';
+import CustomThemeProviderReducer from './CustomThemeProviderSlice';
 
-// export const rootReducer = combineReducers({
-//     authentication: authenticationReducer,   
-//   });
+export const rootReducer = combineReducers({
+    authentication: authenticationReducer,
+    customTheme: CustomThemeProviderReducer
+  });
 
 export const store = configureStore({
-  reducer: {
-    authentication: authenticationReducer,
-  }
+  reducer: rootReducer
 })
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

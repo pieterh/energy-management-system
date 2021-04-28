@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-import { RootState, AppThunk } from '../App/store';
+import { RootState } from '../App/store';
 
 import { login, logout } from './authenticationAPI';
 
@@ -8,13 +8,13 @@ export interface LoginState {
     value: number;
     state: 'logged_out' | 'log_in' | 'logged_in' | 'log_out' ;
   }
-  
-  const initialState: LoginState = {
+
+const initialState: LoginState = {
     value: 0,
     state: 'logged_out',
   };
   
-  export const loginAsync = createAsyncThunk<Promise<any>, {username: string, secret: string}>(
+export const loginAsync = createAsyncThunk<Promise<any>, {username: string, secret: string}>(
     'authentication/login',
     async ({username, secret}: {username: string, secret: string}, /* thunkApi */ { rejectWithValue }) => {
       try{
@@ -29,7 +29,7 @@ export interface LoginState {
     }
   );
 
-  export const logoutAsync = createAsyncThunk(
+export const logoutAsync = createAsyncThunk(
     'authentication/logout',
     async () => {
       const response = await logout();
@@ -73,7 +73,7 @@ export const authenticationSlice = createSlice({
     },
   });
 
-export const { increment } = authenticationSlice.actions;  
+// export const { increment } = authenticationSlice.actions;  
 
 export const isLoggedIn = (state: RootState) => state.authentication.state == 'logged_in';
 

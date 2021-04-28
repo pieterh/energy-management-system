@@ -6,7 +6,6 @@ import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import Container from '@material-ui/core/Container';
-import CssBaseline from '@material-ui/core/CssBaseline';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -20,7 +19,6 @@ import { useForm, Controller } from "react-hook-form";
 import { loginAsync, isLoggedIn } from '../../App/authenticationSlice';
 
 import { useAppSelector, useAppDispatch } from '../../App/hooks';
-
 
 import  Credits from '../Credits/Credits';
 
@@ -71,7 +69,7 @@ type FormInputs = {
 
 export function Login() {
   const loggedIn = useAppSelector(isLoggedIn);
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
   const classes = useStyles(); 
   
   const { register, handleSubmit, watch, control, reset, formState: { errors } } = useForm<FormInputs>();
@@ -92,7 +90,6 @@ export function Login() {
   if (loggedIn) { return (<Redirect to='/'/>); } else
   return (
     <Container component="main" maxWidth="xs">     
-      <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />

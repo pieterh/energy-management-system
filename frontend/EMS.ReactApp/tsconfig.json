@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "lib": [
-      "esnext",
       "dom",
       "dom.iterable"      
     ],
@@ -10,7 +9,7 @@
     "moduleResolution": "node",
     // "resolveJsonModule": true,
     // "isolatedModules": true,    
-    "target": "es5",
+    "target": "es6",
     "jsx": "react-jsx",
     "sourceMap": true,
     "allowJs": true,

@@ -7,7 +7,7 @@
 			"path": "EMS.ReactApp/",
 			"problemMatcher": [],
 			"label": "npm: start - EMS.ReactApp",
-			"detail": "webpack serve"
+			"detail": "webpack serve --config webpack.dev.js"
 		},
 		{
 			"type": "npm",
@@ -16,7 +16,7 @@
 			"group": "build",
 			"problemMatcher": [],
 			"label": "npm: build - EMS.ReactApp",
-			"detail": "webpack"
+			"detail": "webpack --config webpack.prod.js"
 		}
 	]
 }
