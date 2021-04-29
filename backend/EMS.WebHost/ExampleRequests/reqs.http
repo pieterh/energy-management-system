@@ -1,0 +1,20 @@
+﻿@apiRoot = http://localhost:5000
+
+####
+GET {{apiRoot}}/api/mydemo?id=12 HTTP/1.1
+
+
+####
+
+POST {{apiRoot}}/api/users/authenticate HTTP/1.1
+Authorization: Basic pieter:pieter
+content-type: application/json
+
+{
+    "username": "pieter",
+    "password": "pieter"
+}
+
+
+####
+

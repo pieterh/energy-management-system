@@ -1,20 +1,20 @@
-﻿using System;
-using System.IO;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using System.IO;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Rewrite;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders.Physical;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+
+using EMS.WebHost.Helpers;
 
 namespace EMS.WebHost
 {
@@ -48,18 +48,65 @@ namespace EMS.WebHost
 
             services.AddControllers();
 
+            var settings = new JwtSettings()
+            {
+                Key = "72cc7881-297d-4670-8d95-54a00692f1ab",
+                Issuer = "http://petteflet.org",
+                Audience = "Test",
+                MinutesToExpiration = 5,
+                ClockSkew = new System.TimeSpan(0, 0, 30)
+            };
+
+            // don't map any claims.. we don't need old style xml schema claims...
+            JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
+            services.AddAuthentication(i =>
+            {
+                i.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                i.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                i.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                i.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = settings.Issuer,
+                    ValidAudience = settings.Audience,
+                    IssuerSigningKey = new RsaSecurityKey(JwtTokens.KeyParamaters),
+                    ClockSkew = settings.ClockSkew
+                };
+                options.SaveToken = true;
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        // retrieve jwt from cookie and store in context
+                        if (context.Request.Cookies.ContainsKey("X-Access-Token"))
+                        {
+                            context.Token = context.Request.Cookies["X-Access-Token"];
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+            })
+            .AddCookie(options =>
+            {
+                options.Cookie.SameSite = SameSiteMode.Strict;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.IsEssential = true;
+            });
+
             //In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "dist";
             });
-
-            //services
-            //  .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)              
-            //  .AddCookie(options =>
-            //  {
-            //      options.Cookie.HttpOnly = true;
-            //  });
         }
 
         public void Configure(ILogger<Startup> logger, IApplicationBuilder app)
@@ -106,9 +153,7 @@ namespace EMS.WebHost
                 app.UseHttpsRedirection();
 
             app.UseDefaultFiles();
-
             app.UseStaticFiles();
-            //app.UseSpaStaticFiles();
 
             app.Use(async (context, next) =>
             {
@@ -134,7 +179,7 @@ namespace EMS.WebHost
             app.UseRouting();
 
             // put this between UseRouting and UseEndpoints
-            //app.UseAuthentication();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -151,7 +196,6 @@ namespace EMS.WebHost
                     spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
                 }                
             });
-
 
             app.Use((context, next) => {
                 Logger.LogInformation($"{context.Request.Path}");
