@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.5" />
     <PackageReference Include="Rick.Docs.Samples.RouteInfo" Version="1.0.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.5" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,4 +37,8 @@
   </ItemGroup>
 
 
+  <ItemGroup>
+    <Folder Include="ExampleRequests\" />
+    <Folder Include="Helpers\" />
+  </ItemGroup>
 </Project>
