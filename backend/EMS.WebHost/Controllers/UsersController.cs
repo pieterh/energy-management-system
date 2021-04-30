@@ -20,6 +20,15 @@ namespace EMS.WebHost.Controllers
         public string Password { get; set; }
     }
 
+    public class LoginResponse
+    {
+        public string token { get; set; }
+        public UserModel user { get; set; }
+    }
+    public class PingResponse
+    {
+        public UserModel user { get; set; }
+    }
     public class UserModel
     {
         public Guid Id { get; set; }
@@ -32,13 +41,13 @@ namespace EMS.WebHost.Controllers
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-        private readonly ILogger _logger;
-        private ILogger Logger => _logger;
+        private ILogger Logger { get; init; }
         private readonly JwtTokens _jwtCreator;
 
         public UsersController(ILogger<UsersController> logger)
         {
-            _logger = logger;
+            Logger = logger;
+
             var settings = new JwtSettings() {
                 Key = "72cc7881-297d-4670-8d95-54a00692f1ab",
                 Issuer = "http://petteflet.org",
@@ -58,8 +67,11 @@ namespace EMS.WebHost.Controllers
             if (user != null)
             {
                 var token = _jwtCreator.Generate(user.Id, user.Username, user.Name);
-                Response.Cookies.Append("X-Access-Token", token, new CookieOptions() { Path = "/api", HttpOnly = true, SameSite = SameSiteMode.Strict });
-                return Ok(user);
+                //Response.Cookies.Append("X-Access-Token", token, new CookieOptions() { Path = "/api", HttpOnly = true, SameSite = SameSiteMode.Strict });
+                var r = new LoginResponse();
+                r.token = token;
+                r.user = user;
+                return Ok(r);
             }
             else
             {
@@ -68,15 +80,22 @@ namespace EMS.WebHost.Controllers
         }
         
         [HttpGet("ping")]
-        public string Ping() {
+        public PingResponse Ping() {
             var id = User.Claims.FirstOrDefault<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
             var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;
             var s = new StringBuilder();
             foreach(var c in User.Claims)
             {
-                _logger.LogDebug($"{c.Type} - {c.Value}");
+                Logger.LogDebug($"{c.Type} - {c.Value}");
             }
-            return $"pong{Environment.NewLine}Hello {name}";
+            var user = new UserModel
+            {
+                Id = Guid.NewGuid(),
+                Username = "admin",
+                Name = "Pieter Hilkemeijer"
+            };
+
+            return new PingResponse() { user = user };
         }
 
         private UserModel PerformAuth(LoginModel model)
