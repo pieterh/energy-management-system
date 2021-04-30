@@ -60,12 +60,12 @@ namespace EMS.WebHost
             // don't map any claims.. we don't need old style xml schema claims...
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
-            services.AddAuthentication(i =>
+            services.AddAuthentication(options =>
             {
-                i.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                i.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                i.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                i.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
             {
@@ -83,23 +83,23 @@ namespace EMS.WebHost
                 options.SaveToken = true;
                 options.Events = new JwtBearerEvents
                 {
-                    OnMessageReceived = context =>
-                    {
-                        // retrieve jwt from cookie and store in context
-                        if (context.Request.Cookies.ContainsKey("X-Access-Token"))
-                        {
-                            context.Token = context.Request.Cookies["X-Access-Token"];
-                        }
+                    //OnMessageReceived = context =>
+                    //{
+                    //    // retrieve jwt from cookie and store in context
+                    //    if (context.Request.Cookies.ContainsKey("X-Access-Token"))
+                    //    {
+                    //        context.Token = context.Request.Cookies["X-Access-Token"];
+                    //    }
 
-                        return Task.CompletedTask;
-                    }
+                    //    return Task.CompletedTask;
+                    //}
                 };
-            })
-            .AddCookie(options =>
-            {
-                options.Cookie.SameSite = SameSiteMode.Strict;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                options.Cookie.IsEssential = true;
+            //})
+            //.AddCookie(options =>
+            //{
+            //    options.Cookie.SameSite = SameSiteMode.Strict;
+            //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            //    options.Cookie.IsEssential = true;
             });
 
             //In production, the React files will be served from this directory
@@ -151,6 +151,8 @@ namespace EMS.WebHost
 
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
+
+            app.UseMiddleware<Middleware.SecurityHeaders>();
 
             app.UseDefaultFiles();
             app.UseStaticFiles();

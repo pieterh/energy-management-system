@@ -75,11 +75,9 @@ namespace EMS
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
-
                     //services.Configure<List<Adapter>>(hostingContext.Configuration.GetSection("adapters"));
                     //services.Configure<List<Instance>>(hostingContext.Configuration.GetSection("instances"));
                     //services.Configure<WebConfig>(hostingContext.Configuration.GetSection("web"));
-
 
                     ConfigureInstances(builderContext, services);
 
@@ -92,6 +90,7 @@ namespace EMS
                         //kestrelOptions.Configure(
                         // builderContext.Configuration.GetSection("Kestrel"), reloadOnChange: false);
 
+                        kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();
                         builderContext.Configuration.GetSection("web").Bind(wc);
 
