@@ -77,14 +77,11 @@ export function Login() {
   const [isBusy, setIsBusy] = useState(false);
 
   async function onSubmit(data : FormInputs){
-    console.log(`form -> ${JSON.stringify(data)}`);
     setIsBusy(true);    
 
     dispatch(loginAsync({username: data.username, secret: data.password})).then((x) =>{
-      console.log("form <-");
     }).finally(() =>{
       setIsBusy(false); 
-      console.log("form <- finally");
     });  
   }
   if (loggedIn) { return (<Redirect to='/'/>); } else

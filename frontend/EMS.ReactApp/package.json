@@ -19,6 +19,7 @@
     "@types/react-dom": "^17.0.0",
     "@types/react-redux": "^7.1.16",
     "@types/react-router-dom": "^5.1.7",
+    "axios": "^0.21.1",
     "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -26,16 +27,15 @@
     "react-hot-loader": "^4.13.0",
     "react-redux": "^7.2.3",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^4.0.3",
     "redux-thunk": "^2.3.0",
     "redux-toolkit": "^1.1.2",
-    "semantic-ui-react": "^2.0.3"
+    "semantic-ui-react": "^2.0.3",
+    "store2": "^2.12.0",
+    "url-parse": "^1.5.1"
   },
   "scripts": {
     "start": "webpack serve --config webpack.dev.js",
-    "build": "webpack --config webpack.prod.js",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "build": "webpack --config webpack.prod.js"
   },
   "eslintConfig": {
     "extends": [
@@ -61,6 +61,7 @@
     "@babel/plugin-transform-react-jsx": "^7.13.12",
     "@babel/preset-env": "^7.14.0",
     "@babel/preset-react": "^7.13.13",
+    "@types/url-parse": "^1.4.3",
     "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^8.1.1",
     "css-loader": "^5.2.4",
