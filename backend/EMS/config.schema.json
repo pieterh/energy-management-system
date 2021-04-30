@@ -73,13 +73,23 @@
     },
     "web": {
       "type": "object",
-      "port": {
-        "type": "number"
-      }
+      "properties": {
+        "port": {
+          "type": "number"
+        },
+        "host": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "port",
+        "host"
+      ]
     }
   },
   "required": [
     "adapters",
-    "instances"
+    "instances",
+    "web"
   ]
 }
