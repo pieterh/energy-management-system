@@ -1,30 +1,105 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import  store2  from 'store2';
 
-import { RootState } from '../App/store';
+import axios, {AxiosResponse} from 'axios';
+import  URLParse from 'url-parse';
+
+import { RootState, store } from '../App/store';
 
 import { login, logout } from './authenticationAPI';
 
-export interface LoginState {
-    value: number;
-    state: 'logged_out' | 'log_in' | 'logged_in' | 'log_out' ;
-  }
+enum LoginStateEnum {
+  'logged_out', 'log_in' , 'logged_in' , 'log_out'
+}
 
-const initialState: LoginState = {
-    value: 0,
-    state: 'logged_out',
-  };
+export interface LoginState {
+    state: LoginStateEnum ;
+    token: string | undefined;
+    user: User | undefined,
+  }
   
-export const loginAsync = createAsyncThunk<Promise<any>, {username: string, secret: string}>(
+function  CreateState() : LoginState {
+  var s : LoginState=  { 
+    state: LoginStateEnum.logged_out, 
+    token: undefined, 
+    user: undefined 
+  } ;
+
+  var token = store2.session.get('token');
+  if (token !== undefined && token !== null){
+    // s.token = token;
+    s.state = LoginStateEnum.logged_in;
+    // store.dispatch(pingAsync()).then((x) =>{
+    //   console.log("yuup");
+    // });
+  }
+  return s;
+}
+
+function UpdateState(state: LoginState, s : LoginStateEnum, token?:string | undefined, user?:User | undefined) {  
+  if (token !== null && token !== undefined)
+    store2.session.set('token', token);
+  else
+    store2.session.remove('token');
+  state.user = user;
+  state.state = s;  
+}
+
+function UpdateState2(state: LoginState, s : LoginStateEnum, user?:User | undefined) {  
+  state.user = user;
+  state.state = s;  
+}
+
+const initialState = CreateState();
+
+interface LoginResponse {
+  token: string,
+  user: User
+}
+
+interface User {
+  id: string,
+  username: string,
+  name: string
+}
+
+interface ErrorResponse {
+  status: string,
+  statusText: string,
+  message: string
+}
+
+// interceptor that will add the bearer token in the header when we are loged in
+axios.interceptors.request.use(function (config) {
+  var parsedUrl = URLParse(config.url as string, true);
+  if (parsedUrl.pathname.startsWith('/api')){
+    const token = store2.session.get('token');
+    //const token = store.getState()?.authentication?.token;  
+    if (token !== undefined && token !== null)  
+      config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const loginAsync = createAsyncThunk<
+      LoginResponse, 
+      {username: string, secret: string},
+      {rejectValue: ErrorResponse}
+    >(
     'authentication/login',
     async ({username, secret}: {username: string, secret: string}, /* thunkApi */ { rejectWithValue }) => {
       try{
-        console.info(`login(${username}, ${secret}) ->`);   
-        const response = login(username, secret);
-        console.info("login <- "+ JSON.stringify(response));  
-        return response;
-      }catch(err){
-        var resp = {ok: false, message: 'oeps'};
-        return rejectWithValue(err);
+        var data = {username: username, password: secret};
+        var cfg = undefined;
+        var response = await axios.post<LoginResponse>('http://127.0.0.1:5000/api/users/authenticate', data, cfg);
+        return response.data;
+      }catch(err){        
+        return rejectWithValue(
+          {
+            status: err.response.status, 
+            statusText: err.response.statusText, 
+            message: 'oeps'
+          });
       }
     }
   );
@@ -37,6 +112,28 @@ export const logoutAsync = createAsyncThunk(
     }
   );
 
+export const pingAsync = createAsyncThunk<
+      LoginResponse, 
+      undefined,
+      {rejectValue: ErrorResponse}
+    >(
+    'authentication/ping',
+    async (undefined, /* thunkApi */ { rejectWithValue }) => {
+      try{
+        var data = undefined;
+        var cfg = undefined;
+        var response = await axios.get<LoginResponse>('http://127.0.0.1:5000/api/users/ping', cfg);
+        return response.data;
+      }catch(err){        
+        return rejectWithValue(
+          {
+            status: err.response.status, 
+            statusText: err.response.statusText, 
+            message: 'oeps'
+          });
+      }
+    }
+  );
 
 export const authenticationSlice = createSlice({
     name: 'authentication',
@@ -51,31 +148,49 @@ export const authenticationSlice = createSlice({
     extraReducers: (builder) => {
       builder
         .addCase(loginAsync.pending, (state) => {
-          state.state = 'log_in';
+          UpdateState(state, LoginStateEnum.log_in, undefined, undefined);
           console.info(`loginAsync.pending - ${state.state} `);                    
         })
-        .addCase(loginAsync.fulfilled, (state, action) => {
-          state.state = 'logged_in';
-          console.info(`loginAsync.fulfilled - ${state.state} - ${JSON.stringify(action.payload)}`);  
+        .addCase(loginAsync.fulfilled, (state, action) => {          
+          UpdateState(
+            state, 
+            LoginStateEnum.logged_in, 
+            action.payload.token, {
+              id:action.payload.user.id, 
+              username: action.payload.user.username, 
+              name: action.payload.user.name 
+            }); 
+          console.info(`loginAsync.fulfilled - ${state.state} - ${action.payload.user.id} - ${action.payload.user.name}`);  
         })
-        .addCase(loginAsync.rejected, (state, action) => {
-          state.state = 'logged_out';
-          console.info(`login rejected - ${state.state} - ${JSON.stringify(action.payload)}`);  
+        .addCase(loginAsync.rejected, (state, action ) => {
+          UpdateState(state, LoginStateEnum.logged_out);     
+          console.info(`login rejected - ${state.state} - ${action.payload?.status} - ${action.payload?.statusText}`);  
         })        
         .addCase(logoutAsync.pending, (state) => {
-          state.state = 'log_out';
+          UpdateState(state, LoginStateEnum.logged_out);
         })
         .addCase(logoutAsync.fulfilled, (state, action) => {
-          state.state = 'logged_out';
+          UpdateState(state, LoginStateEnum.logged_out);
           console.info(`logged_out - ${state.state} - ${JSON.stringify(action.payload)}`);  
         })
+        .addCase(pingAsync.fulfilled, (state, action) => {
+          UpdateState2(
+            state, 
+            LoginStateEnum.logged_in, 
+            {
+              id:action.payload.user.id, 
+              username: action.payload.user.username, 
+              name: action.payload.user.name 
+            }); 
+        })
+        .addCase(pingAsync.rejected, (state, action ) => {
+          UpdateState(state, LoginStateEnum.logged_out);     
+          console.info(`pong rejected - ${state.state} - ${action.payload?.status} - ${action.payload?.statusText}`);  
+        })  
         ;
     },
   });
 
-// export const { increment } = authenticationSlice.actions;  
-
-export const isLoggedIn = (state: RootState) => state.authentication.state == 'logged_in';
-
+export const isLoggedIn = (state: RootState) => state.authentication.state == LoginStateEnum.logged_in;
 
 export default authenticationSlice.reducer;      
