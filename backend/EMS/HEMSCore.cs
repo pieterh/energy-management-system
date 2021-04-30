@@ -65,7 +65,7 @@ namespace EMS
                
                 try
                 {
-                    _chargePoint.UpdateMaxCurrent(l1, l2, l3);
+                    //_chargePoint.UpdateMaxCurrent(l1, l2, l3);
                 }
                 catch (Exception e)
                 {

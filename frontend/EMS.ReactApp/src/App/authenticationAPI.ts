@@ -34,3 +34,4 @@ export function logout() {
         setTimeout(() => resolve({ data: true }), 2500)
     });
   }
+
