@@ -40,5 +40,6 @@
   <ItemGroup>
     <Folder Include="ExampleRequests\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Middleware\" />
   </ItemGroup>
 </Project>
