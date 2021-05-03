@@ -74,7 +74,7 @@ namespace P1SmartMeter
             else if (string.CompareOrdinal(config.Type.ToString(), "TTY") == 0)
             {
                 _connectionType = ConnectionType.TTY;
-                //_usbPort = config.Port;
+                _usbPort = "/dev/sttyUSB1"; //config.Port;
             }
         }
 

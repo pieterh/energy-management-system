@@ -17,29 +17,21 @@ namespace EMS.WebHosts
     [Route("api/[controller]")]
     public class MyDemoController : ControllerBase
     {
-        private ILogger Logger { get; init; }
-
-        private readonly IChargePoint _chargePoint;
-        private IChargePoint ChargePoint => _chargePoint;
+        private ILogger Logger { get; init; }        
+        private IChargePoint ChargePoint { get; init;  }
 
         public MyDemoController(ILogger<MyDemoController> logger, IChargePoint chargePoint)
         {
             Logger = logger;
-            _chargePoint = chargePoint;
+            ChargePoint = chargePoint;
         }        
-
-        //[HttpGet]
-        //public ActionResult<string> GetAll()
-        //{            
-        //    return $"uh... {Environment.NewLine}{ChargePoint.LastSocketMeasurement?.ToString()}...";
-        //}
 
         [HttpGet]
         public ActionResult<string> Get([FromQuery][BindRequired] int id)
         {
             //http://127.0.0.1:5000/api/MyDemo?id=12
-            Logger.LogInformation($"got request with {id}");
-            return $"id ...{id}";
+            Logger.LogInformation($"got request with {id} - {ChargePoint.LastSocketMeasurement.Mode3StateMessage}");
+            return $"id ...{id}{Environment.NewLine}{ChargePoint.LastSocketMeasurement.Mode3StateMessage}";
         }
     }
 }

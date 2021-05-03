@@ -23,6 +23,7 @@ namespace AlfenNG9xx
         private double _meterReadingStart = 0;
 
         public SocketMeasurementBase LastSocketMeasurement { get; private set; }
+        public ChargeSessionInfoBase ChargeSessionInfo { get; private set; }
 
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
         public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
@@ -89,28 +90,8 @@ namespace AlfenNG9xx
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
-                {                   
-                    var sm = ReadSocketMeasurement(1);
-                    Logger.Debug($"{sm}");
-                    var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
-
-                    double _energyDelivered = 0;
-                    if (!_isConnected && sm.VehicleConnected)
-                    {
-                        _isConnected = true;
-                        _meterReadingStart = sm.RealEnergyDeliveredSum;
-                    }                  
-                    if (_isConnected && !sm.VehicleConnected)
-                    {
-                        _isConnected = false;
-                        _energyDelivered = sm.RealEnergyDeliveredSum - _meterReadingStart;
-                    }
-
-                    LastSocketMeasurement = sm;                    
-
-                    StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
-                    if (chargingStateChanged)
-                        ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, _energyDelivered != 0, _energyDelivered));
+                {
+                    HandleWork();
 
                     await Task.Delay(2500, stoppingToken);
                 }
@@ -123,15 +104,7 @@ namespace AlfenNG9xx
                 }
                 catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
                 {
-                    Logger.Error("Exception: " + e.Message);
                     Logger.Error("Partial Modbus packaged received, we try later again");
-                }
-                catch (Exception e) when (e.Message.StartsWith("Broken pipe"))
-                {
-                    Logger.Error("Exception: " + e.Message);
-                    Logger.Error("Broken pipe, we try later again");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
                 }
                 catch (Exception e)
                 {
@@ -142,6 +115,52 @@ namespace AlfenNG9xx
                 }
             }
             Logger.Info($"Canceled");
+        }
+
+        private void HandleWork()
+        {
+            var sm = ReadSocketMeasurement(1);
+            var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
+
+            double _energyDelivered = 0;
+            if (!_isConnected && sm.VehicleConnected)
+            {
+                _isConnected = true;
+                _meterReadingStart = sm.RealEnergyDeliveredSum;
+                ChargeSessionInfo = new ChargeSessionInfoBase()
+                {
+                    Start = DateTime.Now,
+                    ChargingTime = 0,
+                    EnergyDelivered = 0.0
+                };
+            }
+
+            if (_isConnected)
+            {
+                if (ChargeSessionInfo == null)
+                {
+                    ChargeSessionInfo = new ChargeSessionInfoBase()
+                    {
+                        Start = DateTime.Now,
+                        ChargingTime = 0,
+                        EnergyDelivered = 0.0
+                    };
+                }
+
+                ChargeSessionInfo.EnergyDelivered = sm.RealEnergyDeliveredSum - _meterReadingStart;
+            }
+
+            if (_isConnected && !sm.VehicleConnected)
+            {
+                _isConnected = false;
+                _energyDelivered = sm.RealEnergyDeliveredSum - _meterReadingStart;
+            }
+
+
+            LastSocketMeasurement = sm;
+            StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
+            if (chargingStateChanged)
+                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, _energyDelivered != 0, _energyDelivered));
         }
 
         protected virtual void ShowProductInformation()
@@ -259,19 +278,43 @@ namespace AlfenNG9xx
             sm.VoltageL1 = Converters.ConvertRegistersFloat(sm_part1, 6);
             sm.VoltageL2 = Converters.ConvertRegistersFloat(sm_part1, 8);
             sm.VoltageL3 = Converters.ConvertRegistersFloat(sm_part1, 10);
+            sm.Voltage = sm.VoltageL1;
+            /* Voltage L1-L2*/
+            /* Voltage L2-L3*/
+            /* Voltage L3-L1*/
 
+            /* Current N is null */
             sm.CurrentL1 = Converters.ConvertRegistersFloat(sm_part1, 20);
             sm.CurrentL2 = Converters.ConvertRegistersFloat(sm_part1, 22);
             sm.CurrentL3 = Converters.ConvertRegistersFloat(sm_part1, 24);
 
+            // sum is null, calculate it
+            sm.CurrentSum = sm.CurrentL1 + sm.CurrentL2 + sm.CurrentL3;
+
+
+            sm.RealPowerL1 = Converters.ConvertRegistersFloat(sm_part1, 38);
+            sm.RealPowerL2 = Converters.ConvertRegistersFloat(sm_part1, 40);
+            sm.RealPowerL3 = Converters.ConvertRegistersFloat(sm_part1, 42);
+            sm.RealPowerSum = Converters.ConvertRegistersFloat(sm_part1, 45);  /* */
+
+            /* power factor l1, l2 and l3 are null */
+            /* power factor sum 1 */
+            /* frequency */
+            /* real power l1, l2, l3 and sum have values */
+            /* apparent power and reactive power are null */
             sm.RealEnergyDeliveredL1 = Converters.ConvertRegistersDouble(sm_part1, 62);
             sm.RealEnergyDeliveredL2 = Converters.ConvertRegistersDouble(sm_part1, 66);
             sm.RealEnergyDeliveredL3 = Converters.ConvertRegistersDouble(sm_part1, 70);
             sm.RealEnergyDeliveredSum = Converters.ConvertRegistersDouble(sm_part1, 74);
+            /* rest of part1 is null */
 
             sm.Availability = Converters.ConvertRegistersShort(sm_part2, 0) == 1;
 
             sm.Mode3State = SocketMeasurement.ParseMode3State(Converters.ConvertRegistersToString(sm_part2, 1, 5));
+            var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
+
+            sm.LastChargingStateChanged = (LastSocketMeasurement == null || LastSocketMeasurement?.Mode3State != sm.Mode3State) ? DateTime.Now : LastSocketMeasurement.LastChargingStateChanged;
+
             sm.AppliedMaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 6);
             sm.MaxCurrentValidTime = Converters.ConvertRegistersUInt32(sm_part2, 8);
             sm.MaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 10);
@@ -287,12 +330,13 @@ namespace AlfenNG9xx
             if (_modbusMaster == null)
                 _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
 
-            lock (_modbusMaster) { 
+            lock (_modbusMaster)
+            {
                 return _modbusMaster.ReadHoldingRegisters(slave, address, count);
             }
         }
 
-        
+
         public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
         {
             Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
@@ -304,7 +348,7 @@ namespace AlfenNG9xx
                 if (maxL2 <= 0f || maxL3 <= 0f)
                 {
                     phases = 1;
-                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero); ;
+                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
                 }
                 else
                 {

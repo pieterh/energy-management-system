@@ -10,7 +10,7 @@ let plugins = [
         patterns: [
             { from: 'public/logo192.png', to: '' },
             { from: 'public/logo512.png', to: '' },
-            { from: 'public/manifest.json', to: '' },
+            { from: 'public/app.webmanifest', to: '' },
         ]
     }),
     new InterpolateHtmlPlugin({
