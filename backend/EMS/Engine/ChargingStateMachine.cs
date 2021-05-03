@@ -3,8 +3,6 @@ namespace EMS.Engine
 {
     public class ChargingStateMachine
     {
-        //private static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("chargingstate");
-
         public enum State { NotCharging, Charging, ChargingPaused }
         public State Current { get; set; } = State.NotCharging;
         public DateTime LastStateChange { get; set; } = DateTime.Now;
@@ -43,11 +41,14 @@ namespace EMS.Engine
                     UpdateState(State.ChargingPaused);
                     stateHasChanged = true;
                 }
-            }else
+            }
+            else
+            {
                 if (Current == State.ChargingPaused)
                 {
                     LastStateChange = DateTime.Now;
                 }
+            }
             return stateHasChanged;
         }
 
@@ -62,17 +63,19 @@ namespace EMS.Engine
                     UpdateState(State.Charging);
                     stateHasChanged = true;
                 }
-            }else
-            if (Current == State.Charging)
+            }
+            else
             {
-                LastStateChange = DateTime.Now;
+                if (Current == State.Charging)
+                {
+                    LastStateChange = DateTime.Now;
+                }
             }
             return stateHasChanged;
         }
 
         private void UpdateState(State newState)
         {
-            //Logger.Info($"Change state {Current} -> {newState}");
             Current = newState;
             LastStateChange = DateTime.Now;
         }
