@@ -304,7 +304,7 @@ namespace AlfenNG9xx
                 if (maxL2 <= 0f || maxL3 <= 0f)
                 {
                     phases = 1;
-                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero); ;
+                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
                 }
                 else
                 {

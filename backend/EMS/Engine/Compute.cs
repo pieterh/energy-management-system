@@ -81,14 +81,20 @@ namespace EMS
             {
                 if (_state.Current != ChargingStateMachine.State.NotCharging)
                 {                   
-                    if ((_state.Current == ChargingStateMachine.State.ChargingPaused) || (stateHasChanged = _state.Pause()))
+                    if (_state.Current == ChargingStateMachine.State.ChargingPaused)
                     {
                         retval = 0.0;
-                        Logger?.LogInformation($"Not enough solar power... Stop charging...");
-                        //stateHasChanged = true;
+                        Logger?.LogInformation($"Not enough solar power... We have stopped charging...");                        
                     }
                     else
                     {
+                        stateHasChanged = _state.Pause();
+                        if (stateHasChanged)
+                        {
+                            retval = 0.0;
+                            Logger?.LogInformation($"Not enough solar power... Stop charging......");
+                        }
+
                         Logger?.LogInformation($"Not enough solar power... Keep charging...");
                         retval = MinimumChargeCurrent;
                     }

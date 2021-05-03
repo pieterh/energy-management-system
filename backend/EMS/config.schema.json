@@ -74,11 +74,23 @@
     "web": {
       "type": "object",
       "properties": {
-        "port": {
-          "type": "number"
-        },
-        "host": {
-          "type": "string"
+        "port": { "type": "number" },
+        "host": { "type": "string" },
+        "jwt": {
+          "type": "object",
+          "properties": {
+            "issuer": { "type": "string" },
+            "audience": { "type": "string" },
+            "expiration": { "type": "number" },
+            "clockskew": { "type": "number" }
+          },
+          "required": [
+            "issuer",
+            "audience",
+            "expiration",
+            "clockskew"
+          ]
+
         }
       },
       "required": [
