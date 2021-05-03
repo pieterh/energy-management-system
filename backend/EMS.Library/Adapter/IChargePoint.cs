@@ -18,6 +18,8 @@ namespace EMS.Library
     public interface IChargePoint : IAdapter, IHostedService
     {
         SocketMeasurementBase LastSocketMeasurement { get; }
+        ChargeSessionInfoBase ChargeSessionInfo { get; }
+
         void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3);
 
         public class StatusUpdateEventArgs : EventArgs

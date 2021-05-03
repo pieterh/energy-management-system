@@ -42,6 +42,12 @@
   ],
   "web": {
     "port": 5000,
-    "host": "localhost"
+    "host": "localhost",
+    "jwt": {
+      "issuer": "hems",
+      "audience": "hems",
+      "expiration": 60,
+      "clockskew": 10
+    }
   }
 }
