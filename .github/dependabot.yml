@@ -5,11 +5,4 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: "@material-ui/styles"
-    versions:
-    - 4.11.4
-  - dependency-name: react-hook-form
-    versions:
-    - 7.3.3
-  target-branch: "updates"
+  target-branch: "develop"

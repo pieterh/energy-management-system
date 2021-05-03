@@ -14,7 +14,7 @@ namespace EMS
         private static readonly NLog.Logger LoggerState = NLog.LogManager.GetLogger("chargingstate");
 
         private readonly ILogger Logger;
-        public ChargingMode Mode { get; set; } = ChargingMode.MaxCharge;
+        public ChargingMode Mode { get; set; }
 
         private readonly Measurements _measurements = new();
 
@@ -75,30 +75,12 @@ namespace EMS
 
             var avgCurrent = avgCurrentUsingL1 + avgCurrentUsingL2 + avgCurrentUsingL3;
 
-            var retval = Math.Round(LimitCurrentSolar(ci.CurrentL1, avgCurrent), 2);
+            var chargeCurrent = Math.Round(LimitCurrentSolar(ci.CurrentL1, avgCurrent), 2);
             
-            if (retval < MinimumChargeCurrent)
+            if (chargeCurrent < MinimumChargeCurrent)
             {
-                if (_state.Current != ChargingStateMachine.State.NotCharging)
-                {                   
-                    if ((_state.Current == ChargingStateMachine.State.ChargingPaused) || (stateHasChanged = _state.Pause()))
-                    {
-                        retval = 0.0;
-                        Logger?.LogInformation($"Not enough solar power... Stop charging...");
-                        //stateHasChanged = true;
-                    }
-                    else
-                    {
-                        Logger?.LogInformation($"Not enough solar power... Keep charging...");
-                        retval = MinimumChargeCurrent;
-                    }
-                }
-                else
-                {
-                    retval = 0.0;
-                }
-            }
-            else {
+                (chargeCurrent, stateHasChanged) = NotEnoughOverCapicity();
+            } else {
                 if (_state.Current == ChargingStateMachine.State.ChargingPaused)
                 {
                     stateHasChanged = _state.Unpause();
@@ -107,20 +89,53 @@ namespace EMS
                 {
                     stateHasChanged = _state.Start();
                 }
+
                 if (_state.Current != ChargingStateMachine.State.Charging)
                 {
-                    retval = 0.0;
+                    chargeCurrent = 0.0;
                 }
             }
 
-            Logger?.LogInformation($"{(float)Math.Round(avgCurrentUsingL1, 2)}, {(float)Math.Round(avgCurrentUsingL2, 2)}, {(float)Math.Round(avgCurrentUsingL3, 2)} => {retval}, {stateHasChanged}, {_state.Current}");
+            Logger?.LogInformation($"{(float)Math.Round(avgCurrentUsingL1, 2)}, {(float)Math.Round(avgCurrentUsingL2, 2)}, {(float)Math.Round(avgCurrentUsingL3, 2)} => {chargeCurrent}, {stateHasChanged}, {_state.Current}");
 
             if (stateHasChanged)
             {
                 LoggerState.Info($"State changed {_state.Current}");
             }
             
-            return ((float)Math.Round(retval, 2), 0, 0);
+            return ((float)Math.Round(chargeCurrent, 2), 0, 0);
+        }
+
+        private (double current, bool stateHasChanged) NotEnoughOverCapicity()
+        {
+            double retval;
+            bool stateHasChanged = false;
+            if (_state.Current != ChargingStateMachine.State.NotCharging)
+            {
+                if (_state.Current == ChargingStateMachine.State.ChargingPaused)
+                {
+                    retval = 0.0;
+                    Logger?.LogInformation($"Not enough solar power... We have stopped charging...");
+                }
+                else
+                {
+                    stateHasChanged = _state.Pause();
+                    if (stateHasChanged)
+                    {
+                        retval = 0.0;
+                        Logger?.LogInformation($"Not enough solar power... Stop charging......");
+                    }
+
+                    Logger?.LogInformation($"Not enough solar power... Keep charging...");
+                    retval = MinimumChargeCurrent;
+                }
+            }
+            else
+            {
+                retval = 0.0;
+            }
+
+            return (current: retval, stateHasChanged: stateHasChanged);
         }
 
         private static double LimitCurrent(double c, double avgCurrentUsing)

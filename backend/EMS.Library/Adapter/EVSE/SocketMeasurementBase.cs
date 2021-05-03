@@ -30,15 +30,26 @@ namespace EMS.Library.Adapter.EVSE
         public UInt64 MeterTimestamp { get; set; }
 
         public Mode3State Mode3State { get; set; }
+        public DateTime LastChargingStateChanged { get; set; }
+
+        public float Voltage { get; set; }
         public float VoltageL1 { get; set; }
         public float VoltageL2 { get; set; }
         public float VoltageL3 { get; set; }
+
         public float CurrentL1 { get; set; }
         public float CurrentL2 { get; set; }
         public float CurrentL3 { get; set; }
 
+        public float CurrentSum { get; set; }
+
+        public float RealPowerSum { get; set; }
+
+        public double RealEnergyDeliveredSum { get; set; }
+
         public float AppliedMaxCurrent { get; set; }
 
+        public bool Availability { get; set; }
         public UInt32 MaxCurrentValidTime { get; set; }
         public float MaxCurrent { get; set; }
         public float ActiveLBSafeCurrent { get; set; }
@@ -69,15 +80,15 @@ namespace EMS.Library.Adapter.EVSE
         public string Mode3StateMessage { get {
                 switch (Mode3State)
                 {
-                    case Mode3State.A: return "Standby (A)";
-                    case Mode3State.B1: return "Vehicle detected (B1)";
-                    case Mode3State.B2: return "Vehicle detected (B2)";
-                    case Mode3State.C1: return "Ready charging (C1)";
-                    case Mode3State.C2: return "Charging (C2)";
-                    case Mode3State.D1: return "Ready charging in ventilated area (D1)";
-                    case Mode3State.D2: return "Charging in ventilated area (D2)";
-                    case Mode3State.E: return "No Power (E)";
-                    case Mode3State.F: return "Error (F)";
+                    case Mode3State.A: return "Standby";
+                    case Mode3State.B1: return "Vehicle detected";
+                    case Mode3State.B2: return "Vehicle detected";
+                    case Mode3State.C1: return "Ready charging";
+                    case Mode3State.C2: return "Charging";
+                    case Mode3State.D1: return "Ready charging in ventilated area";
+                    case Mode3State.D2: return "Charging in ventilated area";
+                    case Mode3State.E: return "No Power";
+                    case Mode3State.F: return "Error";
                     default: return "Unknown state";
                 }
             }
@@ -110,4 +121,6 @@ namespace EMS.Library.Adapter.EVSE
             return $"Meter state: {MeterState}; Safe current: {ActiveLBSafeCurrent}A; State: {Mode3State}; Phases: {(Int16)Phases}; Max: {MaxCurrent}A; Applied: {AppliedMaxCurrent}A; Valid: {MaxCurrentValidTime}S";
         }
     }
+
+
 }

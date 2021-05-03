@@ -65,7 +65,7 @@ namespace EMS
                
                 try
                 {
-                    //_chargePoint.UpdateMaxCurrent(l1, l2, l3);
+                    _chargePoint.UpdateMaxCurrent(l1, l2, l3);
                 }
                 catch (Exception e)
                 {
@@ -114,7 +114,7 @@ namespace EMS
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
         {
             Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered} ");
-            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}");
+            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3State}, {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}");
         }
     }
 }
