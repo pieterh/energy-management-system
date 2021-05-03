@@ -75,10 +75,6 @@ namespace EMS
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
-                    //services.Configure<List<Adapter>>(hostingContext.Configuration.GetSection("adapters"));
-                    //services.Configure<List<Instance>>(hostingContext.Configuration.GetSection("instances"));
-                    //services.Configure<WebConfig>(hostingContext.Configuration.GetSection("web"));
-
                     ConfigureInstances(builderContext, services);
 
                     services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<HEMSCore>(x));
@@ -87,8 +83,6 @@ namespace EMS
                 {
                     webBuilder.UseKestrel((builderContext, kestrelOptions) =>
                     {
-                        //kestrelOptions.Configure(
-                        // builderContext.Configuration.GetSection("Kestrel"), reloadOnChange: false);
 
                         kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();

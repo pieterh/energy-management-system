@@ -1,0 +1,42 @@
+﻿@apiRoot = http://localhost:5000
+###
+
+# @name login
+POST {{apiRoot}}/api/users/authenticate HTTP/1.1
+content-type: application/json
+
+{
+    "username": "admin",
+    "password": "admin"
+}
+###
+@token = {{login.response.body.token}}
+
+####
+GET {{apiRoot}}/api/mydemo?id=12 HTTP/1.1
+Authorization: Bearer {{token}}
+
+
+
+####
+
+GET {{apiRoot}}/api/users/ping HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{token}}
+
+####
+
+GET {{apiRoot}}/api/evse/station HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{token}}
+
+#####
+
+GET {{apiRoot}}/api/evse/socket/1 HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{token}}
+
+
+
+
+####
