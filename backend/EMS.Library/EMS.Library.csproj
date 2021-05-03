@@ -3,12 +3,13 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.9" />
+    <PackageReference Include="NLog" Version="4.7.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapter\" />
     <Folder Include="Configuration\" />
     <Folder Include="Adapter\EVSE\" />
+    <Folder Include="DateTime\" />
   </ItemGroup>
 </Project>

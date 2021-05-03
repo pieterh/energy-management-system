@@ -19,13 +19,14 @@ namespace AlfenNG9xx.Model
 
         public MeterType MeterType { get; set; }
 
+        public float RealPowerL1 { get; set; }
+        public float RealPowerL2 { get; set; }
+        public float RealPowerL3 { get; set; }
+
         public double RealEnergyDeliveredL1 { get; set; }
         public double RealEnergyDeliveredL2 { get; set; }
         public double RealEnergyDeliveredL3 { get; set; }
-        public double RealEnergyDeliveredSum { get; set; }
-
-        public bool Availability { get; set; }
-
+        
         public static MeterType ParseMeterType(ushort meterType)
         {
             if (Enum.IsDefined(typeof(MeterType), (Int32)meterType))

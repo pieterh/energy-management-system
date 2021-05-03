@@ -1,18 +1,15 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Threading.Tasks;
 using System.IO;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 using EMS.WebHost.Helpers;
 
@@ -21,6 +18,7 @@ namespace EMS.WebHost
     public class WebConfig
     {
         public ushort Port { get; set; }
+        public JwtConfig Jwt { get; set; }
     }
 
     public class Startup
@@ -34,10 +32,16 @@ namespace EMS.WebHost
         public IWebHostEnvironment Env => _env;
         public IConfiguration Configuration => _configuration;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment env)
+        static Startup()
+        {
+            // don't map any claims.. we don't need old style xml schema claims...
+            JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+        }
+
+        public Startup( IWebHostEnvironment env, IConfiguration configuration)
         {
             _env = env;
-            _configuration = configuration;
+            _configuration = configuration;            
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -46,19 +50,17 @@ namespace EMS.WebHost
             Configuration.GetSection("web").Bind(wc);
             WebConfig = wc;
 
+            // not nice to create the service here
+            // and we also need a reference to the service later
+            // hence we did add it as a dummy arg to configure....
+            // TODO: fix this weird dependency
+            IJWTService jwtCreator = null;            
+            services.AddSingleton<IJWTService>((x) => {
+                jwtCreator = ActivatorUtilities.CreateInstance<JwtTokenService>(x);
+                return jwtCreator;
+            });            
+
             services.AddControllers();
-
-            var settings = new JwtSettings()
-            {
-                Key = "72cc7881-297d-4670-8d95-54a00692f1ab",
-                Issuer = "http://petteflet.org",
-                Audience = "Test",
-                MinutesToExpiration = 5,
-                ClockSkew = new System.TimeSpan(0, 0, 30)
-            };
-
-            // don't map any claims.. we don't need old style xml schema claims...
-            JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
             services.AddAuthentication(options =>
             {
@@ -68,38 +70,9 @@ namespace EMS.WebHost
                 options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = settings.Issuer,
-                    ValidAudience = settings.Audience,
-                    IssuerSigningKey = new RsaSecurityKey(JwtTokens.KeyParamaters),
-                    ClockSkew = settings.ClockSkew
-                };
+            {                
+                options.TokenValidationParameters = jwtCreator.GetTokenValidationParameters();
                 options.SaveToken = true;
-                options.Events = new JwtBearerEvents
-                {
-                    //OnMessageReceived = context =>
-                    //{
-                    //    // retrieve jwt from cookie and store in context
-                    //    if (context.Request.Cookies.ContainsKey("X-Access-Token"))
-                    //    {
-                    //        context.Token = context.Request.Cookies["X-Access-Token"];
-                    //    }
-
-                    //    return Task.CompletedTask;
-                    //}
-                };
-            //})
-            //.AddCookie(options =>
-            //{
-            //    options.Cookie.SameSite = SameSiteMode.Strict;
-            //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            //    options.Cookie.IsEssential = true;
             });
 
             //In production, the React files will be served from this directory
@@ -109,10 +82,9 @@ namespace EMS.WebHost
             });
         }
 
-        public void Configure(ILogger<Startup> logger, IApplicationBuilder app)
+        public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJWTService t /*see comment above*/)
         {
             Logger = logger;
-
             if (Env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -134,12 +106,10 @@ namespace EMS.WebHost
 
                         if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
                         {
-                            await context.Response.WriteAsync(
-                                                      "File error thrown!<br><br>\r\n");
+                            await context.Response.WriteAsync("File error thrown!<br><br>\r\n");
                         }
 
-                        await context.Response.WriteAsync(
-                                                      "<a href=\"/\">Home</a><br>\r\n");
+                        await context.Response.WriteAsync("<a href=\"/\">Home</a><br>\r\n");
                         await context.Response.WriteAsync("</body></html>\r\n");
                         await context.Response.WriteAsync(new string(' ', 512));
                     });
@@ -147,36 +117,15 @@ namespace EMS.WebHost
                 app.UseHsts();
             }
 
-            var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
 
-            app.UseMiddleware<Middleware.SecurityHeaders>();
 
+            app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            app.Use(async (context, next) =>
-            {
-                Logger.LogInformation($"{context.Request.Path}");
-                var path = context.Request.Path;
-                if (path.StartsWithSegments(new PathString("/app")))
-                {
-                    if (string.IsNullOrEmpty(Path.GetExtension(path)))
-                    {
-                        context.Response.ContentType = "text/html";
-                        context.Request.Path = Path.Combine("/app", "index.html");
-                    }
-                }
-
-                if (path.Equals(new PathString("/")))
-                {
-                    context.Response.ContentType = "text/html";
-                    context.Request.Path = Path.Combine("/app", "index.html");
-                }
-                await next.Invoke();
-            });
+            app.UseMiddleware<Middleware.SpaMiddleware>(Logger);
 
             app.UseRouting();
 
@@ -189,13 +138,12 @@ namespace EMS.WebHost
                 endpoints.MapControllers();
             });
 
-            //app.Use(FallbackMiddlewareHandler);
             app.UseSpa(spa =>
             {
                 if (Env.IsDevelopment())
                 {
                     // Make sure you have started the frontend with npm run dev on port 5010
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");                //NOSONAR
                 }                
             });
 
