@@ -1,21 +1,17 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Threading.Tasks;
 using System.IO;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 using EMS.WebHost.Helpers;
-using System;
 
 namespace EMS.WebHost
 {
@@ -121,8 +117,6 @@ namespace EMS.WebHost
                 app.UseHsts();
             }
 
-            var serverAddressesFeature = app.ServerFeatures.Get<IServerAddressesFeature>();
-
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
 
@@ -149,7 +143,7 @@ namespace EMS.WebHost
                 if (Env.IsDevelopment())
                 {
                     // Make sure you have started the frontend with npm run dev on port 5010
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");                //NOSONAR
                 }                
             });
 

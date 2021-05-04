@@ -74,8 +74,7 @@ namespace EMS.WebHost.Controllers
         [HttpGet("ping")]
         public PingResponse Ping() {
             var id = User.Claims.FirstOrDefault<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;
-            var s = new StringBuilder();
+            var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;            
             foreach(var c in User.Claims)
             {
                 Logger.LogDebug($"{c.Type} - {c.Value}");

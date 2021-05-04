@@ -14,7 +14,7 @@ namespace EMS
         private static readonly NLog.Logger LoggerState = NLog.LogManager.GetLogger("chargingstate");
 
         private readonly ILogger Logger;
-        public ChargingMode Mode { get; set; } = ChargingMode.MaxCharge;
+        public ChargingMode Mode { get; set; }
 
         private readonly Measurements _measurements = new();
 
