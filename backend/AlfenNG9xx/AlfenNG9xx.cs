@@ -89,28 +89,8 @@ namespace AlfenNG9xx
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
-                {                   
-                    var sm = ReadSocketMeasurement(1);
-                    Logger.Debug($"{sm}");
-                    var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
-
-                    double _energyDelivered = 0;
-                    if (!_isConnected && sm.VehicleConnected)
-                    {
-                        _isConnected = true;
-                        _meterReadingStart = sm.RealEnergyDeliveredSum;
-                    }                  
-                    if (_isConnected && !sm.VehicleConnected)
-                    {
-                        _isConnected = false;
-                        _energyDelivered = sm.RealEnergyDeliveredSum - _meterReadingStart;
-                    }
-
-                    LastSocketMeasurement = sm;                    
-
-                    StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
-                    if (chargingStateChanged)
-                        ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, _energyDelivered != 0, _energyDelivered));
+                {
+                    HandleWork();
 
                     await Task.Delay(2500, stoppingToken);
                 }
@@ -123,15 +103,7 @@ namespace AlfenNG9xx
                 }
                 catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
                 {
-                    Logger.Error("Exception: " + e.Message);
                     Logger.Error("Partial Modbus packaged received, we try later again");
-                }
-                catch (Exception e) when (e.Message.StartsWith("Broken pipe"))
-                {
-                    Logger.Error("Exception: " + e.Message);
-                    Logger.Error("Broken pipe, we try later again");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
                 }
                 catch (Exception e)
                 {
@@ -142,6 +114,30 @@ namespace AlfenNG9xx
                 }
             }
             Logger.Info($"Canceled");
+        }
+
+        private void HandleWork()
+        {
+            var sm = ReadSocketMeasurement(1);
+            var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
+
+            double _energyDelivered = 0;
+            if (!_isConnected && sm.VehicleConnected)
+            {
+                _isConnected = true;
+                _meterReadingStart = sm.RealEnergyDeliveredSum;
+            }
+            if (_isConnected && !sm.VehicleConnected)
+            {
+                _isConnected = false;
+                _energyDelivered = sm.RealEnergyDeliveredSum - _meterReadingStart;
+            }
+
+            LastSocketMeasurement = sm;
+
+            StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
+            if (chargingStateChanged)
+                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, _energyDelivered != 0, _energyDelivered));
         }
 
         protected virtual void ShowProductInformation()
@@ -304,7 +300,7 @@ namespace AlfenNG9xx
                 if (maxL2 <= 0f || maxL3 <= 0f)
                 {
                     phases = 1;
-                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero); ;
+                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
                 }
                 else
                 {
