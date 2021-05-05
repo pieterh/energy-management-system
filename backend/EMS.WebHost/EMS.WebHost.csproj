@@ -42,4 +42,7 @@
     <Folder Include="Helpers\" />
     <Folder Include="Middleware\" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Controllers\UsersController.cs" />
+  </ItemGroup>
 </Project>

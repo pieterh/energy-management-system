@@ -1,5 +1,5 @@
 import React from 'react';
-import { Provider } from "react-redux";
+
 import { useLocation, useHistory } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 
@@ -14,12 +14,10 @@ import Switch from "@material-ui/core/Switch";
 
 import green from "@material-ui/core/colors/green";
 
-import { store,  } from '../../App/store';
-
 import { useAppSelector, useAppDispatch } from '../../App/hooks';
 
 import { isLoggedIn } from '../../App/authenticationSlice';
-import { ChangeTheme, ThemeTypes } from '../../App/CustomThemeProviderSlice';
+import { ChangeTheme, ThemeTypes } from '../themeprovider/CustomThemeProviderSlice';
 
 
 type FormInputs = {
@@ -87,40 +85,38 @@ export function AppHeader(){
     }
 
     return (
-        <Provider store={store}>    
-            <AppBar color="inherit" position="static">
-                <Toolbar>
-                    <IconButton disabled={!loggedIn} edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
-                    <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" className={classes.title}>
-                    {title}
-                    </Typography>
-                    <div>
-                    {showLogoutButton && <Button onClick={(event) => onLogoutClick(event)} color="inherit">Logout</Button> }
-                    </div>
-                    <div>
-                    {showLoginButton && <Button onClick={(event) => onLoginClick(event)}color="inherit">Login</Button> }
-                    </div>                                        
-                    <Controller
-                      name="darkState"
-                      control={control}     
-                      defaultValue={true}
-                      render={(props) => {
-                        return (
-                          <Switch
-                            // color='default' 
-                            size="small"
-                            onChange={(e) => { props.field.onChange(e.target.checked); onThemeChange(e); }}
-                            checked={props.field.value} /* set default value */
-                          />
-                        );
-                      }} 
-                    />
-                </Toolbar>
-            </AppBar> 
-        </Provider>
+      <AppBar color="inherit" position="static">
+        <Toolbar>
+          <IconButton disabled={!loggedIn} edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
+          <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" className={classes.title}>
+          {title}
+          </Typography>
+          <div>
+          {showLogoutButton && <Button onClick={(event) => onLogoutClick(event)} color="inherit">Logout</Button> }
+          </div>
+          <div>
+          {showLoginButton && <Button onClick={(event) => onLoginClick(event)}color="inherit">Login</Button> }
+          </div>                                        
+          <Controller
+            name="darkState"
+            control={control}     
+            defaultValue={true}
+            render={(props) => {
+              return (
+                <Switch
+                  // color='default' 
+                  size="small"
+                  onChange={(e) => { props.field.onChange(e.target.checked); onThemeChange(e); }}
+                  checked={props.field.value} /* set default value */
+                />
+              );
+            }} 
+          />
+        </Toolbar>
+      </AppBar> 
     );
-    }
+  }
 
     export default AppHeader;
