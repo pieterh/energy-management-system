@@ -2,9 +2,9 @@ import React from 'react';
 import { createMuiTheme, Theme, useTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/core/styles';
 
-import { RootState, store } from './store';
+import { useAppSelector } from '../../App/hooks'
+
 import { ThemeTypes } from './CustomThemeProviderSlice';
-import { useSelector } from 'react-redux';
 
 interface ThemeProviderProps {
   children: React.ReactNode
@@ -37,8 +37,8 @@ const availableThemes : {[key: string]: Theme} = {
 };
 
 export function MyThemeProvider({ children } : ThemeProviderProps) {
-  const themeName = useSelector<RootState>( state => state.customTheme.themeName ) as string;
-  const themeType = useSelector<RootState>( state => state.customTheme.themeType ) as ThemeTypes;
+  const themeName = useAppSelector( state => state.customTheme.themeName ) as string;
+  const themeType = useAppSelector( state => state.customTheme.themeType ) as ThemeTypes;  
   const currentTheme = availableThemes[themeType];
 
   const contextValue = {

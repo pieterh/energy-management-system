@@ -4,15 +4,14 @@ import { BrowserRouter as BrowserRouter, Route } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 
-//import './App.css';
-import MyThemeProvider from './CustomThemeProvider';
 import { useAppDispatch } from './hooks';
 import { pingAsync } from './authenticationSlice';
 
-import AppHeader from '../components/AppHeader/AppHeader';
-import Main from '../components/Main/Main';
-import Login from '../components/Login/Login';
-import Logout from '../components/Logout/Logout';
+import MyThemeProvider from '../features/themeprovider/CustomThemeProvider';
+import AppHeader from '../features/appheader/AppHeader';
+import Main from '../features/main/Main';
+import Login from '../features/login/Login';
+import Logout from '../features/logout/Logout';
 
 function App() {   
   const [initialized, setInitialized] = useState(false);
