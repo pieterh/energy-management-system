@@ -16,12 +16,10 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 
 import { useForm, Controller } from "react-hook-form";
 
-import { loginAsync, isLoggedIn } from '../../App/authenticationSlice';
-
 import { useAppSelector, useAppDispatch } from '../../App/hooks';
-
-import  Credits from '../Credits/Credits';
-
+import { loginAsync, isLoggedIn } from '../../App/authenticationSlice';
+import  Credits from '../credits/Credits';
+ 
 import './Login.css';
 
 const useStyles = makeStyles ((theme: Theme) => 

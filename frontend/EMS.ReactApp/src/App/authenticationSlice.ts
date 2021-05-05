@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import  store2  from 'store2';
+import  browserStorage  from 'store2';
 
 import axios, {AxiosResponse} from 'axios';
 import  URLParse from 'url-parse';
@@ -25,7 +25,7 @@ function  CreateState() : LoginState {
     user: undefined 
   } ;
 
-  var token = store2.session.get('token');
+  var token = browserStorage.session.get('token');
   if (token !== undefined && token !== null){
     // s.token = token;
     s.state = LoginStateEnum.logged_in;
@@ -38,9 +38,9 @@ function  CreateState() : LoginState {
 
 function UpdateState(state: LoginState, s : LoginStateEnum, token?:string | undefined, user?:User | undefined) {  
   if (token !== null && token !== undefined)
-    store2.session.set('token', token);
+    browserStorage.session.set('token', token);
   else
-    store2.session.remove('token');
+    browserStorage.session.remove('token');
   state.user = user;
   state.state = s;  
 }
@@ -73,7 +73,7 @@ interface ErrorResponse {
 axios.interceptors.request.use(function (config) {
   var parsedUrl = URLParse(config.url as string, true);
   if (parsedUrl.pathname.startsWith('/api')){
-    const token = store2.session.get('token');
+    const token = browserStorage.session.get('token');
     //const token = store.getState()?.authentication?.token;  
     if (token !== undefined && token !== null)  
       config.headers.Authorization = `Bearer ${token}`;
