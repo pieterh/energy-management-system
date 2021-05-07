@@ -3,7 +3,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -13,20 +12,27 @@ using EMS.WebHost.Helpers;
 
 namespace EMS.WebHost.Controllers
 {
+    public class Response
+    {
+        public int Status { get; set; }
+        public string StatusText { get; set; }
+        public string Message { get; set; }
+    }
+
+    public class LoginResponse : Response
+    {
+        public string Token { get; set; }
+        public UserModel User { get; set; }
+    }
+    public class PingResponse : Response
+    {
+        public UserModel User { get; set; }
+    }
+
     public class LoginModel
     {
         public string Username { get; set; }
         public string Password { get; set; }
-    }
-
-    public class LoginResponse
-    {
-        public string token { get; set; }
-        public UserModel user { get; set; }
-    }
-    public class PingResponse
-    {
-        public UserModel user { get; set; }
     }
     public class UserModel
     {
@@ -34,7 +40,7 @@ namespace EMS.WebHost.Controllers
         public string Username { get; set; }
         public string Name { get; set; }
     }
-
+     
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/[controller]")]
@@ -60,8 +66,9 @@ namespace EMS.WebHost.Controllers
 
                 var result = new LoginResponse
                 {
-                    token = token,
-                    user = user
+                    Status = 200,
+                    Token = token,
+                    User = user
                 };
                 return Ok(result);
             }
@@ -86,7 +93,7 @@ namespace EMS.WebHost.Controllers
                 Name = name
             };
 
-            return new PingResponse() { user = user };
+            return new PingResponse() { Status = 200, User = user };
         }
 
         private static UserModel PerformAuth(LoginModel model)

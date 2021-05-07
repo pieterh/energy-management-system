@@ -10,14 +10,14 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
-
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import { Alert } from '@material-ui/lab/';
 
 import { useForm, Controller } from "react-hook-form";
 
 import { useAppSelector, useAppDispatch } from '../../App/hooks';
-import { loginAsync, isLoggedIn } from '../../App/authenticationSlice';
+import { loginAsync } from './authenticationSlice';
 import  Credits from '../credits/Credits';
  
 import './Login.css';
@@ -66,23 +66,36 @@ type FormInputs = {
 };
 
 export function Login() {
-  const loggedIn = useAppSelector(isLoggedIn);
+  const isLoggedIn = useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
   
   const { register, handleSubmit, watch, control, reset, formState: { errors } } = useForm<FormInputs>();
 
   const [isBusy, setIsBusy] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   async function onSubmit(data : FormInputs){
+    setHasError(false);
     setIsBusy(true);    
 
-    dispatch(loginAsync({username: data.username, secret: data.password})).then((x) =>{
-    }).finally(() =>{
-      setIsBusy(false); 
+    dispatch(loginAsync({username: data.username, secret: data.password})).then((x) => {
+      switch(x.payload?.status) {
+        case 200:          
+          break;
+        default:          
+          console.error(x.payload?.message);
+          setIsBusy(false);
+          setHasError(true);          
+          break;
+      }      
+    }).catch((e) => {
+      console.log(e);
+      setIsBusy(false);
+      setHasError(true);
     });  
   }
-  if (loggedIn) { return (<Redirect to='/'/>); } else
+  if (isLoggedIn) { return (<Redirect to='/'/>); } else
   return (
     <Container component="main" maxWidth="xs">     
       <div className={classes.paper}>
@@ -144,6 +157,9 @@ export function Login() {
             {/* className={classes.spinner} */}
             { isBusy && <CircularProgress size={20} /> }
           </Button>
+          {hasError &&
+            <Alert severity="warning" >Unknown username or password</Alert>            
+          }
         </form>
       </div>
       <Box mt={8}>
@@ -154,4 +170,3 @@ export function Login() {
 }
 
 export default Login;
-

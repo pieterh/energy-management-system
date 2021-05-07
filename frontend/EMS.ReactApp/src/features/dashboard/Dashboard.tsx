@@ -1,16 +1,14 @@
-import React from 'react';
+
 import Box from '@material-ui/core/Box';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
-import useTheme from '@material-ui/core/styles/useTheme';
 import Button from '@material-ui/core/Button';
-import { useAppSelector, useAppDispatch } from '../../App/hooks';
 
-import { isLoggedIn, pingAsync, loginAsync } from '../../App/authenticationSlice';
+import { useAppSelector, useAppDispatch } from '../../App/hooks';
+import { pingAsync } from '../authentication/authenticationSlice';
 
 export default function Main() {
-  //const theme = useTheme();
-  const loggedIn = useAppSelector(isLoggedIn);
+  const isLoggedIn = useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
   const dispatch = useAppDispatch();
 
   async function onPing(){   
@@ -22,7 +20,7 @@ export default function Main() {
   return(
     <Container>
         <Grid container spacing={1}>
-            {loggedIn && 
+            {isLoggedIn && 
             <Grid item xs={12} sm={4}>
                 <Box bgcolor="success.main" color="primary.contrastText" p={2}>
                     hoppa we zijn er in...
@@ -30,7 +28,7 @@ export default function Main() {
                 <Button onClick={onPing} >ping</Button>
             </Grid>
             }
-            {!loggedIn && 
+            {!isLoggedIn && 
             <Grid item xs={12} sm={4}>
                 <Box bgcolor="primary.main" color="primary.contrastText" p={2}>
                     voor iedereen!yihkkk
