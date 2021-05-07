@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice,  createAction, PayloadAction } from '@reduxjs/toolkit';
 
-export enum ThemeTypes { light, dark };
+export enum ThemeTypes { light = 0, dark = 1, device= 2 };
 
 export interface CustomThemeState {
     themeType: ThemeTypes;
@@ -21,9 +21,19 @@ export const CustomThemeProviderSlice = createSlice({
     },
     extraReducers: builder => {
         builder.addCase(ChangeTheme, (state, action) => {
-            console.log("change theme...");
+            console.log(`change theme... ${state.themeType}`);
             state.themeType = action.payload;
-            state.themeName = state.themeType ==  ThemeTypes.light ? 'light' : 'dark';
+            switch(action.payload){
+              case ThemeTypes.light:
+                state.themeName = 'Light theme';
+                break;
+              case ThemeTypes.dark:
+                state.themeName = 'Dark theme';
+                break;
+              case ThemeTypes.device:
+                state.themeName = 'Device theme';
+                break;
+            }            
           })
     }
   });

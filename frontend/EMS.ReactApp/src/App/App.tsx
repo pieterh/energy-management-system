@@ -35,10 +35,11 @@ function App() {
     <MyThemeProvider>
       <CssBaseline />
       <BrowserRouter basename="/app">
-          <AppHeader />
-          <Route path='/' exact> <Main/> </Route>
-          <Route path='/login'> <Login/> </Route>                   
-          <Route path='/logout'> <Logout/> </Route> 
+          <AppHeader >
+            <Route path='/' exact> <Main/> </Route>
+            <Route path='/login'> <Login/> </Route>
+            <Route path='/logout'> <Logout/> </Route>
+          </AppHeader>
       </BrowserRouter>
     </MyThemeProvider>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createMuiTheme, Theme, useTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/core/styles';
+import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 import { useAppSelector } from '../../App/hooks'
 
@@ -31,16 +32,23 @@ const lightTheme = createMuiTheme({
   }
 });
 
-const availableThemes : {[key: string]: Theme} = {
-  0: lightTheme,
-  1: darkTheme
-};
-
 export function MyThemeProvider({ children } : ThemeProviderProps) {
   const themeName = useAppSelector( state => state.customTheme.themeName ) as string;
   const themeType = useAppSelector( state => state.customTheme.themeType ) as ThemeTypes;  
-  const currentTheme = availableThemes[themeType];
-
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');  
+  var currentTheme : Theme;
+  switch(themeType){
+    case ThemeTypes.light:
+      currentTheme = lightTheme;
+      break;
+    case ThemeTypes.dark:
+      currentTheme = darkTheme;
+      break;      
+    case ThemeTypes.device:      
+      currentTheme = prefersDarkMode ? darkTheme: lightTheme;
+      break;      
+  }
+  
   const contextValue = {
     currentTheme: themeName
   }
@@ -53,37 +61,3 @@ export function MyThemeProvider({ children } : ThemeProviderProps) {
 }
 
 export default MyThemeProvider;
-
-
-// const themeObject : ThemeOptions = {
-//   palette: {
-//     primary: { main: "#053f5b" },
-//     secondary: { main: "#5e3c6f" },
-//     type: "light"
-//   },
-//   // themeName: "Blue Lagoon 2020",
-//   typography: {
-//     fontFamily: "Bitter"
-//   }
-// };
-
-// const useDarkMode = () => {
-//   const [theme1, setTheme] = useState(themeObject);
-
-//   let theme : ThemeOptions = theme1;
-
-//   const {
-//     palette: { type }
-//   } = theme;
-//   const toggleDarkMode = () => {
-//     const updatedTheme = {
-//       ...theme,
-//       palette: {
-//         ...theme.palette,
-//         type: type === "light" ? "dark" : "light"
-//       }
-//     };
-//     setTheme(updatedTheme);
-//   };
-//   return [theme, toggleDarkMode];
-// };
