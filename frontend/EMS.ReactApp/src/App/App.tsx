@@ -5,13 +5,13 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 import { useAppDispatch } from './hooks';
-import { pingAsync } from './authenticationSlice';
+import { pingAsync } from '../features/authentication/authenticationSlice';
 
 import MyThemeProvider from '../features/themeprovider/CustomThemeProvider';
 import AppHeader from '../features/appheader/AppHeader';
 import Main from '../features/main/Main';
-import Login from '../features/login/Login';
-import Logout from '../features/logout/Logout';
+import Login from '../features/authentication/Login';
+import Logout from '../features/authentication/Logout';
 
 function App() {   
   const [initialized, setInitialized] = useState(false);

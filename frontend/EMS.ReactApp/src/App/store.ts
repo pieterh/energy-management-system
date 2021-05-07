@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
  
-import authenticationReducer from './authenticationSlice';
+import authenticationReducer from '../features/authentication/authenticationSlice';
 import CustomThemeProviderReducer from '../features/themeprovider/CustomThemeProviderSlice';
 
 const rootReducer = combineReducers({
