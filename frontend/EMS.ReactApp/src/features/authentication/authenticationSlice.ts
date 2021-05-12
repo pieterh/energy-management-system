@@ -80,12 +80,19 @@ axios.interceptors.request.use(function (config) {
 
 export const loginAsync = createAsyncThunk<
       LoginResponse, 
-      {username: string, secret: string},
+      {username: string, secret: string, doRemember: boolean},
       {rejectValue: Response}
     >(
     'authentication/login',
-    async ({username, secret}: {username: string, secret: string}, /* thunkApi */ { rejectWithValue }) => {
+    async ({username, secret, doRemember}: {username: string, secret: string, doRemember: boolean}, /* thunkApi */ { rejectWithValue }) => {
       try{
+        if (doRemember) {
+          browserStorage.local.set("rememberme", true, true);
+          browserStorage.local.set("username", username, true);
+        } else {
+          browserStorage.local.remove("rememberme");
+          browserStorage.local.remove("username");
+        }
         var data = {username: username, password: secret};
         var cfg = undefined;
         var response = await axios.post<LoginResponse>('http://127.0.0.1:5000/api/users/authenticate', data, cfg);

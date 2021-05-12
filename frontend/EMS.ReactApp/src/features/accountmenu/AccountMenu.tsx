@@ -85,7 +85,7 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
     const [topBarState, setTopBarState] = React.useState(topbarstate.Main);
     const createTopBarMenuF = () => {
       if (showLoginMenuItem) 
-        return [<MenuItem onClick={onLoginClick}>Login</MenuItem>];
+        return [<MenuItem key="a" onClick={onLoginClick}>Login</MenuItem>];
 
         if (topBarState == topbarstate.Main)
           return [                  
