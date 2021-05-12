@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useLocation } from 'react-router-dom';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+import { Icon } from "@material-ui/core";
 
 import AppBar from '@material-ui/core/AppBar';
 import Divider from '@material-ui/core/Divider';
@@ -23,9 +24,14 @@ import MenuIcon from '@material-ui/icons/Menu';
 import MenuOpenIcon from '@material-ui/icons/MenuOpen';
 import SettingsIcon from '@material-ui/icons/Settings';
 import WbSunnyIcon from '@material-ui/icons/WbSunny';
+import DashboardIcon from '@material-ui/icons/Dashboard';
 
-import { useAppSelector, useAppDispatch } from '../../App/hooks';
+import { useAppSelector, useAppDispatch } from '../../common/hooks';
+import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 import AccountMenu from '../accountmenu/AccountMenu';
+
+import CarElectric from '../../icons/CarElectric';
+import ElectricalServices from '../../icons/ElectricalServices';
 
 type FormInputs = {
   darkState : boolean
@@ -38,7 +44,7 @@ interface IAppHeaderState {
 }
 
 interface IStyleProps {
-  isLoggedIn: boolean
+  isScreenXS: boolean
 }
 
 const drawerWidth = 240;
@@ -108,7 +114,7 @@ const useStyles = makeStyles((theme: Theme) =>({
   },
   content: (p : IStyleProps) => ({ 
     flexGrow: 1,
-    paddingLeft: theme.spacing(3) + (p.isLoggedIn ? 0 : 73),
+    paddingLeft: theme.spacing(3) + 56, //(p.isScreenXS ? 0 : 56),
     paddingTop: theme.spacing(3),
     paddingRight: theme.spacing(3),
     paddingBottom: theme.spacing(3)    
@@ -124,12 +130,13 @@ export function AppHeader({children}: Props): JSX.Element{
     const theme = useTheme();
     const isScreenXS = useMediaQuery(theme.breakpoints.only('xs'));
     console.log(`isSmallScreen? -> ${isScreenXS}`);
+    console.log(`xs=${useMediaQuery(theme.breakpoints.only('xs'))} sm=${useMediaQuery(theme.breakpoints.only('sm'))} md=${useMediaQuery(theme.breakpoints.only('md'))} lg=${useMediaQuery(theme.breakpoints.only('lg'))}`  );
 
     const [isDrawerOpen, setDrawerOpen] = React.useState(false);
 
-    const classes = useStyles({isLoggedIn: isScreenXS}); 
+    const classes = useStyles({isScreenXS: isScreenXS}); 
 
-    const isLoggedIn = useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
+    const isLoggedIn = useAppSelector(selectIsLoggedIn);
     const location = useLocation();  
     
     var title = "";
@@ -148,7 +155,7 @@ export function AppHeader({children}: Props): JSX.Element{
     }
 
     const drawerContent = (
-      <React.Fragment>
+      <React.Fragment> 
         { <div className={classes.drawerHeader}/> }
         <List>
           <ListItem button key="pvsystem">
@@ -157,11 +164,29 @@ export function AppHeader({children}: Props): JSX.Element{
           </ListItem>
         </List>        
         <List>
-          <ListItem button key="evstation">
+          <ListItem button key="chargepoint">
             <ListItemIcon> <EvStationIcon /> </ListItemIcon>
-            <ListItemText primary="EV Station" />
+            <ListItemText primary="chargepoint" />
           </ListItem>
-        </List>
+        </List>    
+        <List>
+          <ListItem button key="smartmeter">
+            <ListItemIcon> <ElectricalServices/> </ListItemIcon>
+            <ListItemText primary="Smart Meter" />
+          </ListItem>
+        </List>      
+        <List>
+          <ListItem button key="evcar">
+            <ListItemIcon> <CarElectric/> </ListItemIcon>
+            <ListItemText primary="Electric Car" />
+          </ListItem>
+        </List>                  
+        <List>
+          <ListItem button key="dashboard">
+            <ListItemIcon> <DashboardIcon/> </ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItem>
+        </List> 
         <Divider />
         <List>
           <ListItem button key="settings">

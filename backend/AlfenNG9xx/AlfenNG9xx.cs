@@ -22,7 +22,7 @@ namespace AlfenNG9xx
         private bool _isConnected = false;
         private double _meterReadingStart = 0;
 
-        public SocketMeasurementBase LastSocketMeasurement { get; private set; }
+        public SocketMeasurementBase LastSocketMeasurement { get; private set; }       
 
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
         public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
@@ -134,7 +134,6 @@ namespace AlfenNG9xx
             }
 
             LastSocketMeasurement = sm;
-
             StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
             if (chargingStateChanged)
                 ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, _energyDelivered != 0, _energyDelivered));
@@ -268,6 +267,10 @@ namespace AlfenNG9xx
             sm.Availability = Converters.ConvertRegistersShort(sm_part2, 0) == 1;
 
             sm.Mode3State = SocketMeasurement.ParseMode3State(Converters.ConvertRegistersToString(sm_part2, 1, 5));
+            var chargingStateChanged = (LastSocketMeasurement?.Mode3State != sm.Mode3State);
+
+            sm.LastChargingStateChanged = (LastSocketMeasurement == null || LastSocketMeasurement?.Mode3State != sm.Mode3State) ? DateTime.Now : LastSocketMeasurement.LastChargingStateChanged;
+
             sm.AppliedMaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 6);
             sm.MaxCurrentValidTime = Converters.ConvertRegistersUInt32(sm_part2, 8);
             sm.MaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 10);

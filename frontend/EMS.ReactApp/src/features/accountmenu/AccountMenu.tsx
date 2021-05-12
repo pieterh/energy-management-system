@@ -21,7 +21,9 @@ import PersonIcon from '@material-ui/icons/Person';
 import SettingsIcon from '@material-ui/icons/Settings';
 import WbSunnyIcon from '@material-ui/icons/WbSunny';
 
-import { useAppSelector, useAppDispatch } from '../../App/hooks';
+import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { selectIsLoggedIn } from '../authentication/authenticationSlice';
+
 import { ChangeTheme, ThemeTypes } from '../themeprovider/CustomThemeProviderSlice';
 
 interface AccountMenuProps {
@@ -32,7 +34,7 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
     const dispatch = useAppDispatch();
     const history = useHistory();
 
-    const isLoggedIn = useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
+    const isLoggedIn = useAppSelector(selectIsLoggedIn);
     const themeName = useAppSelector( state => state.customTheme.themeName ) as string;
 
     const showLoginMenuItem = !isLoggedIn && location.pathname != '/login' && location.pathname != '/logout';

@@ -5,10 +5,11 @@ import Button from '@material-ui/core/Button';
 
 import { logoutAsync } from './authenticationSlice';
 
-import { useAppSelector, useAppDispatch } from '../../App/hooks';
+import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 
 export function Logout() {
-  const isLoggedIn = useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
+  const isLoggedIn = useAppSelector(selectIsLoggedIn);
   const dispatch = useAppDispatch()
   const [isBusy, setIsBusy] = useState(false);
 

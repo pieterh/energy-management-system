@@ -19,8 +19,8 @@ import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import { Alert } from '@material-ui/lab/';
 
 
-import { useAppSelector, useAppDispatch } from '../../App/hooks';
-import { loginAsync } from './authenticationSlice';
+import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { loginAsync, selectIsLoggedIn } from './authenticationSlice';
 import  Credits from '../credits/Credits';
  
 import './Login.css';
@@ -69,7 +69,7 @@ type FormInputs = {
 };
 
 export function Login() {
-  const isLoggedIn = useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
+  const isLoggedIn = useAppSelector(selectIsLoggedIn);
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
   

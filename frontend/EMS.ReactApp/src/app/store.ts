@@ -2,10 +2,12 @@ import { combineReducers } from 'redux';
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
  
 import authenticationReducer from '../features/authentication/authenticationSlice';
+import evseReducer from '../features/chargepoint/EVSESlice';
 import CustomThemeProviderReducer from '../features/themeprovider/CustomThemeProviderSlice';
 
 const rootReducer = combineReducers({
     authentication: authenticationReducer,
+    evse: evseReducer,
     customTheme: CustomThemeProviderReducer
   });
 

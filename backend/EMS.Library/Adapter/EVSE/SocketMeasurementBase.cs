@@ -30,6 +30,7 @@ namespace EMS.Library.Adapter.EVSE
         public UInt64 MeterTimestamp { get; set; }
 
         public Mode3State Mode3State { get; set; }
+        public DateTime LastChargingStateChanged { get; set; }
         public float VoltageL1 { get; set; }
         public float VoltageL2 { get; set; }
         public float VoltageL3 { get; set; }
