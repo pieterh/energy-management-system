@@ -4,7 +4,7 @@ import { BrowserRouter as BrowserRouter, Route } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 
-import { useAppDispatch } from './hooks';
+import { useAppDispatch } from '../common/hooks';
 import { pingAsync } from '../features/authentication/authenticationSlice';
 
 import MyThemeProvider from '../features/themeprovider/CustomThemeProvider';

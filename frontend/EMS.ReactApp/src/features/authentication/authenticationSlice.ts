@@ -4,7 +4,11 @@ import  browserStorage  from 'store2';
 import axios from 'axios';
 import  URLParse from 'url-parse';
 
+import { RootState } from '../../common/hooks';
+
 import { login, logout } from './authenticationAPI';
+
+
 
 enum LoginStateEnum {
   'logged_out', 'log_in' , 'logged_in' , 'log_out'
@@ -192,3 +196,7 @@ export const authenticationSlice = createSlice({
   });
 
 export default authenticationSlice.reducer;      
+
+export const selectIsLoggedIn = (state : RootState) => state.authentication.isLoggedIn;
+
+//useAppSelector( state => state.authentication.isLoggedIn ) as boolean;

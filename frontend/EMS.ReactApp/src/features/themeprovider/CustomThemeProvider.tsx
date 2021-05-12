@@ -3,7 +3,7 @@ import { createMuiTheme, Theme, useTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/core/styles';
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 
-import { useAppSelector } from '../../App/hooks'
+import { useAppSelector } from  '../../common/hooks';
 
 import { ThemeTypes } from './CustomThemeProviderSlice';
 
