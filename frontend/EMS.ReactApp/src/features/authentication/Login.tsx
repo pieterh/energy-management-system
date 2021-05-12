@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { Redirect } from 'react-router-dom';
+import  browserStorage  from 'store2';
+
+import { useForm, Controller, FormProvider } from "react-hook-form";
+import { DevTool } from "@hookform/devtools";
 
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
@@ -14,7 +18,6 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import { Alert } from '@material-ui/lab/';
 
-import { useForm, Controller } from "react-hook-form";
 
 import { useAppSelector, useAppDispatch } from '../../App/hooks';
 import { loginAsync } from './authenticationSlice';
@@ -62,7 +65,7 @@ interface ILoginState {
 type FormInputs = {
   username: string,
   password: string,
-  doRemember: string
+  doRemember: boolean
 };
 
 export function Login() {
@@ -70,7 +73,16 @@ export function Login() {
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
   
-  const { register, handleSubmit, watch, control, reset, formState: { errors } } = useForm<FormInputs>();
+  const doRemember = browserStorage.local.has("rememberme");
+  const username = doRemember && browserStorage.local.has("username") ? browserStorage.local.get("username") : "";
+  
+  var formRegistration = useForm<FormInputs>( {
+    defaultValues: {
+      username: username,
+      password: "",
+      doRemember: doRemember
+     }
+  });
 
   const [isBusy, setIsBusy] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -79,7 +91,7 @@ export function Login() {
     setHasError(false);
     setIsBusy(true);    
 
-    dispatch(loginAsync({username: data.username, secret: data.password})).then((x) => {
+    dispatch(loginAsync({username: data.username, secret: data.password, doRemember: data.doRemember})).then((x) => {
       switch(x.payload?.status) {
         case 200:          
           break;
@@ -95,6 +107,7 @@ export function Login() {
       setHasError(true);
     });  
   }
+
   if (isLoggedIn) { return (<Redirect to='/'/>); } else
   return (
     <Container component="main" maxWidth="xs">     
@@ -105,62 +118,60 @@ export function Login() {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
-        <form className={classes.form} onSubmit={handleSubmit(onSubmit)}>
-          <TextField
-            disabled={isBusy}
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="Username"
-            autoComplete="username"
-            autoFocus
-            {...register("username", { required: true })}
-          />
-          {errors.username && <span>This username field is required</span>}
-          <TextField
-            disabled={isBusy}
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            {...register("password", { required: true })}  
-          />
-          {errors.password && <span>This password field is required</span>}
-          <Controller
-            name="doRemember"
-            control={control}
-            defaultValue={false}
-            rules={{ required: false }}
-            render={({ field }) => {
-              return <FormControlLabel
-                        disabled={isBusy}
-                        control={<Checkbox  color="primary" {...field}/>}
-                        label="Remember me"
-                    />
-            }}            
-          />
-          <Button
-            disabled={isBusy}
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-          >
-            Sign In
-            {/* className={classes.spinner} */}
-            { isBusy && <CircularProgress size={20} /> }
-          </Button>
-          {hasError &&
-            <Alert severity="warning" >Unknown username or password</Alert>            
-          }
-        </form>
+        <FormProvider {...formRegistration}>
+          {process.env.NODE_ENV === 'development' &&  
+          <DevTool control={formRegistration.control} placement="top-right"/> }
+          
+          <form className={classes.form} onSubmit={formRegistration.handleSubmit(onSubmit)}>
+            <Controller
+              name="username"            
+              render={({ field: { value, onChange } }) => (
+                <TextField id="username" disabled={isBusy} variant="outlined" margin="normal" required fullWidth  
+                  label="Username" autoComplete="username" autoFocus value={value} onChange={onChange}                 
+                />
+              )}
+            />            
+            {formRegistration.formState.errors.username && <span>This username field is required</span>}
+
+            <Controller
+              name="password"            
+              render={({ field: { value, onChange } }) => (
+                <TextField id="password" type="password" disabled={isBusy} variant="outlined" margin="normal" required fullWidth  
+                  label="Password" autoComplete="current-password" autoFocus value={value} onChange={onChange}                 
+                />
+              )}
+            />  
+            {formRegistration.formState.errors.password && <span>This password field is required</span>}
+
+            <Controller
+              name="doRemember"
+              render={({ field: { value, onChange } }) => (
+                // Checkbox accepts its value as `checked`
+                // so we need to connect the props here 
+                <FormControlLabel
+                  control={<Checkbox id="doremember" checked={value} onChange={onChange} disabled={isBusy}/>}
+                  label="Remember me"
+                />
+              )}
+            />   
+      
+            <Button
+              disabled={isBusy}
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              className={classes.submit}
+            >
+              Sign In
+              {/* className={classes.spinner} */}
+              { isBusy && <CircularProgress size={20} /> }
+            </Button>
+            {hasError &&
+              <Alert severity="warning" >Unknown username or password</Alert>            
+            }
+          </form>
+        </FormProvider>
       </div>
       <Box mt={8}>
         <Credits />

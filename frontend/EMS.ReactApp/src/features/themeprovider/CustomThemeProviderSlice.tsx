@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice,  createAction, PayloadAction } from '@reduxjs/toolkit';
+import  browserStorage  from 'store2';
 
 export enum ThemeTypes { light = 0, dark = 1, device= 2 };
 
@@ -7,9 +8,24 @@ export interface CustomThemeState {
     themeName: string;
   }
 
+function GetInitialTheme() : ThemeTypes {
+  return browserStorage.local.has("theme") ? browserStorage.local.get("theme") : ThemeTypes.device;
+}
+
+function GetThemeName(t : ThemeTypes) : string {
+  switch(t){
+    case ThemeTypes.light:
+      return 'Light theme';
+    case ThemeTypes.dark:
+      return 'Dark theme';      
+    case ThemeTypes.device:
+      return 'Device theme';      
+  }
+}
+
 const initialState: CustomThemeState = {
-    themeType: ThemeTypes.light,
-    themeName: 'light'
+    themeType: GetInitialTheme(),
+    themeName: GetThemeName(GetInitialTheme())
   };
 
 export const ChangeTheme = createAction<ThemeTypes>('ChangeTheme');
@@ -23,17 +39,10 @@ export const CustomThemeProviderSlice = createSlice({
         builder.addCase(ChangeTheme, (state, action) => {
             console.log(`change theme... ${state.themeType}`);
             state.themeType = action.payload;
-            switch(action.payload){
-              case ThemeTypes.light:
-                state.themeName = 'Light theme';
-                break;
-              case ThemeTypes.dark:
-                state.themeName = 'Dark theme';
-                break;
-              case ThemeTypes.device:
-                state.themeName = 'Device theme';
-                break;
-            }            
+            state.themeName = GetThemeName(state.themeType);
+            if (browserStorage.local.has("rememberme")){
+              browserStorage.local.set("theme", state.themeType, true);
+            }
           })
     }
   });

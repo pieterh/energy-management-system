@@ -52,7 +52,7 @@ export function MyThemeProvider({ children } : ThemeProviderProps) {
   const contextValue = {
     currentTheme: themeName
   }
-
+  
   return (
     <CustomThemeContext.Provider value={contextValue}>
       <ThemeProvider theme={currentTheme}>{children}</ThemeProvider>
