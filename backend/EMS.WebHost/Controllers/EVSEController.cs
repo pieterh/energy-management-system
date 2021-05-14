@@ -45,10 +45,10 @@ namespace EMS.WebHosts
             var socket = new SocketInfoModel();
             SocketMeasurementBase sm = ChargePoint.LastSocketMeasurement;
             socket.Id = id;
-            socket.Voltage = PrepareDouble(sm.Voltage, 1, "V");
-            socket.Current = PrepareDouble(sm.CurrentSum, 1, "A");
-            socket.RealPowerSum = PrepareDouble(sm.RealPowerSum / 1000, 1, "kW");                 // kW
-            socket.RealEnergyDelivered = PrepareDouble(sm.RealEnergyDeliveredSum / 1000, 0, "kW");   // kW
+            socket.VoltageFormatted = PrepareDouble(sm.Voltage, 1, "V");
+            socket.CurrentFormatted = PrepareDouble(sm.CurrentSum, 1, "A");
+            socket.RealPowerSumFormatted = PrepareDouble(sm.RealPowerSum / 1000, 1, "kW");                 // kW
+            socket.RealEnergyDeliveredFormatted = PrepareDouble(sm.RealEnergyDeliveredSum / 1000, 0, "kW");   // kW
             socket.Availability = sm.Availability;
 
             socket.Mode3State = sm.Mode3State.ToString();
@@ -65,8 +65,8 @@ namespace EMS.WebHosts
             socket.SetPointAccountedFor = sm.SetPointAccountedFor;
             socket.Phases = sm.Phases;
 
-            socket.PowerAvailable = PrepareDouble(((sm.Phases == Phases.One ? 1 : 3) * sm.Voltage * (socket.VehicleIsCharging ? socket.AppliedMaxCurrent : socket.MaxCurrent)) / 1000, 1, "kW"); // kW
-            socket.PowerUsing = PrepareDouble((sm.Voltage * sm.CurrentSum) / 1000, 1, "kW"); // kW
+            socket.PowerAvailableFormatted = PrepareDouble(((sm.Phases == Phases.One ? 1 : 3) * sm.Voltage * (socket.VehicleIsCharging ? socket.AppliedMaxCurrent : socket.MaxCurrent)) / 1000, 1, "kW"); // kW
+            socket.PowerUsingFormatted = PrepareDouble((sm.Voltage * sm.CurrentSum) / 1000, 1, "kW"); // kW
 
             SessionInfoModel session = null;
             if (socket.VehicleIsConnected && ChargePoint.ChargeSessionInfo != null)
@@ -76,7 +76,7 @@ namespace EMS.WebHosts
 
                 session.Start = csi.Start;
                 session.ChargingTime = csi.ChargingTime;
-                session.EnergyDelivered = (float)Math.Round(csi.EnergyDelivered / 1000, 1); // kWh
+                session.EnergyDeliveredFormatted = PrepareDouble(csi.EnergyDelivered / 1000, 1, "kWh"); // kWh
             }
 
             return new SocketInfoResponse() { Status = 200, SocketInfo = socket, SessionInfo = session };
@@ -91,7 +91,7 @@ namespace EMS.WebHosts
         {
             float retval = (float)Math.Round(f, 1);
             retval = (retval < 0.01) ? 0.0f : retval;
-            return string.Format(new NumberFormatInfo() { NumberDecimalDigits = digits }, "{0:F}", retval);
+            return string.Format(new NumberFormatInfo() { NumberDecimalDigits = digits }, "{0:F} {1}", retval, unitOfMeasurement);
         }
     }
 
@@ -104,16 +104,16 @@ namespace EMS.WebHosts
     {
         public int Id { get; set; }
 
-        public string Voltage { get; set; }
-        public string Current { get; set; }
+        public string VoltageFormatted { get; set; }
+        public string CurrentFormatted { get; set; }
 
-        public string RealPowerSum { get; set; }                 // kW
+        public string RealPowerSumFormatted { get; set; }                 // kW
         //public double RealEnergyDeliveredL1 { get; set; }
         //public double RealEnergyDeliveredL2 { get; set; }
         //public double RealEnergyDeliveredL3 { get; set; }
         //public double RealEnergyDeliveredSum { get; set; }
 
-        public string RealEnergyDelivered { get; set; }          // kWh
+        public string RealEnergyDeliveredFormatted { get; set; }          // kWh
         //public DateTime SessionStarted { get; set; }
 
         public bool Availability { get; set; }
@@ -134,15 +134,14 @@ namespace EMS.WebHosts
         public bool SetPointAccountedFor { get; set; }
         public Phases Phases { get; set; }
 
-        public string PowerAvailable { get; set; }
-        public string PowerUsing { get; set; }
+        public string PowerAvailableFormatted { get; set; }                 // kW
+        public string PowerUsingFormatted { get; set; }                     // kW
     }
 
     public class SessionInfoModel
     {
         public DateTime Start { get; set; }
         public UInt32 ChargingTime { get; set; }
-        [JsonConverter(typeof(FloatConverter_p1))]
-        public float EnergyDelivered { get; set; }              // kWh
+        public string EnergyDeliveredFormatted { get; set; }                // kWh
     }
 }

@@ -80,9 +80,9 @@ export function EVSESocketInfo(props: ISocketInfoProps) {
             <Typography className={classes.pos}  variant="body2" component="p">
               { socketInfo?.availability ? "Available" : "Unavailable"}<br/>
               { socketInfo?.mode3StateMessage }<br/>
-              { socketInfo?.realEnergyDelivered } kWh energy delivered<br/>             
-              { socketInfo?.powerAvailable } <br/>
-              { socketInfo?.vehicleIsConnected && <> { socketInfo?.powerUsing }                            </> }
+              { socketInfo?.realEnergyDeliveredFormatted } kWh energy delivered<br/>             
+              { socketInfo?.powerAvailableFormatted } <br/>
+              { socketInfo?.vehicleIsConnected && <> { socketInfo?.powerUsingFormatted }                            </> }
             </Typography>            
           </Grid>
 
@@ -163,17 +163,17 @@ export function EVSESessionInfo(props: ISessionInfoProps) {
       >
         <Grid container item xs={12} spacing={1}>
           {socketInfo?.vehicleIsConnected &&
-            <Grid item xs={6}>            
+            <Grid item xs={12}>            
               <Typography className={classes.pos}  variant="body2" component="p">
-                { sessionInfo?.start } <br/>
+                Session started at { sessionInfo?.startFormatted } <br/>
                 { socketInfo?.mode3StateMessage } { socketInfo?.lastChargingStateChangedFormatted }<br/>
-                { socketInfo?.phases == 1 ? "1 phase" : "3 phases" } {socketInfo?.powerAvailable}<br/>  
+                { socketInfo?.phases == 1 ? "1 phase" : "3 phases" } {socketInfo?.powerAvailableFormatted}<br/>  
                 { sessionInfo?.energyDelivered } {sessionInfo?.chargingTime}
               </Typography>          
             </Grid>          
           }
           {!socketInfo?.vehicleIsConnected &&
-            <Grid item xs={6}>            
+            <Grid item xs={12}>            
               <Typography className={classes.pos}  variant="body2" component="p">
                 Available ({ socketInfo?.lastChargingStateChangedFormatted })
               </Typography>          

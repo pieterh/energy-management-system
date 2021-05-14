@@ -1,4 +1,4 @@
-import { DateTime, Duration } from 'luxon';
+import { DateTime, DateTimeFormatOptions, Duration } from 'luxon';
 import   prettyMilliseconds  from 'pretty-ms';
 
 export enum DurationFormat { Humanized };
@@ -21,12 +21,31 @@ export function FormatDuration(duration: Duration, f: DurationFormat = DurationF
 export function FormatFromISODiffNow(str: string | undefined, f: DurationFormat = DurationFormat.Humanized) : string {
     if (str == undefined) return "";
     var d = DateTime.fromISO(str).diffNow();
-    return (d.isValid)  ?  FormatDuration(d, f) : "";
+    return (d.isValid) ? FormatDuration(d, f) : "";
 }
 
-export function FormatDateTime(d: DateTime, f: DateTimeFormat = DateTimeFormat.Humanized) : string {
+export function FormatFromISO(str: string | undefined, f: DateTimeFormat = DateTimeFormat.Humanized) : string {
+    if (str == undefined) return "";
+    var d = DateTime.fromISO(str);
+    return (d.isValid) ? FormatDateTime(d, f) : "";
+}
+
+const resolvedOptions = Intl.DateTimeFormat().resolvedOptions();
+
+const options : DateTimeFormatOptions = {
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric',
+    hour12: false,
+    timeZone: resolvedOptions.timeZone
+  };
+
+const dateTimeFormatter = new Intl.DateTimeFormat(resolvedOptions.locale, options);
+
+export function FormatDateTime(date: DateTime, f: DateTimeFormat = DateTimeFormat.Humanized) : string {
     switch (f){
         case DateTimeFormat.Humanized:
+            var r = dateTimeFormatter.format(date.toJSDate());
+            return r;
             break;
     }
     return "";

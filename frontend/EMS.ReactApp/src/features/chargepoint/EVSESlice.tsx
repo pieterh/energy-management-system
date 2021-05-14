@@ -3,7 +3,7 @@ import  deepEqual  from 'deep-equal';
 
 import { RootState } from '../../common/hooks';
 
-import { FormatFromISODiffNow, FormatDurationFromSeconds } from '../../common/DateTimeUtils';
+import { FormatFromISODiffNow, FormatDurationFromSeconds, FormatFromISO } from '../../common/DateTimeUtils';
 
 
 
@@ -12,26 +12,29 @@ import axios from 'axios';
 // {
 //   "socketInfo": {
 //     "id": 1,
-//     "voltage": 237.6,
-//     "current": 48.1,
-//     "realEnergyDelivered": 0,
+//     "voltageFormatted": "229.5 V",
+//     "currentFormatted": "48.3 A",
+//     "realPowerSumFormatted": "1056964.5 kW",
+//     "realEnergyDeliveredFormatted": "1199 kW",
 //     "availability": true,
 //     "mode3State": "C2",
 //     "mode3StateMessage": "Charging",
-//     "lastChargingStateChanged": "2021-05-14T13:38:55.722098+02:00",
+//     "lastChargingStateChanged": "2021-05-14T22:34:24.411325+02:00",
 //     "vehicleIsConnected": true,
 //     "vehicleIsCharging": true,
-//     "appliedMaxCurrent": 16,
+//     "appliedMaxCurrent": "16.0",
 //     "maxCurrentValidTime": 0,
-//     "maxCurrent": 16,
-//     "activeLBSafeCurrent": 16,
+//     "maxCurrent": "16.0",
+//     "activeLBSafeCurrent": "16",
 //     "setPointAccountedFor": true,
-//     "phases": 3
+//     "phases": 3,
+//     "powerAvailableFormatted": "11.0 kW",
+//     "powerUsingFormatted": "11.1 kW"
 //   },
 //   "sessionInfo": {
-//     "start": "2021-05-14T13:38:07.06664+02:00",
+//     "start": "2021-05-14T22:34:24.411446+02:00",
 //     "chargingTime": 0,
-//     "energyDelivered": 0.33
+//     "energyDeliveredFormatted": "0.0 kWh"
 //   },
 //   "status": 200,
 //   "statusText": null,
@@ -45,9 +48,9 @@ export interface EVSEState {
 
 export interface SocketInfo {
   id: number,
-  voltage: number;
-  current: number;
-  realEnergyDelivered: number;
+  voltageFormatted: number;
+  currentFormatted: number;
+  realEnergyDeliveredFormatted: number;
   availability: boolean;
   mode3State: string;
   mode3StateMessage: string;
@@ -58,12 +61,13 @@ export interface SocketInfo {
   phases: number;
   appliedMaxCurrent: number;
   maxCurrent: number;
-  powerAvailable: number;
-  powerUsing: number;
+  powerAvailableFormatted: number;
+  powerUsingFormatted: number;
 }  
 
 export interface SessionInfo {
   start: string | undefined;
+  startFormatted: string | undefined;
   chargingTime: number | undefined;
   chargingTimeFormatted: string | undefined;
   energyDelivered: number | undefined;
@@ -73,9 +77,9 @@ function  CreateState() : EVSEState {
   var newState : EVSEState = { 
     socketInfo : {
       "id": 0,
-      "voltage": 0.0,
-      "current": 0.0,
-      "realEnergyDelivered": 0,
+      "voltageFormatted": 0.0,
+      "currentFormatted": 0.0,
+      "realEnergyDeliveredFormatted": 0,
       "availability": false,  
       "mode3State": "E",
       "mode3StateMessage": "No Power (E)",
@@ -86,11 +90,12 @@ function  CreateState() : EVSEState {
       "phases": 0,
       "appliedMaxCurrent": 0,
       "maxCurrent": 0,
-      "powerAvailable": 0,
-      "powerUsing": 0,
+      "powerAvailableFormatted": 0,
+      "powerUsingFormatted": 0,
     },
     sessionInfo : {
       "start": undefined,
+      "startFormatted": undefined,
       "chargingTime": undefined,
       "chargingTimeFormatted": undefined,
       "energyDelivered": undefined
@@ -109,6 +114,7 @@ function UpdateStateSessionInfo(state: EVSEState, sr: SocketInfoResponse) {
 
     var ses : SessionInfo = {
       ...sr.sessionInfo,
+      startFormatted: FormatFromISO(sr.sessionInfo.start),
       chargingTimeFormatted: !!sr.sessionInfo?.chargingTime ? FormatDurationFromSeconds(sr.sessionInfo?.chargingTime) : undefined
     }
 
@@ -143,9 +149,9 @@ export interface SessionR {
 
 export interface SocketR {
   id: number,
-  voltage: number,
-  current: number,
-  realEnergyDelivered: number;
+  voltageFormatted: number,
+  currentFormatted: number,
+  realEnergyDeliveredFormatted: number;
   availability: boolean;  
   mode3State: string;
   mode3StateMessage: string;
@@ -155,8 +161,8 @@ export interface SocketR {
   phases: number;
   appliedMaxCurrent: number;
   maxCurrent: number;
-  powerAvailable: number;
-  powerUsing: number;
+  powerAvailableFormatted: number;
+  powerUsingFormatted: number;
 }  
 
 
