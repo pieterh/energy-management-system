@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.WebHost.Controllers;
+using EMS.WebHost.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,47 +32,117 @@ namespace EMS.WebHosts
         public ActionResult<SessionInfoModel> GetStationInfo()
         {
             var retval = new SessionInfoModel();
-            retval.Mode3State = ChargePoint.LastSocketMeasurement.Mode3State.ToString();
-            retval.VehicleIsConnected = ChargePoint.LastSocketMeasurement.VehicleConnected;
-            retval.VehicleIsCharging = ChargePoint.LastSocketMeasurement.VehicleIsCharging;
+            //retval.Mode3State = ChargePoint.LastSocketMeasurement.Mode3State.ToString();
+            //retval.VehicleIsConnected = ChargePoint.LastSocketMeasurement.VehicleConnected;
+            //retval.VehicleIsCharging = ChargePoint.LastSocketMeasurement.VehicleIsCharging;
             return retval;
         }
 
 
-        [Route("api/[controller]/socket/{id}/session")]
-        public ActionResult<SessionInfoResponse> GetSessionInfo(int id)
+        [Route("api/[controller]/socket/{id}")]
+        public ActionResult<SocketInfoResponse> GetSocketInfo(int id)
         {
-            var retval = new SessionInfoModel();
+            var socket = new SocketInfoModel();
             SocketMeasurementBase sm = ChargePoint.LastSocketMeasurement;
+            socket.Id = id;
+            socket.Voltage = PrepareDouble(sm.Voltage, 1, "V");
+            socket.Current = PrepareDouble(sm.CurrentSum, 1, "A");
+            socket.RealPowerSum = PrepareDouble(sm.RealPowerSum / 1000, 1, "kW");                 // kW
+            socket.RealEnergyDelivered = PrepareDouble(sm.RealEnergyDeliveredSum / 1000, 0, "kW");   // kW
+            socket.Availability = sm.Availability;
 
-            retval.Mode3State = sm.Mode3State.ToString();
-            retval.Mode3StateMessage = sm.Mode3StateMessage;
-            retval.LastChargingStateChanged = sm.LastChargingStateChanged;
+            socket.Mode3State = sm.Mode3State.ToString();
+            socket.Mode3StateMessage = sm.Mode3StateMessage;
+            socket.LastChargingStateChanged = sm.LastChargingStateChanged;
+            socket.VehicleIsConnected = sm.VehicleConnected;
+            socket.VehicleIsCharging = sm.VehicleIsCharging;
 
-            retval.VehicleIsConnected = sm.VehicleConnected;
-            retval.VehicleIsCharging = sm.VehicleIsCharging;
-            retval.Phases = sm.Phases;
-            retval.AppliedMaxCurrent = sm.AppliedMaxCurrent;
-            retval.MaxCurrent = sm.MaxCurrent;
+            socket.AppliedMaxCurrent = sm.AppliedMaxCurrent;
+            socket.MaxCurrentValidTime = sm.MaxCurrentValidTime;
 
-            return new SessionInfoResponse() { Status = 200, SessionInfo = retval };
+            socket.MaxCurrent = sm.MaxCurrent;
+            socket.ActiveLBSafeCurrent = sm.ActiveLBSafeCurrent;
+            socket.SetPointAccountedFor = sm.SetPointAccountedFor;
+            socket.Phases = sm.Phases;
+
+            socket.PowerAvailable = PrepareDouble(((sm.Phases == Phases.One ? 1 : 3) * sm.Voltage * (socket.VehicleIsCharging ? socket.AppliedMaxCurrent : socket.MaxCurrent)) / 1000, 1, "kW"); // kW
+            socket.PowerUsing = PrepareDouble((sm.Voltage * sm.CurrentSum) / 1000, 1, "kW"); // kW
+
+            SessionInfoModel session = null;
+            if (socket.VehicleIsConnected && ChargePoint.ChargeSessionInfo != null)
+            {
+                session = new SessionInfoModel();
+                var csi = ChargePoint.ChargeSessionInfo;
+
+                session.Start = csi.Start;
+                session.ChargingTime = csi.ChargingTime;
+                session.EnergyDelivered = (float)Math.Round(csi.EnergyDelivered / 1000, 1); // kWh
+            }
+
+            return new SocketInfoResponse() { Status = 200, SocketInfo = socket, SessionInfo = session };
+        }
+
+        private static string PrepareDouble(double f, int digits = 0)
+        {
+            return PrepareDouble(f, digits, string.Empty);
+        }
+
+        private static string PrepareDouble(double f, int digits, string unitOfMeasurement)
+        {
+            float retval = (float)Math.Round(f, 1);
+            retval = (retval < 0.01) ? 0.0f : retval;
+            return string.Format(new NumberFormatInfo() { NumberDecimalDigits = digits }, "{0:F}", retval);
         }
     }
 
-    public class SessionInfoResponse : Response {
+    public class SocketInfoResponse : Response {
+        public SocketInfoModel SocketInfo { get; set; }
         public SessionInfoModel SessionInfo { get; set; }
     }
 
-    public class SessionInfoModel
+    public class SocketInfoModel
     {
-        public int id {get;set;}
+        public int Id { get; set; }
+
+        public string Voltage { get; set; }
+        public string Current { get; set; }
+
+        public string RealPowerSum { get; set; }                 // kW
+        //public double RealEnergyDeliveredL1 { get; set; }
+        //public double RealEnergyDeliveredL2 { get; set; }
+        //public double RealEnergyDeliveredL3 { get; set; }
+        //public double RealEnergyDeliveredSum { get; set; }
+
+        public string RealEnergyDelivered { get; set; }          // kWh
+        //public DateTime SessionStarted { get; set; }
+
+        public bool Availability { get; set; }
         public string Mode3State { get; set; }
         public string Mode3StateMessage { get; set; }
         public DateTime LastChargingStateChanged { get; set; }
         public bool VehicleIsConnected { get; set; }
         public bool VehicleIsCharging { get; set; }
-        public Phases Phases { get; set; }
+
+        [JsonConverter(typeof(FloatConverter_p1))]
         public float AppliedMaxCurrent { get; set; }
+        public UInt32 MaxCurrentValidTime { get; set; }
+        [JsonConverter(typeof(FloatConverter_p1))]
         public float MaxCurrent { get; set; }
+
+        [JsonConverter(typeof(FloatConverter_p0))]
+        public float ActiveLBSafeCurrent { get; set; }
+        public bool SetPointAccountedFor { get; set; }
+        public Phases Phases { get; set; }
+
+        public string PowerAvailable { get; set; }
+        public string PowerUsing { get; set; }
+    }
+
+    public class SessionInfoModel
+    {
+        public DateTime Start { get; set; }
+        public UInt32 ChargingTime { get; set; }
+        [JsonConverter(typeof(FloatConverter_p1))]
+        public float EnergyDelivered { get; set; }              // kWh
     }
 }

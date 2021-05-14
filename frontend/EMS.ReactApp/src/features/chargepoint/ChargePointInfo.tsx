@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
-import { DateTime } from 'luxon';
 
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
-
+import Avatar from '@material-ui/core/Avatar';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
+import EvStationIcon from '@material-ui/icons/EvStation';
 
 import { useAppSelector, useAppDispatch } from '../../common/hooks';
-import { getSessionInfoAsync, selectSessionInfo } from '../chargepoint/EVSESlice';
+import { getSessionInfoAsync, selectSessionInfo, selectSocketInfo } from '../chargepoint/EVSESlice';
 
 import { DashboardCard } from '../../components/dashboardcard/DashboardCard';
 
@@ -29,82 +29,118 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export function EVSEInfo() {
   const classes = useStyles();
-  const dispatch = useAppDispatch();
 
+  // className={classes.avatar}
   return(
     <React.Fragment>
-      <DashboardCard title="EVSE Info">
+      <DashboardCard 
+        title="Alfen Eve Single Pro-line" 
+        subheader="ALF-0000307"
+        avatar={
+          <Avatar>
+            <EvStationIcon />
+          </Avatar>
+        }
+      >
         <Grid container item xs={12} spacing={1}>
           <Grid item xs={12}>
-            <Typography className={classes.pos} color="textSecondary">
-              availability
+            <Typography className={classes.pos}  variant="body2" component="p">
+              Backoffice is connected<br/>
+              Firmware version 4.14.0-3398<br/>
+              Uptime 14days
             </Typography>            
-          </Grid>
-          <Grid item xs={12}>
-            <Typography className={classes.pos} color="textSecondary">
-              mode 3 state
-            </Typography> 
-          </Grid>
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              current l1
-            </Typography> 
-          </Grid>
-          <Grid item xs={4}>
-          <Typography className={classes.pos} color="textSecondary">
-              current l2
-            </Typography> 
-          </Grid>
-          <Grid item xs={4}>
-          <Typography className={classes.pos} color="textSecondary">
-              current l3
-            </Typography> 
-          </Grid> 
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              voltage l1
-            </Typography> 
-          </Grid>
-          <Grid item xs={4}>
-          <Typography className={classes.pos} color="textSecondary">
-              voltage l2
-            </Typography> 
-          </Grid>
-          <Grid item xs={4}>
-          <Typography className={classes.pos} color="textSecondary">
-              voltage l3
-            </Typography> 
-          </Grid>                                  
-          <Grid item xs={12}>
-            <Typography className={classes.pos} color="textSecondary">
-              delivered total
-            </Typography>             
-          </Grid>            
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              delivered l1
-            </Typography>     
-          </Grid>
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              delivered l2
-            </Typography>     
-          </Grid>
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              delivered l3
-            </Typography>     
-          </Grid>             
+          </Grid>               
         </Grid>            
       </DashboardCard>
     </React.Fragment>
   )
 };
 
-export function EVSESessionInfo() {
+export interface ISocketInfoProps {
+  socketnr: number;
+}
+export function EVSESocketInfo(props: ISocketInfoProps) {
+  const classes = useStyles();
+  const sessionInfo = useAppSelector(selectSessionInfo);  
+  const socketInfo = useAppSelector(selectSocketInfo);    
+
+  return(
+    <React.Fragment>
+      <DashboardCard 
+        title="Alfen Eve Single Pro-line"
+        subheader={'ALF-0000307 Socket #' + props.socketnr }
+        avatar={
+          <Avatar>
+            <EvStationIcon />
+          </Avatar>
+        }
+      >
+        <Grid container item xs={12} spacing={1}>
+          <Grid item xs={12}>
+            <Typography className={classes.pos}  variant="body2" component="p">
+              { socketInfo?.availability ? "Available" : "Unavailable"}<br/>
+              { socketInfo?.mode3StateMessage }<br/>
+              { socketInfo?.realEnergyDelivered } kWh energy delivered<br/>             
+              { socketInfo?.powerAvailable } <br/>
+              { socketInfo?.vehicleIsConnected && <> { socketInfo?.powerUsing }                            </> }
+            </Typography>            
+          </Grid>
+
+          {/* <Grid item xs={12}>
+            <Typography className={classes.pos} color="textSecondary">
+              {socketInfo?.voltage} V
+            </Typography> 
+          </Grid> */}
+
+
+
+
+          {/* <Grid item xs={12}>
+            <Typography className={classes.pos} color="textSecondary">
+            {socketInfo?.current} A
+            </Typography> 
+          </Grid>
+
+          <Grid item xs={4}>
+            <Typography className={classes.pos} color="textSecondary">              
+            </Typography> 
+          </Grid> 
+          <Grid item xs={4}>
+            <Typography className={classes.pos} color="textSecondary">
+              {socketInfo?.vehicleIsConnected}
+            </Typography> 
+          </Grid>
+          <Grid item xs={4}>
+            <Typography className={classes.pos} color="textSecondary">
+              {socketInfo?.vehicleIsCharging}
+            </Typography> 
+          </Grid>                                
+       
+          <Grid item xs={8}>
+            <Typography className={classes.pos} color="textSecondary">
+              {socketInfo?.maxCurrent}
+            </Typography>     
+          </Grid>
+          <Grid item xs={4}>
+            <Typography className={classes.pos} color="textSecondary">
+              {socketInfo?.appliedMaxCurrent}
+            </Typography>     
+          </Grid> */}
+            
+        </Grid>            
+      </DashboardCard>
+    </React.Fragment>
+  )
+};
+
+export interface ISessionInfoProps {
+  socketnr: number;
+}
+export function EVSESessionInfo(props: ISessionInfoProps) {
   const classes = useStyles();
   const dispatch = useAppDispatch();
   const sessionInfo = useAppSelector(selectSessionInfo);  
+  const socketInfo = useAppSelector(selectSocketInfo);  
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -116,36 +152,48 @@ export function EVSESessionInfo() {
 
   return(
     <React.Fragment>
-      <DashboardCard title="Session info">
+      <DashboardCard 
+        title="Alfen Eve Single Pro-line"
+        subheader={'ALF-0000307 Socket #' + props.socketnr }
+        avatar={
+          <Avatar>
+            <EvStationIcon />
+          </Avatar>
+        }
+      >
         <Grid container item xs={12} spacing={1}>
-          <Grid item xs={6}>
+          {socketInfo?.vehicleIsConnected &&
+            <Grid item xs={6}>            
+              <Typography className={classes.pos}  variant="body2" component="p">
+                { sessionInfo?.start } <br/>
+                { socketInfo?.mode3StateMessage } { socketInfo?.lastChargingStateChangedFormatted }<br/>
+                { socketInfo?.phases == 1 ? "1 phase" : "3 phases" } {socketInfo?.powerAvailable}<br/>  
+                { sessionInfo?.energyDelivered } {sessionInfo?.chargingTime}
+              </Typography>          
+            </Grid>          
+          }
+          {!socketInfo?.vehicleIsConnected &&
+            <Grid item xs={6}>            
+              <Typography className={classes.pos}  variant="body2" component="p">
+                Available ({ socketInfo?.lastChargingStateChangedFormatted })
+              </Typography>          
+            </Grid>          
+          }
+            
+ 
+          {/* <Grid item xs={6}>
             <Typography className={classes.pos} color="textSecondary">
-              {sessionInfo?.mode3StateMessage}
-            </Typography>                
-          </Grid>
-          <Grid item xs={6}>
-            <Typography className={classes.pos} color="textSecondary">
-              { sessionInfo?.lastChargingStateChangedFormatted }
-            </Typography>   
-          </Grid>            
-          <Grid item xs={12}>
-            <Typography className={classes.pos} color="textSecondary">
-            {sessionInfo?.phases}
-            </Typography>
-          </Grid>     
-          <Grid item xs={6}>
-            <Typography className={classes.pos} color="textSecondary">
-              {sessionInfo?.maxCurrent} A
+              {socketInfo?.maxCurrent} A
             </Typography>
           </Grid>   
           <Grid item xs={6}>
             <Typography className={classes.pos} color="textSecondary">
-              {sessionInfo?.appliedMaxCurrent} A
+              {socketInfo?.appliedMaxCurrent} A
             </Typography>
           </Grid>     
           <Grid item xs={6}>
             <Typography className={classes.pos} color="textSecondary">
-              max power
+              ?
             </Typography>
           </Grid>   
           <Grid item xs={6}>
@@ -160,14 +208,14 @@ export function EVSESessionInfo() {
           </Grid> 
           <Grid item xs={12}>
             <Typography className={classes.pos} color="textSecondary">
-              energy delivered
+              { sessionInfo?.energyDelivered } kWh
             </Typography>
           </Grid>  
           <Grid item xs={12}>
             <Typography className={classes.pos} color="textSecondary">
-              time
+              { sessionInfo?.chargingTimeFormatted }
             </Typography>
-          </Grid>                                    
+          </Grid>                                     */}
         </Grid>
       </DashboardCard>
     </React.Fragment>

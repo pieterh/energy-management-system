@@ -33,6 +33,8 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export type IDashboardCardProps = {
   title: string;
+  subheader?: string;
+  avatar?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -43,18 +45,14 @@ export function DashboardCard(props : IDashboardCardProps) {
     <React.Fragment>
         <Card variant="outlined">
             <CardHeader
-              // avatar={
-              //   <Avatar aria-label="recipe" className={classes.avatar}>
-              //     R
-              //   </Avatar>
-              // }
+              avatar= { props.avatar }
               // action={
               //   <IconButton aria-label="settings">
               //     <MoreVertIcon />
               //   </IconButton>
               // }
               title={props.title}
-              // subheader="September 14, 2016"
+              subheader={props.subheader}
             />              
             <CardContent >
               {props.children}

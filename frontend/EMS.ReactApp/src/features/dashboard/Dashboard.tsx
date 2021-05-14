@@ -12,7 +12,7 @@ import { useAppSelector, useAppDispatch } from  '../../common/hooks';
 import { pingAsync, selectIsLoggedIn } from '../authentication/authenticationSlice';
 import { DashboardCard } from '../../components/dashboardcard/DashboardCard';
 
-import { EVSEInfo, EVSESessionInfo } from '../chargepoint/ChargePointInfo';
+import { EVSEInfo, EVSESocketInfo, EVSESessionInfo } from '../chargepoint/ChargePointInfo';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -60,7 +60,11 @@ export default function Main() {
           </Grid>
 
           <Grid item xs={12} sm={12} md={6} lg={3} >
-            <EVSESessionInfo />
+            <EVSESocketInfo socketnr={1}/>
+          </Grid>
+
+          <Grid item xs={12} sm={12} md={6} lg={3} >
+            <EVSESessionInfo socketnr={1}/>
           </Grid>
           
           <Grid item xs={12} sm={12} md={12} lg={3} >

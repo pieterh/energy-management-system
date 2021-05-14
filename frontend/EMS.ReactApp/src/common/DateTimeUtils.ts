@@ -5,6 +5,9 @@ export enum DurationFormat { Humanized };
 export enum DateTimeFormat { Humanized };
 
 
+export function FormatDurationFromSeconds(seconds: number, f: DurationFormat = DurationFormat.Humanized) : string {
+    return FormatDuration(Duration.fromMillis(seconds * 1000), f);
+}
 
 export function FormatDuration(duration: Duration, f: DurationFormat = DurationFormat.Humanized) : string {
     switch (f){
