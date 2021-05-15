@@ -13,6 +13,11 @@ import Main from '../features/main/Main';
 import Login from '../features/authentication/Login';
 import Logout from '../features/authentication/Logout';
 
+import { useHistory } from 'react-router-dom';
+import { useAppSelector } from  '../common/hooks';
+import { selectIsLoggedIn } from '../features/authentication/authenticationSlice';
+import RequireAuthentication from '../features/authentication/RequireAuthentication';
+
 function App() {   
   const [initialized, setInitialized] = useState(false);
   const [initializing, setInitializing] = useState(false);
@@ -25,7 +30,7 @@ function App() {
      if (!initialized && !initializing){
         setInitializing(true);
         dispatch(pingAsync()).then(() =>{
-          setInitialized(true);
+          setInitialized(true); 
           setInitializing(false);
         });
       }
@@ -35,6 +40,7 @@ function App() {
     <MyThemeProvider>
       <CssBaseline />
       <BrowserRouter basename="/app">
+          <RequireAuthentication/>
           <AppHeader >
             <Route path='/' exact> <Main/> </Route>
             <Route path='/login'> <Login/> </Route>

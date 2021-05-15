@@ -1,10 +1,11 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import  browserStorage  from 'store2';
+import { useHistory } from 'react-router-dom';
 
 import axios from 'axios';
 import  URLParse from 'url-parse';
 
-import { RootState } from '../../common/hooks';
+import { RootState, useAppDispatch } from '../../common/hooks';
 
 import { login, logout } from './authenticationAPI';
 
@@ -147,6 +148,9 @@ export const authenticationSlice = createSlice({
     name: 'authentication',
     initialState,
     reducers: {
+      relogin(state) {
+        UpdateState(state, LoginStateEnum.logged_out); 
+      }
     },
     extraReducers: (builder) => {
       builder
@@ -190,13 +194,17 @@ export const authenticationSlice = createSlice({
         .addCase(pingAsync.rejected, (state, action ) => {
           UpdateState(state, LoginStateEnum.logged_out);     
           console.info(`pong rejected - ${action.payload?.status} - ${action.payload?.statusText}`);  
-        })  
+        })
         ;
     },
   });
 
 export default authenticationSlice.reducer;      
+export const {relogin} = authenticationSlice.actions;
 
 export const selectIsLoggedIn = (state : RootState) => state.authentication.isLoggedIn;
 
+
 //useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
+
+

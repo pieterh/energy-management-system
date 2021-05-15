@@ -114,7 +114,7 @@ function UpdateStateSessionInfo(state: EVSEState, sr: SocketInfoResponse) {
 
     var ses : SessionInfo = {
       ...sr.sessionInfo,
-      startFormatted: FormatFromISO(sr.sessionInfo.start),
+      startFormatted: !!sr.sessionInfo ? FormatFromISO(sr.sessionInfo.start) : undefined,
       chargingTimeFormatted: !!sr.sessionInfo?.chargingTime ? FormatDurationFromSeconds(sr.sessionInfo?.chargingTime) : undefined
     }
 
