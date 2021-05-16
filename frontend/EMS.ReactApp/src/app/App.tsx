@@ -2,50 +2,50 @@ import { useEffect, useState  } from 'react';
 import { BrowserRouter as BrowserRouter, Route } from 'react-router-dom';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
-import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 import { useAppDispatch } from '../common/hooks';
-import { pingAsync } from '../features/authentication/authenticationSlice';
+import SplashScreen from '../components/splash/SplashScreen';
 
+import { pingAsync } from '../features/authentication/authenticationSlice';
 import MyThemeProvider from '../features/themeprovider/CustomThemeProvider';
+
 import AppHeader from '../features/appheader/AppHeader';
 import Main from '../features/main/Main';
 import Login from '../features/authentication/Login';
 import Logout from '../features/authentication/Logout';
 
-import { useHistory } from 'react-router-dom';
-import { useAppSelector } from  '../common/hooks';
-import { selectIsLoggedIn } from '../features/authentication/authenticationSlice';
-import RequireAuthentication from '../features/authentication/RequireAuthentication';
+import CheckAuthentication from '../features/authentication/CheckAuthentication';
 
 function App() {   
   const [initialized, setInitialized] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  
   const dispatch = useAppDispatch();
 
   useEffect(() => {    
-     console.log(`prefers darkmode? -> ${prefersDarkMode}`);
-     if (!initialized && !initializing){
+     if (!initialized && !initializing) {
         setInitializing(true);
-        dispatch(pingAsync()).then(() =>{
+        // we use ping to check if the user is authenticated or not
+        // and the redux store is updated accordingly
+        dispatch(pingAsync()).then(() =>  {
           setInitialized(true); 
           setInitializing(false);
         });
       }
-  },[prefersDarkMode, initialized, initializing]);
+  },[initialized, initializing]);
 
   return (
     <MyThemeProvider>
       <CssBaseline />
-      <BrowserRouter basename="/app">
-          <RequireAuthentication/>
-          <AppHeader >
-            <Route path='/' exact> <Main/> </Route>
-            <Route path='/login'> <Login/> </Route>
-            <Route path='/logout'> <Logout/> </Route>
-          </AppHeader>
+      <BrowserRouter basename="/app">                   
+            { (!initialized || initializing) && <SplashScreen /> }
+            <CheckAuthentication/>
+            <AppHeader >
+              <Route path='/' exact> <Main/> </Route>
+              <Route path='/login'> <Login/> </Route>
+              <Route path='/logout'> <Logout/> </Route>
+            </AppHeader>          
       </BrowserRouter>
     </MyThemeProvider>
   );

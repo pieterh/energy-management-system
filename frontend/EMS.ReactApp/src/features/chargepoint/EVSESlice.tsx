@@ -70,7 +70,7 @@ export interface SessionInfo {
   startFormatted: string | undefined;
   chargingTime: number | undefined;
   chargingTimeFormatted: string | undefined;
-  energyDelivered: number | undefined;
+  energyDeliveredFormatted: string | undefined;
 }
 
 function  CreateState() : EVSEState {
@@ -98,7 +98,7 @@ function  CreateState() : EVSEState {
       "startFormatted": undefined,
       "chargingTime": undefined,
       "chargingTimeFormatted": undefined,
-      "energyDelivered": undefined
+      "energyDeliveredFormatted": undefined
     }
   };
   return newState;
@@ -144,7 +144,7 @@ interface SocketInfoResponse extends Response {
 export interface SessionR {
   start: string;
   chargingTime: number;
-  energyDelivered: number;
+  energyDeliveredFormatted: string;
 }
 
 export interface SocketR {

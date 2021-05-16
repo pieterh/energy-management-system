@@ -82,7 +82,7 @@ export function EVSESocketInfo(props: ISocketInfoProps) {
               { socketInfo?.mode3StateMessage }<br/>
               { socketInfo?.realEnergyDeliveredFormatted } kWh energy delivered<br/>             
               { socketInfo?.powerAvailableFormatted } <br/>
-              { socketInfo?.vehicleIsConnected && <> { socketInfo?.powerUsingFormatted }                            </> }
+              { socketInfo?.vehicleIsConnected && <> { socketInfo?.powerUsingFormatted } </> }
             </Typography>            
           </Grid>
 
@@ -168,7 +168,7 @@ export function EVSESessionInfo(props: ISessionInfoProps) {
                 Session started at { sessionInfo?.startFormatted } <br/>
                 { socketInfo?.mode3StateMessage } { socketInfo?.lastChargingStateChangedFormatted }<br/>
                 { socketInfo?.phases == 1 ? "1 phase" : "3 phases" } {socketInfo?.powerAvailableFormatted}<br/>  
-                { sessionInfo?.energyDelivered } {sessionInfo?.chargingTime}
+                { sessionInfo?.energyDeliveredFormatted } {sessionInfo?.chargingTime}
               </Typography>          
             </Grid>          
           }

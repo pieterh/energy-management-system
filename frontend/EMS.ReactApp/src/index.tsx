@@ -1,10 +1,14 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './app/App';
 import { Provider } from "react-redux";
-import { store } from './app/store';
 
+import { store } from './app/store';
+import App from './app/App';
+
+import { AddInterceptors } from './features/authentication/AxiosInterceptors';
+
+// make sure to add the interceptors _after_ creating the store and _before_ rendering anything.
+// This will make sure that all http calls can be intercepted while initially drawing the components.
+AddInterceptors();
 
 ReactDOM.render(
   // Strict mode is not working properly with material-ui (in development mode)
@@ -16,25 +20,3 @@ ReactDOM.render(
   // </React.StrictMode>,
   document.getElementById('root')
 );
-
-
-// this interceptor is placed here so that it has access
-// to the store outside of the components/functions
-// and accesses the store after initialization
-// so we can't put it in the authenticationSlice....
-import axios from 'axios';
-import { relogin } from './features/authentication/authenticationSlice';
-
-axios.interceptors.response.use(function (response) {
-  return response;
-}, function (error) {
-  if (error.response.status === 401) {
-    try{      
-      store.dispatch(relogin());
-    }catch(error){
-      console.log(error);
-    }
-  } else {
-      return Promise.reject(error);
-  }
-});

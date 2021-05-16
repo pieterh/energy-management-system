@@ -1,11 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import  browserStorage  from 'store2';
-import { useHistory } from 'react-router-dom';
 
 import axios from 'axios';
-import  URLParse from 'url-parse';
 
-import { RootState, useAppDispatch } from '../../common/hooks';
+import { RootState } from '../../common/hooks';
 
 import { login, logout } from './authenticationAPI';
 
@@ -19,7 +17,9 @@ export interface LoginState {
     state: LoginStateEnum;
     isLoggedIn: boolean;
     token: string | undefined;
-    user: User | undefined,
+    user: User | undefined;
+    hasAuthenticationError: boolean;
+    message: string | undefined;
   }
   
 function  CreateState() : LoginState {
@@ -27,7 +27,9 @@ function  CreateState() : LoginState {
     state: LoginStateEnum.logged_out, 
     isLoggedIn: false,
     token: undefined, 
-    user: undefined 
+    user: undefined,
+    hasAuthenticationError: false,
+    message: undefined
   };
 
   // TODO: check expiration time
@@ -46,12 +48,20 @@ function UpdateState(state: LoginState, s : LoginStateEnum, user?:User | undefin
   state.user = user;
   state.state = s;
   state.isLoggedIn = isLoggedIn;  
+  state.hasAuthenticationError = false;
+  state.message = undefined;
 
   if (isLoggedIn){
     if (token !== null && token !== undefined)
       browserStorage.session.set('token', token);
   } else 
     browserStorage.session.remove('token');
+}
+
+function UpdateStateAuthenticationError(state: LoginState, message: string){
+  UpdateState(state, LoginStateEnum.logged_out);
+  state.hasAuthenticationError = true;
+  state.message = message;
 }
 
 interface Response {
@@ -70,18 +80,6 @@ interface User {
   username: string,
   name: string
 }
-
-// interceptor that will add the bearer token in the header when we are loged in
-axios.interceptors.request.use(function (config) {
-  var parsedUrl = URLParse(config.url as string, true);
-  if (parsedUrl.pathname.startsWith('/api')){
-    const token = browserStorage.session.get('token');
-    //const token = store.getState()?.authentication?.token;  
-    if (token !== undefined && token !== null)  
-      config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export const loginAsync = createAsyncThunk<
       LoginResponse, 
@@ -129,7 +127,6 @@ export const pingAsync = createAsyncThunk<
     'authentication/ping',
     async (undefined, /* thunkApi */ { rejectWithValue }) => {
       try{
-        var data = undefined;
         var cfg = undefined;
         var response = await axios.get<LoginResponse>('http://127.0.0.1:5000/api/users/ping', cfg);
         return response.data;
@@ -149,7 +146,7 @@ export const authenticationSlice = createSlice({
     initialState,
     reducers: {
       relogin(state) {
-        UpdateState(state, LoginStateEnum.logged_out); 
+        UpdateStateAuthenticationError(state, "There was an authentication error. Please login."); 
       }
     },
     extraReducers: (builder) => {
@@ -181,7 +178,7 @@ export const authenticationSlice = createSlice({
           UpdateState(state, LoginStateEnum.logged_out);
           console.info(`logged_out - ${JSON.stringify(action.payload)}`);  
         })
-        .addCase(pingAsync.fulfilled, (state, action) => {
+        .addCase(pingAsync.fulfilled, (state, action) =>  {          
           UpdateState(
             state, 
             LoginStateEnum.logged_in, 
@@ -189,7 +186,8 @@ export const authenticationSlice = createSlice({
               id:action.payload.user.id, 
               username: action.payload.user.username, 
               name: action.payload.user.name 
-            }); 
+            }
+          ); 
         })
         .addCase(pingAsync.rejected, (state, action ) => {
           UpdateState(state, LoginStateEnum.logged_out);     
@@ -200,11 +198,10 @@ export const authenticationSlice = createSlice({
   });
 
 export default authenticationSlice.reducer;      
-export const {relogin} = authenticationSlice.actions;
+export const { relogin } = authenticationSlice.actions;
 
+// some selectors to access data from the store that is managed by this slice
 export const selectIsLoggedIn = (state : RootState) => state.authentication.isLoggedIn;
-
-
-//useAppSelector( state => state.authentication.isLoggedIn ) as boolean;
-
+export const selectHasAuthenticationError = (state : RootState) => state.authentication.hasAuthenticationError;
+export const selectMessage = (state : RootState) => state.authentication.message;
 
