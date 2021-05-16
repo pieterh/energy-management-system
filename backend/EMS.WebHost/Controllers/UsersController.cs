@@ -70,7 +70,7 @@ namespace EMS.WebHost.Controllers
                     Token = token,
                     User = user
                 };
-                return Ok(result);
+                return new JsonResult(result);
             }
             else
             {
@@ -79,7 +79,7 @@ namespace EMS.WebHost.Controllers
         }
         
         [HttpGet("ping")]
-        public PingResponse Ping() {
+        public IActionResult Ping() {
             var id = User.Claims.FirstOrDefault<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
             var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;            
             foreach(var c in User.Claims)
@@ -93,7 +93,7 @@ namespace EMS.WebHost.Controllers
                 Name = name
             };
 
-            return new PingResponse() { Status = 200, User = user };
+            return new JsonResult(new PingResponse() { Status = 200, User = user });
         }
 
         private static UserModel PerformAuth(LoginModel model)

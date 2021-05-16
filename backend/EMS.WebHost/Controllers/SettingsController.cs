@@ -29,7 +29,7 @@ namespace EMS.WebHosts
         [HttpGet]
         public ActionResult<SettingsModel> Get()
         {
-            return new SettingsModel();
+            return new JsonResult(new SettingsModel());
         }
 
         [HttpPost]

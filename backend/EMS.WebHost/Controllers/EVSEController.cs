@@ -35,7 +35,7 @@ namespace EMS.WebHosts
             //retval.Mode3State = ChargePoint.LastSocketMeasurement.Mode3State.ToString();
             //retval.VehicleIsConnected = ChargePoint.LastSocketMeasurement.VehicleConnected;
             //retval.VehicleIsCharging = ChargePoint.LastSocketMeasurement.VehicleIsCharging;
-            return retval;
+            return new JsonResult(retval);
         }
 
 
@@ -79,7 +79,7 @@ namespace EMS.WebHosts
                 session.EnergyDeliveredFormatted = PrepareDouble(csi.EnergyDelivered / 1000, 1, "kWh"); // kWh
             }
 
-            return new SocketInfoResponse() { Status = 200, SocketInfo = socket, SessionInfo = session };
+            return new JsonResult(new SocketInfoResponse() { Status = 200, SocketInfo = socket, SessionInfo = session });
         }
 
         private static string PrepareDouble(double f, int digits = 0)

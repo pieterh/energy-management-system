@@ -120,8 +120,8 @@ namespace EMS.WebHost
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
 
-            app.UseMiddleware<Middleware.SecurityHeaders>();
 
+            app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
