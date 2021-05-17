@@ -1,14 +1,16 @@
 import { combineReducers } from 'redux';
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
- 
+
+import drawerReducer from '../features/appdrawer/drawerSlice';
 import authenticationReducer from '../features/authentication/authenticationSlice';
 import evseReducer from '../features/chargepoint/EVSESlice';
-import CustomThemeProviderReducer from '../features/themeprovider/CustomThemeProviderSlice';
+import customThemeProviderReducer from '../features/themeprovider/CustomThemeProviderSlice';
 
 const rootReducer = combineReducers({
+    drawer: drawerReducer,
     authentication: authenticationReducer,
     evse: evseReducer,
-    customTheme: CustomThemeProviderReducer
+    customTheme: customThemeProviderReducer
   });
 
 export const store = configureStore({

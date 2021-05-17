@@ -110,7 +110,7 @@ export function Login() {
 
   if (isLoggedIn) { return (<Redirect to='/'/>); } else
   return (
-    <Container component="main" maxWidth="xs">     
+    <Container maxWidth="xs">     
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />

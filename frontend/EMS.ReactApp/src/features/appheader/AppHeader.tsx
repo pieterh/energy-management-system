@@ -12,18 +12,13 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 
 import { useAppSelector, useAppDispatch } from '../../common/hooks';
+import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from '../appdrawer/drawerSlice';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 import AccountMenu from '../accountmenu/AccountMenu';
-import AppDrawer from '../appdrawer/AppDrawer';
-
-type FormInputs = {
-  darkState : boolean
-};
 
 interface IStyleProps {
   isScreenXS: boolean
 }
-
 
 const useStyles = makeStyles((theme: Theme) =>({
   root: {
@@ -37,23 +32,9 @@ const useStyles = makeStyles((theme: Theme) =>({
   title: {
     flexGrow: 1
   },
-  customHeight: {
-    minHeight: 200
-  },
-  offset: theme.mixins.toolbar,
-  hide: {
-    display: 'none',
-  },
   toolbar: {
     paddingLeft: 16,
   },
-  content: (p : IStyleProps) => ({ 
-    flexGrow: 1,
-    paddingLeft: theme.spacing(3) + 56, //(p.isScreenXS ? 0 : 56),
-    paddingTop: theme.spacing(3),
-    paddingRight: theme.spacing(3),
-    paddingBottom: theme.spacing(3)    
-  }),
 }));
 
 type Props = {
@@ -69,7 +50,8 @@ export function AppHeader({children}: Props): JSX.Element {
     const isScreenXS = useMediaQuery(theme.breakpoints.only('xs'));
     const classes = useStyles({isScreenXS: isScreenXS});   
 
-    const [isDrawerOpen, setDrawerOpen] = React.useState(false);
+    const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
+
     
     var title = "";
     title = location.pathname == '/' ? 'Main' : title;
@@ -79,11 +61,11 @@ export function AppHeader({children}: Props): JSX.Element {
     title = location.pathname == '/settings' ? 'Settings' : title;
 
     function onDrawerToggleClick(event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null)  {
-      setDrawerOpen(!isDrawerOpen);
+      dispatch(toggleDrawer());
     }
   
     function onDrawerCloseClick(event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null)  {
-      setDrawerOpen(false);
+      dispatch(closeDrawer());
     }
 
     return (
@@ -103,11 +85,9 @@ export function AppHeader({children}: Props): JSX.Element {
               <AccountMenu />
             </Toolbar>
           </AppBar> 
-          <AppDrawer persistent={isLoggedIn && isScreenXS} drawerOpen={isDrawerOpen}/>
+
         </div>
-        <main className={classes.content} >
-          {children}
-        </main>
+
       </React.Fragment>
     );
   }

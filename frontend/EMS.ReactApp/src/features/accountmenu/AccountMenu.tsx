@@ -114,7 +114,7 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
 
     return (
         <React.Fragment>
-          <MuiIconButton ref={buttonRef} aria-controls={open ? 'menu-list-grow' : undefined} aria-haspopup="true" onClick={handleToggle}> 
+          <MuiIconButton aria-label="account menu" ref={buttonRef} aria-controls={open ? 'menu-list-grow' : undefined} aria-haspopup="true" onClick={handleToggle}> 
               <PersonIcon/> 
           </MuiIconButton>       
           <Popper open={open} anchorEl={anchorEl} role={undefined} transition disablePortal>

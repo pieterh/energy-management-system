@@ -2,25 +2,42 @@ import { useEffect, useState  } from 'react';
 import { BrowserRouter as BrowserRouter, Route } from 'react-router-dom';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
+import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { makeStyles, Theme, useTheme } from '@material-ui/core/styles';
 
-import { useAppDispatch } from '../common/hooks';
 import SplashScreen from '../components/splash/SplashScreen';
 
 import { pingAsync } from '../features/authentication/authenticationSlice';
 import MyThemeProvider from '../features/themeprovider/CustomThemeProvider';
-
+import AppDrawer from '../features/appdrawer/drawer';
 import AppHeader from '../features/appheader/AppHeader';
 import Main from '../features/main/Main';
 import Login from '../features/authentication/Login';
 import Logout from '../features/authentication/Logout';
-
+import { useAppSelector, useAppDispatch } from '../common/hooks';
+import { selectIsLoggedIn } from '../features/authentication/authenticationSlice';
 import CheckAuthentication from '../features/authentication/CheckAuthentication';
+
+const useStyles = makeStyles((theme: Theme) =>({
+  content: () => ({ 
+    flexGrow: 1,
+    paddingLeft: theme.spacing(3) + 56, //(p.isScreenXS ? 0 : 56),
+    paddingTop: theme.spacing(3),
+    paddingRight: theme.spacing(3),
+    paddingBottom: theme.spacing(3)    
+  }),
+}));
 
 function App() {   
   const [initialized, setInitialized] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  
+  const theme = useTheme();
+
+  const isLoggedIn = useAppSelector(selectIsLoggedIn);    
+  const isScreenXS = useMediaQuery(theme.breakpoints.only('xs'));
+  const classes = useStyles({isScreenXS: isScreenXS});   
+
   const dispatch = useAppDispatch();
 
   useEffect(() => {    
@@ -41,11 +58,13 @@ function App() {
       <BrowserRouter basename="/app">                   
             { (!initialized || initializing) && <SplashScreen /> }
             <CheckAuthentication/>
-            <AppHeader >
+            <AppHeader ></AppHeader>    
+            <AppDrawer persistent={isLoggedIn && isScreenXS}/>
+            <main className={classes.content} >
               <Route path='/' exact> <Main/> </Route>
               <Route path='/login'> <Login/> </Route>
               <Route path='/logout'> <Logout/> </Route>
-            </AppHeader>          
+            </main>             
       </BrowserRouter>
     </MyThemeProvider>
   );

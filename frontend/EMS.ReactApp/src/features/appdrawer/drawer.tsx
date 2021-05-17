@@ -14,36 +14,32 @@ import WbSunnyIcon from '@material-ui/icons/WbSunny';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import Drawer from '@material-ui/core/Drawer';
 
-import { useAppDispatch } from  '../../common/hooks';
+import { useAppDispatch, useAppSelector } from  '../../common/hooks';
 
 import CarElectric from '../../icons/CarElectric';
 import ElectricalServices from '../../icons/ElectricalServices';
+import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from './drawerSlice';
 
 const drawerWidth = 240;
 const useStyles = makeStyles ((theme: Theme) => 
-  createStyles({
-    drawerHeader: {
-        display: 'flex',
-        alignItems: 'center',
-        padding: theme.spacing(0, 1),
-        // necessary for content to be below app bar
-        ...theme.mixins.toolbar,
-        justifyContent: 'flex-end',
-      },      
+  createStyles({   
     drawer: {
         flexShrink: 0,
         whiteSpace: 'nowrap',    
         position: 'fixed',
         zIndex:10,
       },
-      drawerOpen: {
+    paper: {
+        top: 'unset',
+      },
+    drawerOpen: {
         width: drawerWidth,
         transition: theme.transitions.create('width', {
           easing: theme.transitions.easing.sharp,
           duration: theme.transitions.duration.enteringScreen,
         }),
       },
-      drawerClose: {
+    drawerClose: {
         transition: theme.transitions.create('width', {
           easing: theme.transitions.easing.sharp,
           duration: theme.transitions.duration.leavingScreen,
@@ -55,8 +51,7 @@ const useStyles = makeStyles ((theme: Theme) =>
 );
 
 interface IAppDrawerProps {
-  persistent: boolean,
-  drawerOpen: boolean
+  persistent: boolean
 }
 
 const drawerContent = (
@@ -104,24 +99,24 @@ const drawerContent = (
 export default function AppDrawer(props: IAppDrawerProps) {
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
+  const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
 
   return (
     <Drawer
         variant= {props.persistent ? "persistent" : "permanent"}
         className={clsx(classes.drawer, {
-        [classes.drawerOpen]: props.drawerOpen,
-        [classes.drawerClose]: !props.drawerOpen,
+        [classes.drawerOpen]: isDrawerOpen,
+        [classes.drawerClose]: !isDrawerOpen,
         })}
         classes={{
-        paper: clsx({
-            [classes.drawerOpen]: props.drawerOpen,
-            [classes.drawerClose]: !props.drawerOpen,
+        paper: clsx(classes.paper,{
+            [classes.drawerOpen]: isDrawerOpen,
+            [classes.drawerClose]: !isDrawerOpen,
         }),
         }}            
         anchor="left"
-        open={props.drawerOpen}
+        open={isDrawerOpen}
     >
-      <div className={classes.drawerHeader}/>
       {drawerContent}
     </Drawer>
   )

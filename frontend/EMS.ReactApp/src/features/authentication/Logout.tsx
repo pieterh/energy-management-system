@@ -23,8 +23,8 @@ export function Logout() {
   }
   if (!isLoggedIn) { return (<Redirect to='/'/>); } else
   return (
-      <Container component="main" maxWidth="xs"> 
-      <Button onClick={(event) => onLogoutClick(event)} color="inherit">Logout</Button>
+      <Container maxWidth="xs"> 
+        <Button onClick={(event) => onLogoutClick(event)} color="inherit">Logout</Button>
       </Container>  
   );
 }

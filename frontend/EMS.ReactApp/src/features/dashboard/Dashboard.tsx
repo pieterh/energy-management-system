@@ -77,7 +77,7 @@ export default function Main() {
                   <Paper className={classes.paper}>twee</Paper>
                 </Grid>              
                 <Grid item xs={12}>
-                  <Button onClick={onPing} >ping</Button>
+                  <Button aria-label="ping" onClick={onPing} >ping</Button>
                 </Grid>
               </Grid>
             </DashboardCard>
