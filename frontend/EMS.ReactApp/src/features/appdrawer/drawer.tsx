@@ -54,52 +54,16 @@ interface IAppDrawerProps {
   persistent: boolean
 }
 
-const drawerContent = (
-    <React.Fragment>       
-        <List>
-            <ListItem button key="pvsystem">
-                <ListItemIcon> <WbSunnyIcon /> </ListItemIcon>
-                <ListItemText primary="Solar Power" />
-            </ListItem>
-        </List>        
-        <List>
-            <ListItem button key="chargepoint">
-                <ListItemIcon> <EvStationIcon /> </ListItemIcon>
-                <ListItemText primary="chargepoint" />
-            </ListItem>
-        </List>    
-        <List>
-            <ListItem button key="smartmeter">
-                <ListItemIcon> <ElectricalServices/> </ListItemIcon>
-                <ListItemText primary="Smart Meter" />
-            </ListItem>
-        </List>      
-        <List>
-            <ListItem button key="evcar">
-                <ListItemIcon> <CarElectric/> </ListItemIcon>
-                <ListItemText primary="Electric Car" />
-            </ListItem>
-        </List>                  
-        <List>
-            <ListItem button key="dashboard">
-                <ListItemIcon> <DashboardIcon/> </ListItemIcon>
-                <ListItemText primary="Dashboard" />
-            </ListItem>
-        </List> 
-        <Divider />
-        <List>
-            <ListItem button key="settings">
-                <ListItemIcon> <SettingsIcon /> </ListItemIcon>
-                <ListItemText primary="Settings" />
-            </ListItem>
-        </List> 
-    </React.Fragment>
-);
 
 export default function AppDrawer(props: IAppDrawerProps) {
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
   const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
+
+  function onDrawerItemClick(event: React.MouseEvent<HTMLDivElement> | null)  {
+    // dispatch(closeDrawer());
+    console.log("click ! " + event?.currentTarget?.id);
+  }
 
   return (
     <Drawer
@@ -117,7 +81,38 @@ export default function AppDrawer(props: IAppDrawerProps) {
         anchor="left"
         open={isDrawerOpen}
     >
-      {drawerContent}
+      <React.Fragment>       
+        <List>
+          <ListItem id="appdrawer-pvsystem" key="pvsystem" button onClick={onDrawerItemClick}>
+            <ListItemIcon> <WbSunnyIcon /> </ListItemIcon>
+            <ListItemText primary="Solar Power" />
+          </ListItem>
+        </List>        
+        <List>
+          <ListItem id="appdrawer-evse" key="evse" button onClick={onDrawerItemClick}>
+            <ListItemIcon> <EvStationIcon /> </ListItemIcon>
+            <ListItemText primary="Charge Point" />
+          </ListItem>
+        </List>    
+        <List>
+          <ListItem id="appdrawer-smartmeter" key="smartmeter" button onClick={onDrawerItemClick}>
+            <ListItemIcon> <ElectricalServices/> </ListItemIcon>
+            <ListItemText primary="Smart Meter" />
+          </ListItem>
+        </List>      
+        <List>
+          <ListItem id="appdrawer-evcar" key="evcar" button onClick={onDrawerItemClick}>
+            <ListItemIcon> <CarElectric/> </ListItemIcon>
+            <ListItemText primary="Electric Car" />
+          </ListItem>
+        </List>                  
+        <List>
+          <ListItem id="appdrawer-dashboard" key="dashboard" button onClick={onDrawerItemClick}>
+            <ListItemIcon> <DashboardIcon/> </ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItem>
+        </List> 
+      </React.Fragment>
     </Drawer>
   )
 }
