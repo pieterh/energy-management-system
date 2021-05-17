@@ -12,7 +12,7 @@
     "@reduxjs/toolkit": "^1.5.1",
     "@testing-library/dom": "^7.31.0",
     "@testing-library/jest-dom": "^5.11.10",
-    "@testing-library/react": "^11.2.6",
+    "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^13.1.9",
     "@types/jest": "^26.0.23",
     "@types/luxon": "^1.26.5",
