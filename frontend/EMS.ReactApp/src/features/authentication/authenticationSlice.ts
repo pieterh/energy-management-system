@@ -1,13 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import  browserStorage  from 'store2';
-
 import axios from 'axios';
-
 import { RootState } from '../../common/hooks';
-
 import { login, logout } from './authenticationAPI';
-
-
 
 enum LoginStateEnum {
   'logged_out', 'log_in' , 'logged_in' , 'log_out'

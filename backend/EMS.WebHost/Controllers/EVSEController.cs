@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Text.Json.Serialization;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Logging;
@@ -102,8 +103,8 @@ namespace EMS.WebHosts
         public string CurrentFormatted { get; set; }
 
         public string RealPowerSumFormatted { get; set; }                 // kW
-
         public string RealEnergyDeliveredFormatted { get; set; }          // kWh
+
 
         public bool Availability { get; set; }
         public string Mode3State { get; set; }

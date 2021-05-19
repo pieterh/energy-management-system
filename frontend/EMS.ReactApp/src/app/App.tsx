@@ -2,18 +2,23 @@ import { useEffect, useState  } from 'react';
 import { BrowserRouter as BrowserRouter, Route } from 'react-router-dom';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
+
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+
 
 import SplashScreen from '../components/splash/SplashScreen';
 
 import { pingAsync } from '../features/authentication/authenticationSlice';
 import MyThemeProvider from '../features/themeprovider/CustomThemeProvider';
+
 import AppDrawer from '../features/appdrawer/drawer';
+
 import AppHeader from '../features/appheader/AppHeader';
 import Main from '../features/main/Main';
 import Login from '../features/authentication/Login';
 import Logout from '../features/authentication/Logout';
+
 import { useAppSelector, useAppDispatch } from '../common/hooks';
 import { selectIsLoggedIn } from '../features/authentication/authenticationSlice';
 import CheckAuthentication from '../features/authentication/CheckAuthentication';

@@ -12,6 +12,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 
 import { useAppSelector, useAppDispatch } from '../../common/hooks';
+
 import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from '../appdrawer/drawerSlice';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 import AccountMenu from '../accountmenu/AccountMenu';
@@ -51,7 +52,6 @@ export function AppHeader({children}: Props): JSX.Element {
     const classes = useStyles({isScreenXS: isScreenXS});   
 
     const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
-
     
     var title = "";
     title = location.pathname == '/' ? 'Main' : title;
@@ -85,9 +85,7 @@ export function AppHeader({children}: Props): JSX.Element {
               <AccountMenu />
             </Toolbar>
           </AppBar> 
-
         </div>
-
       </React.Fragment>
     );
   }
