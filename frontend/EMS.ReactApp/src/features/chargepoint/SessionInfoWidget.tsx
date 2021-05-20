@@ -7,7 +7,7 @@ import Typography from '@material-ui/core/Typography';
 import EvStationIcon from '@material-ui/icons/EvStation';
 
 import { useAppSelector, useAppDispatch } from '../../common/hooks';
-import { getSessionInfoAsync, selectSessionInfo, selectSocketInfo } from '../chargepoint/EVSESlice';
+import { getSessionInfoAsync, selectSessionInfo, selectSocketInfo } from './EVSESlice';
 
 import { DashboardCard } from '../../components/dashboardcard/DashboardCard';
 
@@ -27,116 +27,13 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export function EVSEInfo() {
-  const classes = useStyles();
 
-  // className={classes.avatar}
-  return(
-    <React.Fragment>
-      <DashboardCard 
-        title="Alfen Eve Single Pro-line" 
-        subheader="ALF-0000307"
-        avatar={
-          <Avatar>
-            <EvStationIcon />
-          </Avatar>
-        }
-      >
-        <Grid container item xs={12} spacing={1}>
-          <Grid item xs={12}>
-            <Typography className={classes.pos}  variant="body2" component="p">
-              Backoffice is connected<br/>
-              Firmware version 4.14.0-3398<br/>
-              Uptime 14days
-            </Typography>            
-          </Grid>               
-        </Grid>            
-      </DashboardCard>
-    </React.Fragment>
-  )
-};
-
-export interface ISocketInfoProps {
+export interface ISessionInfoWidget {
   socketnr: number;
 }
-export function EVSESocketInfo(props: ISocketInfoProps) {
-  const classes = useStyles();
-  const sessionInfo = useAppSelector(selectSessionInfo);  
-  const socketInfo = useAppSelector(selectSocketInfo);    
 
-  return(
-    <React.Fragment>
-      <DashboardCard 
-        title="Alfen Eve Single Pro-line"
-        subheader={'ALF-0000307 Socket #' + props.socketnr }
-        avatar={
-          <Avatar>
-            <EvStationIcon />
-          </Avatar>
-        }
-      >
-        <Grid container item xs={12} spacing={1}>
-          <Grid item xs={12}>
-            <Typography className={classes.pos}  variant="body2" component="p">
-              { socketInfo?.availability ? "Available" : "Unavailable"}<br/>
-              { socketInfo?.mode3StateMessage }<br/>
-              { socketInfo?.realEnergyDeliveredFormatted } kWh energy delivered<br/>             
-              { socketInfo?.powerAvailableFormatted } <br/>
-              { socketInfo?.vehicleIsConnected && <> { socketInfo?.powerUsingFormatted } </> }
-            </Typography>            
-          </Grid>
-
-          {/* <Grid item xs={12}>
-            <Typography className={classes.pos} color="textSecondary">
-              {socketInfo?.voltage} V
-            </Typography> 
-          </Grid> */}
-
-
-
-
-          {/* <Grid item xs={12}>
-            <Typography className={classes.pos} color="textSecondary">
-            {socketInfo?.current} A
-            </Typography> 
-          </Grid>
-
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">              
-            </Typography> 
-          </Grid> 
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              {socketInfo?.vehicleIsConnected}
-            </Typography> 
-          </Grid>
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              {socketInfo?.vehicleIsCharging}
-            </Typography> 
-          </Grid>                                
-       
-          <Grid item xs={8}>
-            <Typography className={classes.pos} color="textSecondary">
-              {socketInfo?.maxCurrent}
-            </Typography>     
-          </Grid>
-          <Grid item xs={4}>
-            <Typography className={classes.pos} color="textSecondary">
-              {socketInfo?.appliedMaxCurrent}
-            </Typography>     
-          </Grid> */}
-            
-        </Grid>            
-      </DashboardCard>
-    </React.Fragment>
-  )
-};
-
-export interface ISessionInfoProps {
-  socketnr: number;
-}
-export function EVSESessionInfo(props: ISessionInfoProps) {
+export default SessionInfoWidget;
+export function SessionInfoWidget(props: ISessionInfoWidget) {
   const classes = useStyles();
   const dispatch = useAppDispatch();
   const sessionInfo = useAppSelector(selectSessionInfo);  
