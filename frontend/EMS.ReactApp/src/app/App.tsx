@@ -18,6 +18,9 @@ import AppHeader from '../features/appheader/AppHeader';
 import Main from '../features/main/Main';
 import Login from '../features/authentication/Login';
 import Logout from '../features/authentication/Logout';
+// import { Page as EVSEPage } from '../features/chargepoint/Page';
+
+import { DrawerDefinition } from '../features/appdrawer/drawer';
 
 import { useAppSelector, useAppDispatch } from '../common/hooks';
 import { selectIsLoggedIn } from '../features/authentication/authenticationSlice';
@@ -57,6 +60,10 @@ function App() {
       }
   },[initialized, initializing]);
 
+  const routesFromDrawer = DrawerDefinition.items.map((item, i) => (
+    <Route key={item.key} path={item.route}> {item.component} </Route>
+  ));
+
   return (
     <MyThemeProvider>
       <CssBaseline />
@@ -69,6 +76,8 @@ function App() {
               <Route path='/' exact> <Main/> </Route>
               <Route path='/login'> <Login/> </Route>
               <Route path='/logout'> <Logout/> </Route>
+              {/* <Route path='/evse'> <EVSEPage/> </Route> */}
+              {routesFromDrawer}
             </main>             
       </BrowserRouter>
     </MyThemeProvider>
