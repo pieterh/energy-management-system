@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import clsx from 'clsx';
 
 import Divider from '@material-ui/core/Divider';
@@ -19,6 +20,8 @@ import { useAppDispatch, useAppSelector } from  '../../common/hooks';
 import CarElectric from '../../icons/CarElectric';
 import ElectricalServices from '../../icons/ElectricalServices';
 import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from './drawerSlice';
+
+import { Page as EVSEPage } from '../chargepoint/Page';
 
 const drawerWidth = 240;
 const useStyles = makeStyles ((theme: Theme) => 
@@ -50,19 +53,96 @@ const useStyles = makeStyles ((theme: Theme) =>
   })
 );
 
+export type DrawerItem = {
+  id: string,
+  key: string,
+  icon: React.ReactNode,
+  title: string,
+  route: string 
+  exactRoute: boolean,
+  component: React.ReactNode,
+}
+
+export type DrawerDefinitionT = {
+  items: DrawerItem[]
+}
+
+export const DrawerDefinition : DrawerDefinitionT = {
+  items: [
+    {
+      id:"appdrawer-pvsystem",
+      key: "pvsystem",
+      icon: <WbSunnyIcon />,
+      title: "Solar Power!",
+      route: "/pvsystem",
+      exactRoute: false,
+      component: <WbSunnyIcon />
+    },
+    {
+      id:"appdrawer-evse",
+      key: "evse",
+      icon: <EvStationIcon />,
+      title: "Charge Point",
+      route: "/evse",
+      exactRoute: false,
+      component: <EVSEPage />
+    },    
+    {
+      id:"appdrawer-smartmeter",
+      key: "smartmeter",
+      icon: <ElectricalServices />,
+      title: "Smart meter",
+      route: "/smartmeter",
+      exactRoute: false,
+      component: <ElectricalServices />
+    },     
+    {
+      id:"appdrawer-evcar",
+      key: "evcar",
+      icon: <CarElectric />,
+      title: "Electric Car",
+      route: "/ev",
+      exactRoute: false,
+      component: <CarElectric />
+    },         
+    {
+      id:"appdrawer-dashboard",
+      key: "dashboard",
+      icon: <DashboardIcon />,
+      title: "Dashboard",
+      route: "/",
+      exactRoute: true,
+      component: <> </>
+    },      
+  ],
+} 
+
 interface IAppDrawerProps {
   persistent: boolean
 }
 
-
 export default function AppDrawer(props: IAppDrawerProps) {
+  const history = useHistory();
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
   const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
 
-  function onDrawerItemClick(event: React.MouseEvent<HTMLDivElement> | null)  {
-    // dispatch(closeDrawer());
-    console.log("click ! " + event?.currentTarget?.id);
+  const drawerContent = DrawerDefinition.items.map((item, i) => (
+    <List key={item.key}>
+      <ListItem id={"appdrawer-"+item.key} button onClick={onDrawerItemClick} >
+        <ListItemIcon> {item.icon} </ListItemIcon>
+        <ListItemText primary={item.title} />
+      </ListItem>
+    </List>  
+  ));
+
+  function onDrawerItemClick(event: React.MouseEvent<HTMLDivElement> | null) {
+    var item = DrawerDefinition.items.find((x) => { return  x.id === event?.currentTarget?.id });
+    if (!!item){
+      history.push(item.route);
+    } else {
+      console.error("click item nog found ->" + event?.currentTarget?.id);
+    }
   }
 
   return (
@@ -82,36 +162,7 @@ export default function AppDrawer(props: IAppDrawerProps) {
         open={isDrawerOpen}
     >
       <React.Fragment>       
-        <List>
-          <ListItem id="appdrawer-pvsystem" key="pvsystem" button onClick={onDrawerItemClick}>
-            <ListItemIcon> <WbSunnyIcon /> </ListItemIcon>
-            <ListItemText primary="Solar Power" />
-          </ListItem>
-        </List>        
-        <List>
-          <ListItem id="appdrawer-evse" key="evse" button onClick={onDrawerItemClick}>
-            <ListItemIcon> <EvStationIcon /> </ListItemIcon>
-            <ListItemText primary="Charge Point" />
-          </ListItem>
-        </List>    
-        <List>
-          <ListItem id="appdrawer-smartmeter" key="smartmeter" button onClick={onDrawerItemClick}>
-            <ListItemIcon> <ElectricalServices/> </ListItemIcon>
-            <ListItemText primary="Smart Meter" />
-          </ListItem>
-        </List>      
-        <List>
-          <ListItem id="appdrawer-evcar" key="evcar" button onClick={onDrawerItemClick}>
-            <ListItemIcon> <CarElectric/> </ListItemIcon>
-            <ListItemText primary="Electric Car" />
-          </ListItem>
-        </List>                  
-        <List>
-          <ListItem id="appdrawer-dashboard" key="dashboard" button onClick={onDrawerItemClick}>
-            <ListItemIcon> <DashboardIcon/> </ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItem>
-        </List> 
+        { drawerContent }  
       </React.Fragment>
     </Drawer>
   )
