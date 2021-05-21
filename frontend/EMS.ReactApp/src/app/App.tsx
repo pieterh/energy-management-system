@@ -1,11 +1,10 @@
 import { useEffect, useState  } from 'react';
-import { BrowserRouter as BrowserRouter, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
 
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { makeStyles, Theme, useTheme } from '@material-ui/core/styles';
-
 
 import SplashScreen from '../components/splash/SplashScreen';
 
@@ -18,13 +17,13 @@ import AppHeader from '../features/appheader/AppHeader';
 import Main from '../features/main/Main';
 import Login from '../features/authentication/Login';
 import Logout from '../features/authentication/Logout';
-// import { Page as EVSEPage } from '../features/chargepoint/Page';
 
 import { DrawerDefinition } from '../features/appdrawer/drawer';
 
 import { useAppSelector, useAppDispatch } from '../common/hooks';
 import { selectIsLoggedIn } from '../features/authentication/authenticationSlice';
 import CheckAuthentication from '../features/authentication/CheckAuthentication';
+
 
 const useStyles = makeStyles((theme: Theme) =>({
   content: () => ({ 
@@ -66,19 +65,19 @@ function App() {
 
   return (
     <MyThemeProvider>
-      <CssBaseline />
-      <BrowserRouter basename="/app">                   
-            { (!initialized || initializing) && <SplashScreen /> }
-            <CheckAuthentication/>
-            <AppHeader ></AppHeader>    
-            <AppDrawer persistent={isLoggedIn && isScreenXS}/>
-            <main className={classes.content} >
-              <Route path='/' exact> <Main/> </Route>
-              <Route path='/login'> <Login/> </Route>
-              <Route path='/logout'> <Logout/> </Route>
-              {routesFromDrawer}
-            </main>             
-      </BrowserRouter>
+      <CssBaseline />      
+      { (!initialized || initializing) && <SplashScreen /> }
+      
+      <CheckAuthentication/>
+      <AppHeader ></AppHeader>    
+      <AppDrawer persistent={isLoggedIn && isScreenXS}/>
+      <main className={classes.content} >
+        <Route path='/' exact> <Main/> </Route>
+        <Route path='/login'> <Login/> </Route>
+        <Route path='/logout'> <Logout/> </Route>
+        {routesFromDrawer}
+      </main>             
+      
     </MyThemeProvider>
   );
 }
