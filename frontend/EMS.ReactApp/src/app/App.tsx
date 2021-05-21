@@ -76,7 +76,6 @@ function App() {
               <Route path='/' exact> <Main/> </Route>
               <Route path='/login'> <Login/> </Route>
               <Route path='/logout'> <Logout/> </Route>
-              {/* <Route path='/evse'> <EVSEPage/> </Route> */}
               {routesFromDrawer}
             </main>             
       </BrowserRouter>
