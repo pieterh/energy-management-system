@@ -54,6 +54,7 @@ function UpdateState(state: LoginState, s : LoginStateEnum, user?:User | undefin
 }
 
 function UpdateStateAuthenticationError(state: LoginState, message: string){
+  window.location.reload();
   UpdateState(state, LoginStateEnum.logged_out);
   state.hasAuthenticationError = true;
   state.message = message;
@@ -141,6 +142,8 @@ export const authenticationSlice = createSlice({
     initialState,
     reducers: {
       relogin(state) {
+        // force reload of screen to clear the redux state...
+        window.location.reload();
         UpdateStateAuthenticationError(state, "There was an authentication error. Please login."); 
       }
     },
@@ -166,11 +169,10 @@ export const authenticationSlice = createSlice({
           UpdateState(state, LoginStateEnum.logged_out);     
           console.info(`login rejected - ${action.payload?.status} - ${action.payload?.statusText}`);  
         })        
-        .addCase(logoutAsync.pending, (state) => {
-          UpdateState(state, LoginStateEnum.logged_out);
-        })
         .addCase(logoutAsync.fulfilled, (state, action) => {
           UpdateState(state, LoginStateEnum.logged_out);
+          // force reload of screen to clear the redux state...
+          window.location.reload();
           console.info(`logged_out - ${JSON.stringify(action.payload)}`);  
         })
         .addCase(pingAsync.fulfilled, (state, action) =>  {          
