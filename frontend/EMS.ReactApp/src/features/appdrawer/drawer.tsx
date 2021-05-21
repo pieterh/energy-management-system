@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import clsx from 'clsx';
 
@@ -20,6 +21,7 @@ import { useAppDispatch, useAppSelector } from  '../../common/hooks';
 import CarElectric from '../../icons/CarElectric';
 import ElectricalServices from '../../icons/ElectricalServices';
 import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from './drawerSlice';
+import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 
 import { Page as EVSEPage } from '../chargepoint/Page';
 
@@ -125,6 +127,7 @@ export default function AppDrawer(props: IAppDrawerProps) {
   const history = useHistory();
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
+  const isLoggedIn = useAppSelector(selectIsLoggedIn);    
   const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
 
   const drawerContent = DrawerDefinition.items.map((item, i) => (
@@ -145,6 +148,13 @@ export default function AppDrawer(props: IAppDrawerProps) {
     }
   }
 
+  // just close the drawer when we are logged out
+  useEffect(() => {  
+    if (!isLoggedIn && isDrawerOpen){
+      dispatch(closeDrawer());
+    }
+  }, [isLoggedIn, isDrawerOpen]);
+
   return (
     <Drawer
         variant= {props.persistent ? "persistent" : "permanent"}
@@ -160,6 +170,7 @@ export default function AppDrawer(props: IAppDrawerProps) {
         }}            
         anchor="left"
         open={isDrawerOpen}
+        hidden={!isLoggedIn}
     >
       <React.Fragment>       
         { drawerContent }  

@@ -68,6 +68,8 @@ export function AppHeader({children}: Props): JSX.Element {
       dispatch(closeDrawer());
     }
 
+
+
     return (
       <React.Fragment>   
         <div className={classes.root}>     
