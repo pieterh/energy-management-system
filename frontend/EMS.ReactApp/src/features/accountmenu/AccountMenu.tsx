@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{ useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
@@ -40,26 +40,16 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
     const showLoginMenuItem = !isLoggedIn && location.pathname != '/login' && location.pathname != '/logout';
 
     const buttonRef = React.useRef(null);
-
-    const handleThemeChange = (theme:ThemeTypes) => {
-        dispatch(ChangeTheme(theme));
-        setAnchorEl(null); // close main menu
-      };
-
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
 
     const handleOpenMain = () => {
         setTopBarState(topbarstate.Main);
       }
-    const handleOpenAppearance = () => {
-      setTopBarState(topbarstate.Appearance);
-    };
 
     const handleToggle = () => {
       handleOpenMain();
       setAnchorEl(buttonRef.current);
-      // setDrawerOpen(false);
     };
     
     const handleClose = (event: React.MouseEvent<{}>) => {
@@ -73,44 +63,67 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
       }
     }
   
-    function onLoginClick(event: React.MouseEvent<HTMLLIElement, MouseEvent> | null)  {
-      setAnchorEl(null);
-      history.push('/login');
-    }
-
-    function onLogoutClick(event: React.MouseEvent<HTMLLIElement, MouseEvent> | null)  {
-      setAnchorEl(null);
-      history.push('/logout');
+    function onMenuClick(event: React.MouseEvent<HTMLLIElement, MouseEvent> | null)  {
+      switch(event?.currentTarget.id) {
+        case "menu-back":
+          handleOpenMain();
+          break;
+        case "menu-theme":
+          setTopBarState(topbarstate.Appearance);
+          break;
+        case "menu-login":
+          history.push('/login');
+          setAnchorEl(null);
+          break;          
+        case "menu-logout":
+          history.push('/logout');
+          setAnchorEl(null);
+          break;
+        case "menu-settings":
+          history.push('/settings');
+          setAnchorEl(null);
+          break;
+        case "menu-theme-device":
+          dispatch(ChangeTheme(ThemeTypes.device));
+          setAnchorEl(null);
+          break;          
+        case "menu-theme-dark":
+          dispatch(ChangeTheme(ThemeTypes.dark));
+          setAnchorEl(null);
+          break;
+        case "menu-theme-light":
+          dispatch(ChangeTheme(ThemeTypes.light));
+          setAnchorEl(null);
+          break;
+      }      
     }
 
     enum topbarstate {Main, Appearance}
     const [topBarState, setTopBarState] = React.useState(topbarstate.Main);
-    const createTopBarMenuF = () => {
+    const topBarMenuItems = useMemo(() => {
       if (showLoginMenuItem) 
-        return [<MenuItem key="a" onClick={onLoginClick}>Login</MenuItem>];
+        return [ <MenuItem id="menu-login" key="login" onClick={onMenuClick}>Login</MenuItem> ];
 
         if (topBarState == topbarstate.Main)
           return [                  
-            <MenuItem key="a" onClick={handleOpenAppearance}><ListItemIcon><Brightness4Icon/></ListItemIcon>Appearance: {themeName}</MenuItem>,
-            <MenuItem key="b" onClick={handleClose}><ListItemIcon><AccountBoxIcon/></ListItemIcon>My account</MenuItem>,
-            <MenuItem key="c" onClick={handleClose}><ListItemIcon><SettingsIcon/></ListItemIcon>Settings</MenuItem>,
-            <Divider key="d" />,
-            <MenuItem key="e" onClick={onLogoutClick}><ListItemIcon><ExitToAppIcon/></ListItemIcon>Logout</MenuItem>,
+            <MenuItem id="menu-theme" key="theme" onClick={onMenuClick}><ListItemIcon><Brightness4Icon/></ListItemIcon>Appearance: {themeName}</MenuItem>,
+            <MenuItem id="menu-myaccount" key="myaccount" onClick={onMenuClick}><ListItemIcon><AccountBoxIcon/></ListItemIcon>My account</MenuItem>,
+            <MenuItem id="menu-settings" key="settings" onClick={onMenuClick}><ListItemIcon><SettingsIcon/></ListItemIcon>Settings</MenuItem>,
+            <Divider key="divider-1" />,
+            <MenuItem id="menu-logout" key="logout" onClick={onMenuClick}><ListItemIcon><ExitToAppIcon/></ListItemIcon>Logout</MenuItem>,
           ];
-          if (topBarState == topbarstate.Appearance) {
-            return [
-              <MenuItem key="a" onClick={handleOpenMain}><ListItemIcon><ArrowBackIcon/></ListItemIcon>Appearance</MenuItem>,
-              <Divider key="b" />,
-              <div key="c" >Settings applies to this browser only</div>,
-              <MenuItem key="d" onClick={() => handleThemeChange(ThemeTypes.device)}><ListItemIcon><DesktopWindowsIcon/></ListItemIcon>Use device theme</MenuItem>,
-              <MenuItem key="e" onClick={() => handleThemeChange(ThemeTypes.dark)}><ListItemIcon><NightsStayIcon/></ListItemIcon>Dark theme</MenuItem>,
-              <MenuItem key="bf" onClick={() => handleThemeChange(ThemeTypes.light)}><ListItemIcon><WbSunnyIcon/></ListItemIcon>Light theme</MenuItem>,
-            ];              
-          }                
+        if (topBarState == topbarstate.Appearance) 
+          return [
+            <MenuItem key="menu-back" onClick={onMenuClick}><ListItemIcon><ArrowBackIcon/></ListItemIcon>Appearance</MenuItem>,
+            <Divider key="divider-1" />,
+            <div key="div-1" >Settings applies to this browser only</div>,
+            <MenuItem id="menu-theme-device" key="device" onClick={onMenuClick}><ListItemIcon><DesktopWindowsIcon/></ListItemIcon>Use device theme</MenuItem>,
+            <MenuItem id="menu-theme-dark" key="dark" onClick={onMenuClick}><ListItemIcon><NightsStayIcon/></ListItemIcon>Dark theme</MenuItem>,
+            <MenuItem id="menu-theme-light" key="light" onClick={onMenuClick}><ListItemIcon><WbSunnyIcon/></ListItemIcon>Light theme</MenuItem>,
+          ]; 
         return [];
-    };
+    }, [showLoginMenuItem, topBarState, themeName]);
 
-    const createTopBarMenu = createTopBarMenuF();  
 
     return (
         <React.Fragment>
@@ -126,7 +139,7 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
                 <Paper>
                     <ClickAwayListener onClickAway={handleClose}>
                       <MenuList autoFocusItem={open} id="menu-list-grow" onKeyDown={handleListKeyDown}>                             
-                        {createTopBarMenu}  
+                        {topBarMenuItems}  
                       </MenuList>
                     </ClickAwayListener>
                 </Paper>

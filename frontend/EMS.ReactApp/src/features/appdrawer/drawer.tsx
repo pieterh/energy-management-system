@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import clsx from 'clsx';
 
-import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -11,7 +9,6 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 
 import EvStationIcon from '@material-ui/icons/EvStation';
-import SettingsIcon from '@material-ui/icons/Settings';
 import WbSunnyIcon from '@material-ui/icons/WbSunny';
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import Drawer from '@material-ui/core/Drawer';
@@ -24,6 +21,8 @@ import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from './dra
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 
 import { Page as EVSEPage } from '../chargepoint/Page';
+import { Page as SmartMeterPage } from '../smartmeter/Page';
+import { Page as EVPage } from '../ev/Page';
 
 const drawerWidth = 240;
 const useStyles = makeStyles ((theme: Theme) => 
@@ -96,7 +95,7 @@ export const DrawerDefinition : DrawerDefinitionT = {
       title: "Smart meter",
       route: "/smartmeter",
       exactRoute: false,
-      component: <ElectricalServices />
+      component: <SmartMeterPage />
     },     
     {
       id:"appdrawer-evcar",
@@ -105,7 +104,7 @@ export const DrawerDefinition : DrawerDefinitionT = {
       title: "Electric Car",
       route: "/ev",
       exactRoute: false,
-      component: <CarElectric />
+      component: <EVPage />
     },         
     {
       id:"appdrawer-dashboard",
