@@ -7,6 +7,7 @@ using EMS.Library;
 using EMS.Library.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using P1SmartMeter.Connection;
 using P1SmartMeter.Telegram.DSMR;
 
@@ -14,7 +15,7 @@ namespace P1SmartMeter
 {
     public class P1SmartMeter : BackgroundService, ISmartMeter
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private readonly ILogger Logger;
         private bool _disposed = false;
 
         private enum ConnectionType { LAN, TTY };
@@ -28,12 +29,12 @@ namespace P1SmartMeter
         private MessageBuffer _buffer = null;
         private readonly P1RelayServer _relayServer = null;
 
-        private Reading.Measurement _measurement;
-        public Reading.Measurement Measurement
+        public MeasurementBase LastMeasurement { get => _measurement; }
+
+        private Measurement _measurement;
+        protected Measurement Measurement
         {
-            get => _measurement;
-            protected set
-            {
+            set {         
                 _measurement = value;
                 MeasurementAvailable?.Invoke(this, new ISmartMeter.MeasurementAvailableEventArgs() { Measurement = value });
             }
@@ -45,25 +46,16 @@ namespace P1SmartMeter
         {
             services.AddSingleton<P1RelayServer>();
 
-            services.AddSingleton(typeof(ISmartMeter), x =>
-            {
-                var s = ActivatorUtilities.CreateInstance(x, typeof(P1SmartMeter), instance.Config);
-                Logger.Info($"Instance [{instance.Name}], created");
-                return s;
-            });
-            services.AddSingleton<IHostedService>(x =>
-            {
-                var s = x.GetService(typeof(ISmartMeter)) as IHostedService;
-                return s;
-            });
+            BackgroundServiceHelper.CreateAndStart<ISmartMeter, P1SmartMeter>(services, instance.Config);
         }
 
 
-        public P1SmartMeter(Config config, P1RelayServer relayServer)
+        public P1SmartMeter(ILogger<P1SmartMeter> logger, Config config, P1RelayServer relayServer)
         {
+            Logger = logger;
             _relayServer = relayServer;
 
-            Logger.Info($"P1SmartMeter({config.ToString().Replace(Environment.NewLine, " ")})");
+            Logger.LogInformation($"P1SmartMeter({config.ToString().Replace(Environment.NewLine, " ")})");
 
             if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)
             {
@@ -87,7 +79,7 @@ namespace P1SmartMeter
 
         protected void Grind(bool disposing)
         {
-            Logger.Trace($"Dispose({disposing}) _disposed {_disposed}");
+            Logger.LogTrace($"Dispose({disposing}) _disposed {_disposed}");
 
             if (_disposed) return;
 
@@ -97,7 +89,7 @@ namespace P1SmartMeter
             }
 
             _disposed = true;
-            Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
+            Logger.LogTrace($"Dispose({disposing}) done => _disposed {_disposed}");
         }
 
         private void DisposeReader()
@@ -109,7 +101,7 @@ namespace P1SmartMeter
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Logger.Info($"P1SmartMeter Starting");
+            Logger.LogInformation($"P1SmartMeter Starting");
             TransformManyBlock<string, string> _firstBlock;
             BroadcastBlock<string> _broadcastRaw;
             TransformBlock<string, DSMRTelegram> _secondBlock;
@@ -124,7 +116,7 @@ namespace P1SmartMeter
                 var l = new List<string>();
                 while (_buffer.TryTake(out string msg))
                 {
-                    Logger.Debug($"first received complete message. passing it to transform... {msg.Length}");
+                    Logger.LogDebug($"first received complete message. passing it to transform... {msg.Length}");
                     l.Add(msg);
                 }
 
@@ -135,7 +127,7 @@ namespace P1SmartMeter
 
             _secondBlock = new TransformBlock<string, DSMRTelegram>(input =>
             {
-                Logger.Debug($"second received it and is going to transform it");
+                Logger.LogDebug($"second received it and is going to transform it");
                 var t = new DSMRTelegram(input);
 
                 return t;
@@ -143,10 +135,10 @@ namespace P1SmartMeter
 
             _lastBlock = new ActionBlock<DSMRTelegram>(x =>
             {
-                Logger.Debug($"read transformed message{Environment.NewLine}{x}");
+                Logger.LogDebug($"read transformed message{Environment.NewLine}{x}");
                 var m = new Reading.Measurement(x) { Received = DateTime.Now };
 
-                Logger.Debug($"Message {m}");
+                Logger.LogDebug($"Message {m}");
                 Measurement = m;
             });
 
@@ -182,7 +174,7 @@ namespace P1SmartMeter
             finally
             {
                 _reader.Stop();
-                Logger.Info($"Canceled");
+                Logger.LogInformation($"Canceled");
             }
         }
 

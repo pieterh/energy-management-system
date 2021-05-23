@@ -1,13 +1,11 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import  deepEqual  from 'deep-equal';
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import deepEqual from "deep-equal";
 
-import { RootState } from '../../common/hooks';
+import { RootState } from "../../common/hooks";
 
-import { FormatFromISODiffNow, FormatDurationFromSeconds, FormatFromISO } from '../../common/DateTimeUtils';
+import { FormatFromISODiffNow, FormatDurationFromSeconds, FormatFromISO } from "../../common/DateTimeUtils";
 
-
-
-import axios from 'axios';
+import axios from "axios";
 
 // {
 //   "socketInfo": {
@@ -47,7 +45,7 @@ export interface EVSEState {
 }
 
 export interface SocketInfo {
-  id: number,
+  id: number;
   voltageFormatted: number;
   currentFormatted: number;
   realEnergyDeliveredFormatted: number;
@@ -63,7 +61,7 @@ export interface SocketInfo {
   maxCurrent: number;
   powerAvailableFormatted: number;
   powerUsingFormatted: number;
-}  
+}
 
 export interface SessionInfo {
   start: string | undefined;
@@ -73,33 +71,33 @@ export interface SessionInfo {
   energyDeliveredFormatted: string | undefined;
 }
 
-function  CreateState() : EVSEState {
-  var newState : EVSEState = { 
-    socketInfo : {
-      "id": 0,
-      "voltageFormatted": 0.0,
-      "currentFormatted": 0.0,
-      "realEnergyDeliveredFormatted": 0,
-      "availability": false,  
-      "mode3State": "E",
-      "mode3StateMessage": "No Power (E)",
-      "lastChargingStateChanged": undefined,
-      "lastChargingStateChangedFormatted": undefined,
-      "vehicleIsConnected": false,
-      "vehicleIsCharging": false,
-      "phases": 0,
-      "appliedMaxCurrent": 0,
-      "maxCurrent": 0,
-      "powerAvailableFormatted": 0,
-      "powerUsingFormatted": 0,
+function CreateState(): EVSEState {
+  var newState: EVSEState = {
+    socketInfo: {
+      id: 0,
+      voltageFormatted: 0.0,
+      currentFormatted: 0.0,
+      realEnergyDeliveredFormatted: 0,
+      availability: false,
+      mode3State: "E",
+      mode3StateMessage: "No Power (E)",
+      lastChargingStateChanged: undefined,
+      lastChargingStateChangedFormatted: undefined,
+      vehicleIsConnected: false,
+      vehicleIsCharging: false,
+      phases: 0,
+      appliedMaxCurrent: 0,
+      maxCurrent: 0,
+      powerAvailableFormatted: 0,
+      powerUsingFormatted: 0,
     },
-    sessionInfo : {
-      "start": undefined,
-      "startFormatted": undefined,
-      "chargingTime": undefined,
-      "chargingTimeFormatted": undefined,
-      "energyDeliveredFormatted": undefined
-    }
+    sessionInfo: {
+      start: undefined,
+      startFormatted: undefined,
+      chargingTime: undefined,
+      chargingTimeFormatted: undefined,
+      energyDeliveredFormatted: undefined,
+    },
   };
   return newState;
 }
@@ -107,33 +105,35 @@ function  CreateState() : EVSEState {
 const initialState = CreateState();
 
 function UpdateStateSessionInfo(state: EVSEState, sr: SocketInfoResponse) {
-    var si : SocketInfo = {
-      ...sr.socketInfo, 
-      lastChargingStateChangedFormatted: FormatFromISODiffNow(sr.socketInfo.lastChargingStateChanged)
-    };
+  var si: SocketInfo = {
+    ...sr.socketInfo,
+    lastChargingStateChangedFormatted: FormatFromISODiffNow(sr.socketInfo.lastChargingStateChanged),
+  };
 
-    var ses : SessionInfo = {
-      ...sr.sessionInfo,
-      startFormatted: !!sr.sessionInfo ? FormatFromISO(sr.sessionInfo.start) : undefined,
-      chargingTimeFormatted: !!sr.sessionInfo?.chargingTime ? FormatDurationFromSeconds(sr.sessionInfo?.chargingTime) : undefined
-    }
+  var ses: SessionInfo = {
+    ...sr.sessionInfo,
+    startFormatted: !!sr.sessionInfo ? FormatFromISO(sr.sessionInfo.start) : undefined,
+    chargingTimeFormatted: !!sr.sessionInfo?.chargingTime
+      ? FormatDurationFromSeconds(sr.sessionInfo?.chargingTime)
+      : undefined,
+  };
 
-    // validate if the data is really updated before updating the state
-    // preventing updates that are not needed
-    if (!deepEqual(state.socketInfo, si) ){
-        state.socketInfo = si;
-        console.log("new data 1;-)"); 
-    }
-    if (!deepEqual(state.sessionInfo, ses) ){
-      state.sessionInfo = ses;
-      console.log("new data 2;-)"); 
-  }  
+  // validate if the data is really updated before updating the state
+  // preventing updates that are not needed
+  if (!deepEqual(state.socketInfo, si)) {
+    state.socketInfo = si;
+    console.log("new data 1;-)");
+  }
+  if (!deepEqual(state.sessionInfo, ses)) {
+    state.sessionInfo = ses;
+    console.log("new data 2;-)");
+  }
 }
 
 interface Response {
-  status: number,
-  statusText: string,
-  message: string  
+  status: number;
+  statusText: string;
+  message: string;
 }
 
 interface SocketInfoResponse extends Response {
@@ -148,11 +148,11 @@ export interface SessionR {
 }
 
 export interface SocketR {
-  id: number,
-  voltageFormatted: number,
-  currentFormatted: number,
+  id: number;
+  voltageFormatted: number;
+  currentFormatted: number;
   realEnergyDeliveredFormatted: number;
-  availability: boolean;  
+  availability: boolean;
   mode3State: string;
   mode3StateMessage: string;
   lastChargingStateChanged: string | undefined;
@@ -163,51 +163,44 @@ export interface SocketR {
   maxCurrent: number;
   powerAvailableFormatted: number;
   powerUsingFormatted: number;
-}  
+}
 
-
-export const getSessionInfoAsync = createAsyncThunk<
-      SocketInfoResponse, 
-      {id: number},
-      {rejectValue: Response}
-    >(
-    'evse/getSession',
-    async ({id}: {id: number}, { rejectWithValue }) => {
-      try {
-        var cfg = undefined;
-        var response = await axios.get<SocketInfoResponse>(`http://127.0.0.1:5000/api/evse/socket/${id}`, cfg);
-        return response.data;
-      }catch(err){        
-        return rejectWithValue(
-          {
-            status: err.response.status, 
-            statusText: err.response.statusText, 
-            message: err.resonse.message
-          });
-      }
+export const getSessionInfoAsync = createAsyncThunk<SocketInfoResponse, { id: number }, { rejectValue: Response }>(
+  "evse/getSession",
+  async ({ id }: { id: number }, { rejectWithValue }) => {
+    try {
+      var cfg = undefined;
+      var response = await axios.get<SocketInfoResponse>(`http://127.0.0.1:5000/api/evse/socket/${id}`, cfg);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue({
+        status: err.response.status,
+        statusText: err.response.statusText,
+        message: err.resonse.message,
+      });
     }
-  );
+  }
+);
 
 export const evseSlice = createSlice({
-    name: 'evse',
-    initialState,
-    reducers: {
-    },
-    extraReducers: (builder) => {
-      builder
-        .addCase(getSessionInfoAsync.fulfilled, (state, action) => {    
-            UpdateStateSessionInfo(state, action.payload);
-        })
-        .addCase(getSessionInfoAsync.rejected, (state, action ) => {
-          console.info(`getSessionInfoAsync rejected - ${action.payload?.status} - ${action.payload?.statusText}`);  
-        })
-        ;
-    },
-  });
+  name: "evse",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(getSessionInfoAsync.fulfilled, (state, action) => {
+        UpdateStateSessionInfo(state, action.payload);
+      })
+      .addCase(getSessionInfoAsync.rejected, (state, action) => {
+        console.info(`getSessionInfoAsync rejected - ${action.payload?.status} - ${action.payload?.statusText}`);
+      });
+  },
+});
 
-export default evseSlice.reducer;      
+export default evseSlice.reducer;
 
+export const selectSocketInfo = (state: RootState) => state.evse.socketInfo;
+export const selectSessionInfo = (state: RootState) => state.evse.sessionInfo;
 
-
-export const selectSocketInfo = (state : RootState) => state.evse.socketInfo;
-export const selectSessionInfo = (state : RootState) => state.evse.sessionInfo;
+export const vehicleIsConnected = (state: RootState) => state.evse.socketInfo.vehicleIsConnected;
+export const vehicleIsCharging = (state: RootState) => state.evse.socketInfo.vehicleIsCharging;

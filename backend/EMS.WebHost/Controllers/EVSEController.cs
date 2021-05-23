@@ -20,7 +20,7 @@ namespace EMS.WebHosts
         private ILogger Logger { get; init; }
         private IChargePoint ChargePoint { get; init; }
 
-        public EVSEController(ILogger<MyDemoController> logger, IChargePoint chargePoint)
+        public EVSEController(ILogger<EVSEController> logger, IChargePoint chargePoint)
         {
             Logger = logger;
             ChargePoint = chargePoint;
