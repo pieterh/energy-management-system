@@ -17,12 +17,15 @@ import { useAppDispatch, useAppSelector } from  '../../common/hooks';
 
 import CarElectric from '../../icons/CarElectric';
 import ElectricalServices from '../../icons/ElectricalServices';
+import SettingsPowerIcon from '@material-ui/icons/SettingsPower';
+
 import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from './drawerSlice';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 
 import { Page as EVSEPage } from '../chargepoint/Page';
 import { Page as SmartMeterPage } from '../smartmeter/Page';
 import { Page as EVPage } from '../ev/Page';
+import { Page as HEMSPage } from '../hems/Page';
 
 const drawerWidth = 240;
 const useStyles = makeStyles ((theme: Theme) => 
@@ -71,6 +74,15 @@ export type DrawerDefinitionT = {
 export const DrawerDefinition : DrawerDefinitionT = {
   items: [
     {
+      id:"appdrawer-dashboard",
+      key: "dashboard",
+      icon: <DashboardIcon />,
+      title: "Dashboard",
+      route: "/",
+      exactRoute: true,
+      component: <> </>
+    },     
+    {
       id:"appdrawer-pvsystem",
       key: "pvsystem",
       icon: <WbSunnyIcon />,
@@ -105,16 +117,16 @@ export const DrawerDefinition : DrawerDefinitionT = {
       route: "/ev",
       exactRoute: false,
       component: <EVPage />
-    },         
+    },        
     {
-      id:"appdrawer-dashboard",
-      key: "dashboard",
-      icon: <DashboardIcon />,
-      title: "Dashboard",
-      route: "/",
-      exactRoute: true,
-      component: <> </>
-    },      
+      id:"appdrawer-hems",
+      key: "hems",
+      icon: <SettingsPowerIcon />,
+      title: "HEMS",
+      route: "/hems",
+      exactRoute: false,
+      component: <HEMSPage />
+    },     
   ],
 } 
 

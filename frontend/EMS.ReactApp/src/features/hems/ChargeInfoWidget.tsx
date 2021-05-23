@@ -4,12 +4,12 @@ import { makeStyles, createStyles, Theme } from "@material-ui/core/styles";
 import Avatar from "@material-ui/core/Avatar";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import EvStationIcon from "@material-ui/icons/EvStation";
 
 import { useAppSelector, useAppDispatch } from "../../common/hooks";
-import { getSessionInfoAsync, selectSessionInfo, selectSocketInfo } from "./EVSESlice";
-
+import { getHemsInfoAsync, selectHemsInfo } from "./hemsSlice";
+import { vehicleIsConnected } from "../chargepoint/EVSESlice";
 import { DashboardCard } from "../../components/dashboardcard/DashboardCard";
+import EvStationIcon from "@material-ui/icons/EvStation";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -27,21 +27,18 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-export interface ISessionInfoWidget {
-  socketnr: number;
-}
+export interface IChargingInfoWidget {}
 
-export default SessionInfoWidget;
-export function SessionInfoWidget(props: ISessionInfoWidget) {
+export default ChargingInfoWidget;
+export function ChargingInfoWidget(props: IChargingInfoWidget) {
   const classes = useStyles();
   const dispatch = useAppDispatch();
-  const sessionInfo = useAppSelector(selectSessionInfo);
-  const socketInfo = useAppSelector(selectSocketInfo);
+  const hemsInfo = useAppSelector(selectHemsInfo);
+  const isVehicleConnected = useAppSelector(vehicleIsConnected);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // hmmm object arg...
-      dispatch(getSessionInfoAsync({ id: 1 }));
+      dispatch(getHemsInfoAsync());
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -49,8 +46,8 @@ export function SessionInfoWidget(props: ISessionInfoWidget) {
   return (
     <React.Fragment>
       <DashboardCard
-        title="Alfen Eve Single Pro-line"
-        subheader={"ALF-0000307 Socket #" + props.socketnr}
+        title="HEMS"
+        subheader={"charge"}
         avatar={
           <Avatar>
             <EvStationIcon />
@@ -58,22 +55,25 @@ export function SessionInfoWidget(props: ISessionInfoWidget) {
         }
       >
         <Grid container item xs={12} spacing={1}>
-          {socketInfo?.vehicleIsConnected && (
+          {isVehicleConnected && (
             <Grid item xs={12}>
               <Typography className={classes.pos} variant="body2" component="p">
-                Session started at {sessionInfo?.startFormatted} <br />
-                Capacity available {socketInfo?.powerAvailableFormatted} ({socketInfo?.phases == 1 ? "1 phase" : "3 phases"})
+                {hemsInfo.mode}
                 <br />
-                {socketInfo?.mode3StateMessage} {socketInfo?.lastChargingStateChangedFormatted}
-                <br />
-                Charged {sessionInfo?.energyDeliveredFormatted} (in {sessionInfo?.chargingTimeFormatted})
+                {hemsInfo.state} {hemsInfo?.lastStateChangeFormatted} <br />
+                {hemsInfo.currentAvailableL1Formatted} {hemsInfo.currentAvailableL2Formatted}{" "}
+                {hemsInfo.currentAvailableL3Formatted}
               </Typography>
             </Grid>
           )}
-          {!socketInfo?.vehicleIsConnected && (
+          {!isVehicleConnected && (
             <Grid item xs={12}>
               <Typography className={classes.pos} variant="body2" component="p">
-                Available ({socketInfo?.lastChargingStateChangedFormatted})
+                {hemsInfo.mode}
+                <br />
+                {hemsInfo.state} {hemsInfo?.lastStateChangeFormatted} <br />
+                {hemsInfo.currentAvailableL1Formatted} {hemsInfo.currentAvailableL2Formatted}{" "}
+                {hemsInfo.currentAvailableL3Formatted}
               </Typography>
             </Grid>
           )}
