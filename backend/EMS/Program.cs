@@ -11,6 +11,7 @@ using CommandLine;
 using NLog.Extensions.Logging;
 using EMS.Library.Configuration;
 using EMS.WebHost;
+using EMS.Library;
 
 namespace EMS
 {
@@ -77,7 +78,7 @@ namespace EMS
                 {
                     ConfigureInstances(builderContext, services);
 
-                    services.AddSingleton<IHostedService>(x => ActivatorUtilities.CreateInstance<HEMSCore>(x));
+                    BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

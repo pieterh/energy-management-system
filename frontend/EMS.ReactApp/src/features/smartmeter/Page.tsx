@@ -1,12 +1,12 @@
-import React from 'react';
-
+import React from "react";
+import { SmartMeterInfoWidget } from "./smartmeterInfoWidget";
 
 export function Page() {
-  return(    
-      <>
-      <h1>smart meter</h1>
-      </>
-  )
+  return (
+    <>
+      <SmartMeterInfoWidget />
+    </>
+  );
 }
 
 export default Page;

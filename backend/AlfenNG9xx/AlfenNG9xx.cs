@@ -29,17 +29,7 @@ namespace AlfenNG9xx
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
-            services.AddSingleton(typeof(IChargePoint), x =>
-            {
-                var s = ActivatorUtilities.CreateInstance(x, typeof(Alfen), instance.Config);
-                Logger.Info($"Instance [{instance.Name}], created");
-                return s;
-            });
-            services.AddSingleton<IHostedService>(x =>
-            {
-                var s = x.GetService(typeof(IChargePoint)) as IHostedService;
-                return s;
-            });
+            BackgroundServiceHelper.CreateAndStart<IChargePoint, Alfen>(services, instance.Config);
         }
 
         public Alfen(Config config)

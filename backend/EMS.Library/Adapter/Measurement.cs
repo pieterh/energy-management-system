@@ -16,6 +16,17 @@ namespace EMS.Library
         public double? VoltageL2 { get; protected set; }
         public double? VoltageL3 { get; protected set; }
 
+        public int? TariffIndicator { get; protected set; }
+
+        public double? Electricity1FromGrid { get; protected set; }
+
+        public double? Electricity2FromGrid { get; protected set; }
+
+        public double? Electricity1ToGrid { get; protected set; }
+
+        public double? Electricity2ToGrid { get; protected set; }
+
+
         public MeasurementBase() { }
 
         public MeasurementBase(double? c1, double? c2, double? c3, double? v1, double? v2, double? v3)
@@ -44,14 +55,6 @@ namespace EMS.Library
 
     public class Measurement : MeasurementBase
     {
-        public int? TariffIndicator { get; protected set; }
 
-        public double? Electricity1FromGrid { get; protected set; }
-
-        public double? Electricity2FromGrid { get; protected set; }
-
-        public double? Electricity1ToGrid { get; protected set; }
-
-        public double? Electricity2ToGrid { get; protected set; }
     }
 }
