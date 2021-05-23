@@ -10,12 +10,6 @@ using EMS.Engine;
 
 namespace EMS
 {
-
-    public interface IHEMSCore                                              //NOSONAR
-    {
-
-    }
-
     public class HEMSCore : BackgroundService, IHEMSCore, IHostedService    //NOSONAR
     {
         private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
@@ -27,6 +21,13 @@ namespace EMS
 
         private const int _interval = 10000; //ms
 
+        public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
+
+        public ChargingMode ChargingMode {
+            get => _compute.Mode;
+            set => _compute.Mode = value;
+        }
+
         public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeter smartMeter, IChargePoint chargePoint)
         {
             Logger = logger;
@@ -34,7 +35,7 @@ namespace EMS
             _smartMeter = smartMeter;
             _chargePoint = chargePoint;
 
-            _compute = new(logger, Compute.ChargingMode.MaxCharge);
+            _compute = new(logger, ChargingMode.MaxCharge);
 
             appLifetime.ApplicationStarted.Register(OnStarted);
             appLifetime.ApplicationStopping.Register(OnStopping);
@@ -51,7 +52,7 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _compute.Mode = Compute.ChargingMode.MaxSolar;
+            ChargingMode = ChargingMode.MaxSolar;
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -61,7 +62,7 @@ namespace EMS
                     measurememt.CurrentL1, measurememt.CurrentL2, measurememt.CurrentL3,
                     measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);
 
-                (var l1, var l2, var l3) = _compute.Charging(ci);
+                var (l1, l2, l3) = _compute.Charging(ci);
                
                 try
                 {

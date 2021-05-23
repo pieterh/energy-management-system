@@ -9,12 +9,12 @@ namespace EMS
 {
     public class Compute
     {
-        public enum ChargingMode { MaxCharge, MaxSolar };
-
         private static readonly NLog.Logger LoggerState = NLog.LogManager.GetLogger("chargingstate");
 
         private readonly ILogger Logger;
         public ChargingMode Mode { get; set; }
+
+        public ChargeControlInfo Info { get; private set; }
 
         private readonly Measurements _measurements = new();
 
@@ -30,22 +30,27 @@ namespace EMS
         {
             Logger = logger;
             Mode = mode;
+            Info = new();
         }
 
-        public (double, double, double) Charging(ChargingInfo ci)
+        public (double l1, double l2, double l3) Charging(ChargingInfo ci)
         {
             switch (Mode)
             {
                 case ChargingMode.MaxCharge:
-                    return MaxCharging(ci);                
+                    var t = MaxCharging(ci);
+                    Info = new ChargeControlInfo(ChargingMode.MaxCharge, _state.Current, _state.LastStateChange, t.l1, t.l2, t.l3); 
+                    return t;
                 case ChargingMode.MaxSolar:
-                    return MaxSolar(ci);
+                    var t2 =  MaxSolar(ci);
+                    Info = new ChargeControlInfo(ChargingMode.MaxSolar, _state.Current, _state.LastStateChange, t2.l1, t2.l2, t2.l3);
+                    return t2;
                 default:
                     return (-1, -1, -1);
             }
         }
 
-        private (double, double, double) MaxCharging(ChargingInfo ci)
+        private (double l1, double l2, double l3) MaxCharging(ChargingInfo ci)
         {
             var m = _measurements.Get();
             if (ci == null || m.Length < MinimumDataPoints) return ( -1, -1, -1);
@@ -62,7 +67,7 @@ namespace EMS
             return (retval1, retval2, retval3);
         }
 
-        private (double, double, double) MaxSolar(ChargingInfo ci)
+        private (double l1, double l2, double l3) MaxSolar(ChargingInfo ci)
         {
             var m = _measurements.Get();
             if (ci == null || m.Length < MinimumDataPoints) return (-1, -1, -1);
@@ -81,7 +86,7 @@ namespace EMS
             {
                 (chargeCurrent, stateHasChanged) = NotEnoughOverCapicity();
             } else {
-                if (_state.Current == ChargingStateMachine.State.ChargingPaused)
+                if (_state.Current == ChargingState.ChargingPaused)
                 {
                     stateHasChanged = _state.Unpause();
                 }
@@ -90,7 +95,7 @@ namespace EMS
                     stateHasChanged = _state.Start();
                 }
 
-                if (_state.Current != ChargingStateMachine.State.Charging)
+                if (_state.Current != ChargingState.Charging)
                 {
                     chargeCurrent = 0.0;
                 }
@@ -110,9 +115,9 @@ namespace EMS
         {
             double retval;
             bool stateHasChanged = false;
-            if (_state.Current != ChargingStateMachine.State.NotCharging)
+            if (_state.Current != ChargingState.NotCharging)
             {
-                if (_state.Current == ChargingStateMachine.State.ChargingPaused)
+                if (_state.Current == ChargingState.ChargingPaused)
                 {
                     retval = 0.0;
                     Logger?.LogInformation($"Not enough solar power... We have stopped charging...");
@@ -122,6 +127,7 @@ namespace EMS
                     stateHasChanged = _state.Pause();
                     if (stateHasChanged)
                     {
+                        // TODO: uh?
                         retval = 0.0;
                         Logger?.LogInformation($"Not enough solar power... Stop charging......");
                     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using EMS.Engine;
+using EMS.Library;
 using FluentAssertions;
 using Xunit;
 using static EMS.Engine.ChargingStateMachine;
@@ -21,11 +22,11 @@ namespace EMS.Tests
             };
 
             stateMachine.Start();
-            stateMachine.Current.Should().Be(State.Charging, "we can start immediatly after creation");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "we can start immediatly after creation");
             stateMachine.Stop();
-            stateMachine.Current.Should().Be(State.NotCharging, "we can stop immediatly after starting");
+            stateMachine.Current.Should().Be(ChargingState.NotCharging, "we can stop immediatly after starting");
             stateMachine.Start();
-            stateMachine.Current.Should().Be(State.Charging, "we can start immediatly after stopping");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "we can start immediatly after stopping");
         }
 
         [Fact]
@@ -37,12 +38,12 @@ namespace EMS.Tests
             };
 
             stateMachine.Start();
-            stateMachine.Current.Should().Be(State.Charging, "we can start immediatly after creation");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "we can start immediatly after creation");
             stateMachine.LastStateChange = DateTime.Now.AddSeconds(-DELAY);
             stateMachine.Pause();
-            stateMachine.Current.Should().Be(State.ChargingPaused, "after some time we should be able to pause");
+            stateMachine.Current.Should().Be(ChargingState.ChargingPaused, "after some time we should be able to pause");
             stateMachine.Stop();
-            stateMachine.Current.Should().Be(State.NotCharging, "we can stop immediatly even when paused");            
+            stateMachine.Current.Should().Be(ChargingState.NotCharging, "we can stop immediatly even when paused");            
         }
 
         [Fact]
@@ -54,22 +55,22 @@ namespace EMS.Tests
             };
 
             stateMachine.Start();
-            stateMachine.Current.Should().Be(State.Charging, "we can start immediatly after creation");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "we can start immediatly after creation");
             stateMachine.Pause();
-            stateMachine.Current.Should().Be(State.Charging, "we can't pause immediatly after starting");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "we can't pause immediatly after starting");
             stateMachine.LastStateChange = DateTime.Now.AddSeconds(-DELAY_SMALL);
             stateMachine.Pause();
-            stateMachine.Current.Should().Be(State.Charging, "we can't pause immediatly after starting");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "we can't pause immediatly after starting");
 
             stateMachine.LastStateChange = DateTime.Now.AddSeconds(-DELAY);
             stateMachine.Pause();
-            stateMachine.Current.Should().Be(State.ChargingPaused, "after some time we should be able to");
+            stateMachine.Current.Should().Be(ChargingState.ChargingPaused, "after some time we should be able to");
             stateMachine.LastStateChange = DateTime.Now.AddSeconds(-DELAY_SMALL);
             stateMachine.Unpause();
-            stateMachine.Current.Should().Be(State.ChargingPaused, "we can't unpause immediatly");
+            stateMachine.Current.Should().Be(ChargingState.ChargingPaused, "we can't unpause immediatly");
             stateMachine.LastStateChange = DateTime.Now.AddSeconds(-DELAY);
             stateMachine.Unpause();
-            stateMachine.Current.Should().Be(State.Charging, "after some time we should be able to");
+            stateMachine.Current.Should().Be(ChargingState.Charging, "after some time we should be able to");
         }
     }
 }

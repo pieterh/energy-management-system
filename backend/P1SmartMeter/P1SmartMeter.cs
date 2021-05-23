@@ -45,17 +45,7 @@ namespace P1SmartMeter
         {
             services.AddSingleton<P1RelayServer>();
 
-            services.AddSingleton(typeof(ISmartMeter), x =>
-            {
-                var s = ActivatorUtilities.CreateInstance(x, typeof(P1SmartMeter), instance.Config);
-                Logger.Info($"Instance [{instance.Name}], created");
-                return s;
-            });
-            services.AddSingleton<IHostedService>(x =>
-            {
-                var s = x.GetService(typeof(ISmartMeter)) as IHostedService;
-                return s;
-            });
+            BackgroundServiceHelper.CreateAndStart<ISmartMeter, P1SmartMeter>(services, instance.Config);
         }
 
 
