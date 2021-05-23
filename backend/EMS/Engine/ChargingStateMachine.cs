@@ -1,19 +1,21 @@
 ﻿using System;
+using EMS.Library;
+
 namespace EMS.Engine
 {
     public class ChargingStateMachine
     {
-        public enum State { NotCharging, Charging, ChargingPaused }
-        public State Current { get; set; } = State.NotCharging;
+
+        public ChargingState Current { get; set; } = ChargingState.NotCharging;
         public DateTime LastStateChange { get; set; } = DateTime.Now;
         public const int MINIMUM_TIME_SECS = 240;
 
         public bool Start()
         {
             bool stateHasChanged = false;
-            if (Current == State.NotCharging)
+            if (Current == ChargingState.NotCharging)
             {
-                UpdateState(State.Charging);
+                UpdateState(ChargingState.Charging);
                 stateHasChanged = true;
             }
             return stateHasChanged;
@@ -22,9 +24,9 @@ namespace EMS.Engine
         public bool Stop()
         {
             bool stateHasChanged = false;
-            if (Current != State.NotCharging)
+            if (Current != ChargingState.NotCharging)
             {
-                UpdateState(State.NotCharging);
+                UpdateState(ChargingState.NotCharging);
                 stateHasChanged = true;
             }
             return stateHasChanged;
@@ -33,18 +35,18 @@ namespace EMS.Engine
         public bool Pause()
         {
             bool stateHasChanged = false;
-            if (Current == State.Charging)
+            if (Current == ChargingState.Charging)
             {
                 var secs = (DateTime.Now - LastStateChange).TotalSeconds;
                 if (secs >= MINIMUM_TIME_SECS)
                 {
-                    UpdateState(State.ChargingPaused);
+                    UpdateState(ChargingState.ChargingPaused);
                     stateHasChanged = true;
                 }
             }
             else
             {
-                if (Current == State.ChargingPaused)
+                if (Current == ChargingState.ChargingPaused)
                 {
                     LastStateChange = DateTime.Now;
                 }
@@ -55,18 +57,18 @@ namespace EMS.Engine
         public bool Unpause()
         {
             bool stateHasChanged = false;
-            if (Current == State.ChargingPaused)
+            if (Current == ChargingState.ChargingPaused)
             {
                 var secs = (DateTime.Now - LastStateChange).TotalSeconds;
                 if (secs >= MINIMUM_TIME_SECS)
                 {
-                    UpdateState(State.Charging);
+                    UpdateState(ChargingState.Charging);
                     stateHasChanged = true;
                 }
             }
             else
             {
-                if (Current == State.Charging)
+                if (Current == ChargingState.Charging)
                 {
                     LastStateChange = DateTime.Now;
                 }
@@ -74,7 +76,7 @@ namespace EMS.Engine
             return stateHasChanged;
         }
 
-        private void UpdateState(State newState)
+        private void UpdateState(ChargingState newState)
         {
             Current = newState;
             LastStateChange = DateTime.Now;

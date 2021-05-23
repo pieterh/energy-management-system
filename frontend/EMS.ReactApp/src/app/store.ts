@@ -5,7 +5,9 @@ import { createBrowserHistory, History } from 'history'
 
 import drawerReducer from '../features/appdrawer/drawerSlice';
 import authenticationReducer from '../features/authentication/authenticationSlice';
+import hemsReducer from '../features/hems/hemsSlice';
 import evseReducer from '../features/chargepoint/EVSESlice';
+import smartmeterReducer from '../features/smartmeter/smartmeterSlice';
 import customThemeProviderReducer from '../features/themeprovider/CustomThemeProviderSlice';
 
 export const history = createBrowserHistory();
@@ -14,7 +16,9 @@ const createRootReducer = (history: History) => combineReducers({
   router: connectRouter(history),
   drawer: drawerReducer,
   authentication: authenticationReducer,
+  hems: hemsReducer,
   evse: evseReducer,
+  smartmeter: smartmeterReducer,
   customTheme: customThemeProviderReducer
 });
 
