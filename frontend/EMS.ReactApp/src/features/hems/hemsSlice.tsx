@@ -1,0 +1,120 @@
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import deepEqual from "deep-equal";
+
+import { RootState } from "../../common/hooks";
+
+import { FormatFromISODiffNow, FormatDurationFromSeconds, FormatFromISO } from "../../common/DateTimeUtils";
+
+import axios from "axios";
+
+// {
+//   "info": {
+//     "mode": "MaxSolar",
+//     "state": "NotCharging",
+//     "lastStateChange": "2021-05-23T16:30:53.478223+02:00",
+//     "currentAvailableL1Formatted": "0.0 A",
+//     "currentAvailableL2Formatted": "0.0 A",
+//     "currentAvailableL3Formatted": "0.0 A"
+//   },
+//   "status": 0,
+//   "statusText": null,
+//   "message": null
+// }
+
+export interface HemsState {
+  hemsInfo: hemsInfo;
+}
+
+export interface hemsInfo {
+  mode: string;
+  state: string;
+  lastStateChangeFormatted: string;
+  currentAvailableL1Formatted: string;
+  currentAvailableL2Formatted: string;
+  currentAvailableL3Formatted: string;
+}
+
+function CreateState(): HemsState {
+  var newState: HemsState = {
+    hemsInfo: {
+      mode: "",
+      state: "",
+      lastStateChangeFormatted: "",
+      currentAvailableL1Formatted: "",
+      currentAvailableL2Formatted: "",
+      currentAvailableL3Formatted: "",
+    },
+  };
+  return newState;
+}
+
+const initialState = CreateState();
+
+function UpdateStateSessionInfo(state: HemsState, sr: HemsInfoResponse) {
+  var hi: hemsInfo = {
+    ...sr.info,
+    lastStateChangeFormatted: FormatFromISO(sr.info.lastStateChange),
+  };
+
+  // validate if the data is really updated before updating the state
+  // preventing updates that are not needed
+  if (!deepEqual(state.hemsInfo, hi)) {
+    state.hemsInfo = hi;
+    console.log("new data 1;-)");
+  }
+}
+
+interface Response {
+  status: number;
+  statusText: string;
+  message: string;
+}
+
+interface HemsInfoResponse extends Response {
+  info: hemsR;
+}
+
+export interface hemsR {
+  mode: string;
+  state: string;
+  lastStateChange: string;
+  currentAvailableL1Formatted: string;
+  currentAvailableL2Formatted: string;
+  currentAvailableL3Formatted: string;
+}
+
+export const getHemsInfoAsync = createAsyncThunk<HemsInfoResponse, undefined, { rejectValue: Response }>(
+  "hems/getInfo",
+  async (undefined, { rejectWithValue }) => {
+    try {
+      var cfg = undefined;
+      var response = await axios.get<HemsInfoResponse>(`http://127.0.0.1:5000/api/hems/info/`, cfg);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue({
+        status: err.response.status,
+        statusText: err.response.statusText,
+        message: err.resonse.message,
+      });
+    }
+  }
+);
+
+export const hemsSlice = createSlice({
+  name: "hems",
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(getHemsInfoAsync.fulfilled, (state, action) => {
+        UpdateStateSessionInfo(state, action.payload);
+      })
+      .addCase(getHemsInfoAsync.rejected, (state, action) => {
+        console.info(`getHemsInfoAsync rejected - ${action.payload?.status} - ${action.payload?.statusText}`);
+      });
+  },
+});
+
+export default hemsSlice.reducer;
+
+export const selectHemsInfo = (state: RootState) => state.hems.hemsInfo;

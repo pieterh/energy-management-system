@@ -37,6 +37,13 @@ content-type: application/json
 Authorization: Bearer {{token}}
 
 
+#####
 
+GET {{apiRoot}}/api/hems/info HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{token}}
+#####
 
-####
+GET {{apiRoot}}/api/smartmeter/info HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{token}}
