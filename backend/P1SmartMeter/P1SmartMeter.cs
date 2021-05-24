@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using EMS.Library;
 using EMS.Library.Configuration;
+using EMS.Library.DateTimeProvider;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -136,7 +137,7 @@ namespace P1SmartMeter
             _lastBlock = new ActionBlock<DSMRTelegram>(x =>
             {
                 Logger.LogDebug($"read transformed message{Environment.NewLine}{x}");
-                var m = new Reading.Measurement(x) { Received = DateTime.Now };
+                var m = new Reading.Measurement(x) { Received = DateTimeProvider.Now };
 
                 Logger.LogDebug($"Message {m}");
                 Measurement = m;
@@ -183,9 +184,9 @@ namespace P1SmartMeter
             switch (_connectionType)
             {
                 case ConnectionType.LAN:
-                    return new LANReader(_host, _port);
+                    return new ReaderLAN(_host, _port);
                 case ConnectionType.TTY:
-                    return new TTYReader(_usbPort);
+                    return new ReaderTTY(_usbPort);
             }
             return null;
         }

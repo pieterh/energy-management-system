@@ -8,6 +8,7 @@ using EMS.Library;
 using EMS.Library.Configuration;
 using AlfenNG9xx.Model;
 using EMS.Library.Adapter.EVSE;
+using EMS.Library.DateTimeProvider;
 
 namespace AlfenNG9xx
 {
@@ -254,7 +255,7 @@ namespace AlfenNG9xx
             sm.CurrentL3 = Converters.ConvertRegistersFloat(sm_part1, 24);
 
             // sum is null, calculate it
-            sm.CurrentSum = sm.CurrentL1 + sm.CurrentL2 + sm.CurrentL3;
+            sm.CurrentSum = sm.CurrentL1.Value + sm.CurrentL2.Value + sm.CurrentL3.Value;
 
 
             sm.RealPowerL1 = Converters.ConvertRegistersFloat(sm_part1, 38);
@@ -276,7 +277,7 @@ namespace AlfenNG9xx
             sm.Availability = Converters.ConvertRegistersShort(sm_part2, 0) == 1;
 
             sm.Mode3State = SocketMeasurement.ParseMode3State(Converters.ConvertRegistersToString(sm_part2, 1, 5));
-            sm.LastChargingStateChanged = (LastSocketMeasurement == null || LastSocketMeasurement?.Mode3State != sm.Mode3State) ? DateTime.Now : LastSocketMeasurement.LastChargingStateChanged;
+            sm.LastChargingStateChanged = (LastSocketMeasurement == null || LastSocketMeasurement?.Mode3State != sm.Mode3State) ? DateTimeProvider.Now : LastSocketMeasurement.LastChargingStateChanged;
 
             sm.AppliedMaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 6);
             sm.MaxCurrentValidTime = Converters.ConvertRegistersUInt32(sm_part2, 8);
