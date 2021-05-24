@@ -1,32 +1,20 @@
 ﻿using System;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text;
 using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
 {
-    public class LANReader : IP1Interface                                   //NOSONAR
+    public abstract class Reader : IP1Interface
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        protected static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
         private Task _backgroundTask = null;
 
-        private CancellationTokenSource _tokenSource = null;
+        protected CancellationTokenSource _tokenSource = null;
 
         public Task BackgroundTask { get { return _backgroundTask; } }
-
-        private readonly string _host;
-        private readonly int _port;
-
         public event EventHandler<IP1Interface.DataArrivedEventArgs> DataArrived;
-
-        public LANReader(string host, int port)
-        {
-            _host = host;
-            _port = port;
-        }
 
         public void Dispose()
         {
@@ -49,6 +37,7 @@ namespace P1SmartMeter.Connection
             _disposed = true;
             Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
         }
+
 
         private void DisposeBackgroundTask()
         {
@@ -111,12 +100,12 @@ namespace P1SmartMeter.Connection
 
         public virtual void Start()
         {
-            Logger.Info($"Starting");
-            DisposeTokenSource();
+            Logger.Info($"Starting+++");
+
             _tokenSource = new CancellationTokenSource();
             _backgroundTask = Task.Run(() =>
             {
-                Logger.Info($"BackgroundTask running");
+                Logger.Info($"BackgroundTask running +++");
                 try
                 {
                     Run();
@@ -127,7 +116,7 @@ namespace P1SmartMeter.Connection
                     Logger.Error(ex, "Unhandled exception in BackgroundTask");
                     throw;
                 }
-                Logger.Info($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
+                Logger.Info($"BackgroundTask++ stopped -> stop requested {StopRequested(0)}");
             }, _tokenSource.Token);
         }
 
@@ -138,42 +127,7 @@ namespace P1SmartMeter.Connection
             // wait for background task to finish. but not to long...
             Task.WaitAll(new Task[] { BackgroundTask }, 500);
         }
-
-        private void Run()
-        {
-            Logger.Info($"BackgroundTask run");
-
-            using (var tcpClient = new TcpClient(_host, _port))
-            {
-                Logger.Info($"BackgroundTask connected");
-                var bufje = new byte[4096];
-
-                tcpClient.ReceiveBufferSize = 4096;
-                tcpClient.ReceiveTimeout = 30000;
-                using var s = tcpClient.GetStream();
-
-                while (!StopRequested(250))
-                {
-                    Logger.Trace($"BackgroundTask reading!");
-                    var nrCharsRead = s.Read(bufje, 0, bufje.Length);
-
-                    Logger.Debug($"BackgroundTask read {nrCharsRead} bytes...");
-                    var tmp = new byte[nrCharsRead];
-                    Buffer.BlockCopy(bufje, 0, tmp, 0, nrCharsRead);
-
-                    OnDataArrived(new DataArrivedEventArgs() { Data = Encoding.ASCII.GetString(tmp) });
-                }
-
-                s.Close();
-            }
-
-            if (_tokenSource.Token.IsCancellationRequested)
-            {
-                throw new OperationCanceledException();
-            }
-        }
-
-        private bool StopRequested(int ms)
+        protected bool StopRequested(int ms)
         {
             if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                 return true;
@@ -185,13 +139,13 @@ namespace P1SmartMeter.Connection
             }
             return false;
         }
-
         protected void OnDataArrived(DataArrivedEventArgs e)
         {
             Logger.Debug($"data from stream!");
             EventHandler<DataArrivedEventArgs> handler = DataArrived;
             handler?.Invoke(this, e);
         }
-    }
 
+        protected abstract void Run();
+    }
 }

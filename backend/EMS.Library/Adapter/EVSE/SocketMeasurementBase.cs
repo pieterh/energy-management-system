@@ -22,7 +22,7 @@ namespace EMS.Library.Adapter.EVSE
         Unknown = -1
     }
 
-    public class SocketMeasurementBase
+    public class SocketMeasurementBase : ICurrentMeasurement
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -37,11 +37,11 @@ namespace EMS.Library.Adapter.EVSE
         public float VoltageL2 { get; set; }
         public float VoltageL3 { get; set; }
 
-        public float CurrentL1 { get; set; }
-        public float CurrentL2 { get; set; }
-        public float CurrentL3 { get; set; }
+        public double? CurrentL1 { get; set; }
+        public double? CurrentL2 { get; set; }
+        public double? CurrentL3 { get; set; }
 
-        public float CurrentSum { get; set; }
+        public double CurrentSum { get; set; }
 
         public float RealPowerSum { get; set; }
 
