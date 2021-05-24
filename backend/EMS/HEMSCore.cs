@@ -52,17 +52,11 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            ChargingMode = ChargingMode.MaxSolar;
+            ChargingMode = ChargingMode.MaxEco;
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var measurememt = _chargePoint.LastSocketMeasurement;
-
-                var ci = new ChargingInfo(
-                    measurememt.CurrentL1, measurememt.CurrentL2, measurememt.CurrentL3,
-                    measurememt.VoltageL1, measurememt.VoltageL2, measurememt.VoltageL3);
-
-                var (l1, l2, l3) = _compute.Charging(ci);
+                var (l1, l2, l3) = _compute.Charging();
                
                 try
                 {
@@ -109,7 +103,8 @@ namespace EMS
         private void SmartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
         {
             Logger.LogInformation($"- {e.Measurement}");
-            _compute.AddMeasurement(e.Measurement);
+
+            _compute.AddMeasurement(e.Measurement, _chargePoint.LastSocketMeasurement);
         }
 
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
