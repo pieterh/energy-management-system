@@ -1,5 +1,6 @@
 ﻿using System;
 using EMS.Library;
+using EMS.Library.DateTimeProvider;
 
 namespace EMS.Engine
 {
@@ -7,7 +8,7 @@ namespace EMS.Engine
     {
 
         public ChargingState Current { get; set; } = ChargingState.NotCharging;
-        public DateTime LastStateChange { get; set; } = DateTime.Now;
+        public DateTime LastStateChange { get; set; } = DateTimeProvider.Now;
         public const int MINIMUM_TIME_SECS = 240;
 
         public bool Start()
@@ -37,7 +38,7 @@ namespace EMS.Engine
             bool stateHasChanged = false;
             if (Current == ChargingState.Charging)
             {
-                var secs = (DateTime.Now - LastStateChange).TotalSeconds;
+                var secs = (DateTimeProvider.Now - LastStateChange).TotalSeconds;
                 if (secs >= MINIMUM_TIME_SECS)
                 {
                     UpdateState(ChargingState.ChargingPaused);
@@ -48,7 +49,7 @@ namespace EMS.Engine
             {
                 if (Current == ChargingState.ChargingPaused)
                 {
-                    LastStateChange = DateTime.Now;
+                    LastStateChange = DateTimeProvider.Now;
                 }
             }
             return stateHasChanged;
@@ -59,7 +60,7 @@ namespace EMS.Engine
             bool stateHasChanged = false;
             if (Current == ChargingState.ChargingPaused)
             {
-                var secs = (DateTime.Now - LastStateChange).TotalSeconds;
+                var secs = (DateTimeProvider.Now - LastStateChange).TotalSeconds;
                 if (secs >= MINIMUM_TIME_SECS)
                 {
                     UpdateState(ChargingState.Charging);
@@ -70,7 +71,7 @@ namespace EMS.Engine
             {
                 if (Current == ChargingState.Charging)
                 {
-                    LastStateChange = DateTime.Now;
+                    LastStateChange = DateTimeProvider.Now;
                 }
             }
             return stateHasChanged;
@@ -79,7 +80,7 @@ namespace EMS.Engine
         private void UpdateState(ChargingState newState)
         {
             Current = newState;
-            LastStateChange = DateTime.Now;
+            LastStateChange = DateTimeProvider.Now;
         }
     }
 }

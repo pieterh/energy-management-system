@@ -1,8 +1,9 @@
 ﻿using System;
+using EMS.Library.Adapter;
 
 namespace EMS.Library
 {
-    public class MeasurementBase
+    public class MeasurementBase: ICurrentMeasurement
     {
         public DateTime Received { get; set; }
 
@@ -30,7 +31,7 @@ namespace EMS.Library
         public MeasurementBase() { }
 
         public MeasurementBase(double? c1, double? c2, double? c3, double? v1, double? v2, double? v3)
-            : this(DateTime.Now, c1, c2, c3, v1, v2, v3)
+            : this(DateTimeProvider.DateTimeProvider.Now, c1, c2, c3, v1, v2, v3)
         {            
         }
 
