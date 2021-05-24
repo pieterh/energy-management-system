@@ -71,7 +71,7 @@
     "@types/deep-equal": "^1.0.1",
     "@types/url-parse": "^1.4.3",
     "babel-loader": "^8.1.0",
-    "copy-webpack-plugin": "^8.1.1",
+    "copy-webpack-plugin": "^9.0.0",
     "css-loader": "^5.2.5",
     "html-webpack-plugin": "^5.3.1",
     "interpolate-html-plugin": "^4.0.0",
