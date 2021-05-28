@@ -90,10 +90,11 @@ namespace EMS
             var avg = _measurements.CalculateAggregatedAverageUsage();
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
-            LoggerState.Info($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge}");
+            LoggerState.Info($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge} with {avg.nrOfDataPoints} datapoints");
+            Logger?.LogInformation($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge} with {avg.nrOfDataPoints} datapoints");
 
             var chargeCurrent = Math.Round(LimitEco(avg.averageCharge, avg.averageUsage), 2);
-            Logger?.LogInformation($"avg current {avg.averageUsage} and charging at {avg.averageCharge} (buffer size {MaxBufferSeconds} seconds)");
+            Logger?.LogInformation($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge} with {avg.nrOfDataPoints} datapoints (buffer size {MaxBufferSeconds} seconds)");
 
             if (chargeCurrent < MinimumEcoModeExport)
             {
@@ -146,6 +147,8 @@ namespace EMS
         private bool AllowToCharge()
         {
             bool stateHasChanged;
+            if (_state.Current == ChargingState.Charging) return true;
+
             if (_state.Current == ChargingState.ChargingPaused)
             {
                 stateHasChanged = _state.Unpause();

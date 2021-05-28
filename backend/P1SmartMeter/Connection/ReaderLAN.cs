@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
@@ -9,6 +10,11 @@ namespace P1SmartMeter.Connection
     {
         private readonly string _host;
         private readonly int _port;
+        private const int RECEIVE_BUFFER_SIZE = 2048;
+
+        private TcpClient _tcpClient;
+        private NetworkStream _stream;
+        private SocketAsyncEventArgs _receiveEventArgs;
 
         public ReaderLAN(string host, int port)
         {
@@ -16,39 +22,85 @@ namespace P1SmartMeter.Connection
             _port = port;
         }
 
-        protected override void Run()
+        protected override void Dispose(bool disposing)
         {
-            Logger.Info($"BackgroundTask run");
-
-            using (var tcpClient = new TcpClient(_host, _port))
+            if (disposing)
             {
-                Logger.Info($"BackgroundTask connected");
-                var bufje = new byte[4096];
-
-                tcpClient.ReceiveBufferSize = 4096;
-                tcpClient.ReceiveTimeout = 30000;
-                using var s = tcpClient.GetStream();
-
-                while (!StopRequested(250))
-                {
-                    Logger.Trace($"BackgroundTask reading!");
-                    var nrCharsRead = s.Read(bufje, 0, bufje.Length);
-
-                    Logger.Debug($"BackgroundTask read {nrCharsRead} bytes...");
-                    var tmp = new byte[nrCharsRead];
-                    Buffer.BlockCopy(bufje, 0, tmp, 0, nrCharsRead);
-
-                    OnDataArrived(new DataArrivedEventArgs() { Data = Encoding.ASCII.GetString(tmp) });
-                }
-
-                s.Close();
-            }
-
-            if (_tokenSource.Token.IsCancellationRequested)
-            {
-                throw new OperationCanceledException();
+                DisposeStream();
             }
         }
-    }
 
+        private void DisposeStream()
+        {
+            _receiveEventArgs?.Dispose();
+            _receiveEventArgs = null;
+
+            _stream?.Close();
+            _stream?.Dispose();
+            _stream = null;
+
+            _tcpClient?.Close();
+            _tcpClient?.Dispose();
+            _tcpClient = null;
+        }
+
+        protected override void Start()
+        {
+            _tcpClient = new TcpClient(_host, _port)
+            {
+                ReceiveBufferSize = RECEIVE_BUFFER_SIZE,
+                ReceiveTimeout = 30000
+            };
+
+            _stream = _tcpClient.GetStream();
+
+            _receiveEventArgs = new SocketAsyncEventArgs();
+            _receiveEventArgs.SetBuffer(new Byte[RECEIVE_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
+            _receiveEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceive);
+
+            if (!_stream.Socket.ReceiveAsync(_receiveEventArgs))
+            {
+                Console.WriteLine($"kuch1");
+                ProcesReceivedData(_receiveEventArgs);
+            }
+        }
+
+        protected override void Stop()
+        {
+            DisposeStream();
+        }
+
+        private void ProcesReceivedData(SocketAsyncEventArgs receiveEventArgs)
+        {
+            if (StopRequested(0)) { return; }
+
+           
+            var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span.Slice(0, receiveEventArgs.BytesTransferred));
+            OnDataArrived(new DataArrivedEventArgs() { Data = data });
+
+            if (!_stream.Socket.ReceiveAsync(receiveEventArgs))
+            {
+                ProcesReceivedData(receiveEventArgs);
+            }
+        }
+
+        private void OnReceive(object sender, SocketAsyncEventArgs e)
+        {
+            ProcesReceivedData(e);
+        }
+
+        protected override void DoBackgroundWork()
+        {
+            if (!_stream.Socket.Connected)
+            {
+                Console.WriteLine($"Lost connection... stop");
+                Stop();
+                if (!StopRequested(10000))
+                {
+                    Console.WriteLine($"Lost connection... and try again");
+                    Start();
+                }
+            }                
+        }
+    }
 }
