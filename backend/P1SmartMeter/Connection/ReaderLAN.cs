@@ -9,44 +9,70 @@ namespace P1SmartMeter.Connection
     {
         private readonly string _host;
         private readonly int _port;
+        private readonly byte[] _buffer = new byte[4096];
+        private readonly Memory<byte> _memmoryBuffer ;
+
+        private TcpClient _tcpClient;
+        private NetworkStream _stream;
 
         public ReaderLAN(string host, int port)
         {
             _host = host;
             _port = port;
+
+            _memmoryBuffer = _buffer.AsMemory(0, _buffer.Length);
         }
 
-        protected override void Run()
+        protected override void Dispose(bool disposing)
         {
-            Logger.Info($"BackgroundTask run");
-
-            using (var tcpClient = new TcpClient(_host, _port))
+            if (disposing)
             {
-                Logger.Info($"BackgroundTask connected");
-                var bufje = new byte[4096];
-
-                tcpClient.ReceiveBufferSize = 4096;
-                tcpClient.ReceiveTimeout = 30000;
-                using var s = tcpClient.GetStream();
-
-                while (!StopRequested(250))
-                {
-                    Logger.Trace($"BackgroundTask reading!");
-                    var nrCharsRead = s.Read(bufje, 0, bufje.Length);
-
-                    Logger.Debug($"BackgroundTask read {nrCharsRead} bytes...");
-                    var tmp = new byte[nrCharsRead];
-                    Buffer.BlockCopy(bufje, 0, tmp, 0, nrCharsRead);
-
-                    OnDataArrived(new DataArrivedEventArgs() { Data = Encoding.ASCII.GetString(tmp) });
-                }
-
-                s.Close();
+                DisposeStream();
             }
+        }
 
-            if (_tokenSource.Token.IsCancellationRequested)
+        private void DisposeStream()
+        {
+            _stream?.Close();
+            _stream?.Dispose();
+            _stream = null;
+
+            _tcpClient?.Close();
+            _tcpClient?.Dispose();
+            _tcpClient = null;
+        }
+
+        protected override void Start()
+        {
+            _tcpClient = new TcpClient(_host, _port);
+            _tcpClient.ReceiveBufferSize = 4096;
+            _tcpClient.ReceiveTimeout = 30000;
+
+            _stream = _tcpClient.GetStream();
+        }
+
+        protected override void Stop()
+        {
+            DisposeStream();
+        }
+
+        // would like to have an event when data arrives at the socket instead of this polling.... :-(
+        protected override int Interval { get { return 200; } }
+        protected override async void DoBackgroundWork()
+        {
+            try
             {
-                throw new OperationCanceledException();
+                if (_stream.DataAvailable)
+                {
+                    var nrCharsRead = await _stream.ReadAsync(_memmoryBuffer, TokenSource.Token);
+                    var data = Encoding.ASCII.GetString(_memmoryBuffer.Span.Slice(0, nrCharsRead));
+                    OnDataArrived(new DataArrivedEventArgs() { Data = data });                    
+                }
+            }
+            catch (OperationCanceledException oce)
+            {
+                if (!StopRequested(0))
+                    Logger.Error("Unexpected ", oce);
             }
         }
     }

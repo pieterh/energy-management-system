@@ -6,7 +6,7 @@ namespace EMS.Library
 {
     public abstract class BackgroundWorker : IBackgroundWorker
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        protected static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
         private Task _backgroundTask = null;
 
@@ -128,15 +128,16 @@ namespace EMS.Library
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this.Stop();
             _tokenSource?.Cancel();
+
+            this.Stop();
             return Task.CompletedTask;
         }
 
-
+        protected virtual int Interval { get { return 2500;} }
         private void Run()
         {
-            while (!StopRequested(2500))
+            while (!StopRequested(Interval))
             {
                 DoBackgroundWork();
             }
@@ -147,13 +148,13 @@ namespace EMS.Library
             }
         }
 
-        private bool StopRequested(int ms)
+        protected bool StopRequested(int ms)
         {
             if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                 return true;
-            for (var i = 0; i < ms / 500; i++)
+            for (var i = 0; i < ms / 100; i++)
             {
-                Thread.Sleep(500);
+                Thread.Sleep(100);
                 if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                     return true;
             }

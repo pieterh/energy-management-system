@@ -1,10 +1,9 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace EMS.Library
 {
-    public sealed class BackgroundServiceHelper
+    public static class BackgroundServiceHelper
     {
         public static void CreateAndStart<I, T>(IServiceCollection services, params object[] constructorArgs)
         {
@@ -15,7 +14,6 @@ namespace EMS.Library
             services.AddSingleton(typeof(I), x =>
             {
                 var s = ActivatorUtilities.CreateInstance(x, typeof(T), constructorArgs);
-//              Logger.Info($"Instance [{s.GetType().FullName}], created");
                 return s;
             });
             services.AddSingleton<IHostedService>(x =>
