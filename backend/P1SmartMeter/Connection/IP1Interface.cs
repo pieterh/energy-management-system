@@ -1,10 +1,10 @@
 ﻿using System;
+using Microsoft.Extensions.Hosting;
+
 namespace P1SmartMeter.Connection
 {
-    public interface IP1Interface: IDisposable                              //NOSONAR
+    public interface IP1Interface: IHostedService, IDisposable                              //NOSONAR
     {
-        void Start();
-        void Stop();
         event EventHandler<DataArrivedEventArgs> DataArrived;
 
         public class DataArrivedEventArgs : EventArgs

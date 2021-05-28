@@ -12,8 +12,6 @@ namespace P1SmartMeter
 {
     public class P1RelayServer : BackgroundWorker
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
         private readonly List<TcpClient> _clients = new List<TcpClient>();
 
         private TcpListener _listener;

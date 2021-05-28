@@ -95,7 +95,7 @@ namespace P1SmartMeter
 
         private void DisposeReader()
         {
-            _reader?.Stop();
+            //_reader?. ?.Stop();
             _reader?.Dispose();
             _reader = null;
         }
@@ -166,7 +166,7 @@ namespace P1SmartMeter
             
             try
             {
-                _reader.Start();
+                await _reader.StartAsync(stoppingToken);
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     await Task.Delay(1000, stoppingToken);
@@ -174,7 +174,7 @@ namespace P1SmartMeter
             }
             finally
             {
-                _reader.Stop();
+                await _reader.StopAsync(stoppingToken);
                 Logger.LogInformation($"Canceled");
             }
         }
