@@ -11,5 +11,7 @@
     <Folder Include="Configuration\" />
     <Folder Include="Adapter\EVSE\" />
     <Folder Include="DateTime\" />
+    <Folder Include="Core\" />
+    <Folder Include="Adapter\SmartMeter\" />
   </ItemGroup>
 </Project>

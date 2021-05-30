@@ -1,15 +1,8 @@
 ﻿using System;
-namespace EMS.Library
+using System.Collections.Generic;
+
+namespace EMS.Library.Core
 {
-    public enum ChargingMode { MaxCharge, MaxEco, MaxSolar };
-    public enum ChargingState { NotCharging, Charging, ChargingPaused }
-
-    public interface IHEMSCore                                              //NOSONAR
-    {
-        ChargingMode ChargingMode { get; set; }
-        ChargeControlInfo ChargeControlInfo { get; }
-    }
-
     public class ChargeControlInfo
     {
         public ChargingMode Mode { get; init; }
@@ -18,11 +11,13 @@ namespace EMS.Library
         public double CurrentAvailableL1 { get; init; }
         public double CurrentAvailableL2 { get; init; }
         public double CurrentAvailableL3 { get; init; }
+        public IEnumerable<Measurement> Measurements { get;init;}
 
         public ChargeControlInfo()
         {
         }
-        public ChargeControlInfo(ChargingMode mode, ChargingState state, DateTime lastStateChange, double l1, double l2, double l3)
+
+        public ChargeControlInfo(ChargingMode mode, ChargingState state, DateTime lastStateChange, double l1, double l2, double l3, IEnumerable<Measurement> m)
         {
             Mode = mode;
             State = state;
@@ -30,6 +25,7 @@ namespace EMS.Library
             CurrentAvailableL1 = l1;
             CurrentAvailableL2 = l2;
             CurrentAvailableL3 = l3;
+            Measurements = m;
         }
     }
 }

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.Engine;
+using EMS.Library.Core;
+using EMS.Library.Adapter.SmartMeter;
 
 namespace EMS
 {
