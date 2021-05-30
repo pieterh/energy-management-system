@@ -27,7 +27,7 @@ namespace EMS.Tests
 
             var r1 = mock.Object.CalculateAverageUsage();
 
-            r1.nrOfDataPoints.Should().Be(bufferseconds - 10, "all items till now added, should now be in the buffer");
+            r1.NrOfDataPoints.Should().Be(bufferseconds - 10, "all items till now added, should now be in the buffer");
 
             // add some more data to the buffer
             for (int i = 0; i < bufferseconds * 2; i++)
@@ -37,7 +37,7 @@ namespace EMS.Tests
                 dateTime = dateTime.AddSeconds(1);
             }
             var r2 = mock.Object.CalculateAverageUsage();
-            r2.nrOfDataPoints.Should().Be(bufferseconds , "should not exceed the maximum");
+            r2.NrOfDataPoints.Should().Be(bufferseconds , "should not exceed the maximum");
         }
 
         [Fact]
@@ -65,14 +65,14 @@ namespace EMS.Tests
 
             // we know what the average now should be
             var r1 = mock.Object.CalculateAverageUsage();
-            r1.nrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
-            r1.avgCurrentUsingL1.Should().Be(2, "it is the average between 1 and 3");
-            r1.avgCurrentUsingL2.Should().Be(3, "it is the average between 2 and 4");
-            r1.avgCurrentUsingL3.Should().Be(4, "it is the average between 3 and 5");
+            r1.NrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
+            r1.CurrentUsingL1.Should().Be(2, "it is the average between 1 and 3");
+            r1.CurrentUsingL2.Should().Be(3, "it is the average between 2 and 4");
+            r1.CurrentUsingL3.Should().Be(4, "it is the average between 3 and 5");
 
-            r1.avgCurrentChargingL1.Should().Be(0, "we are not charging");
-            r1.avgCurrentChargingL2.Should().Be(0, "we are not charging");
-            r1.avgCurrentChargingL3.Should().Be(0, "we are not charging");
+            r1.CurrentChargingL1.Should().Be(0, "we are not charging");
+            r1.CurrentChargingL2.Should().Be(0, "we are not charging");
+            r1.CurrentChargingL3.Should().Be(0, "we are not charging");
 
             // overflow the buffer with zero values
             for (int i = 0; i < bufferseconds; i++)
@@ -85,14 +85,14 @@ namespace EMS.Tests
             // since the buffer is now filled with zero's, lets check if the average does agree ;-)
             var r2 = mock.Object.CalculateAverageUsage();
 
-            r2.nrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
+            r2.NrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
 
-            r2.avgCurrentUsingL1.Should().Be(0, "since we filled the buffer with all 0 values");
-            r2.avgCurrentUsingL2.Should().Be(0, "since we filled the buffer with all 0 values");
-            r2.avgCurrentUsingL3.Should().Be(0, "since we filled the buffer with all 0 values");
-            r2.avgCurrentChargingL1.Should().Be(0, "we are not charging");
-            r2.avgCurrentChargingL2.Should().Be(0, "we are not charging");
-            r2.avgCurrentChargingL3.Should().Be(0, "we are not charging");
+            r2.CurrentUsingL1.Should().Be(0, "since we filled the buffer with all 0 values");
+            r2.CurrentUsingL2.Should().Be(0, "since we filled the buffer with all 0 values");
+            r2.CurrentUsingL3.Should().Be(0, "since we filled the buffer with all 0 values");
+            r2.CurrentChargingL1.Should().Be(0, "we are not charging");
+            r2.CurrentChargingL2.Should().Be(0, "we are not charging");
+            r2.CurrentChargingL3.Should().Be(0, "we are not charging");
         }
 
         [Fact]
@@ -120,14 +120,14 @@ namespace EMS.Tests
 
             // we know what the average now should be
             var r1 = mock.Object.CalculateAverageUsage();
-            r1.nrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
-            r1.avgCurrentUsingL1.Should().Be(0, "we are not using");
-            r1.avgCurrentUsingL2.Should().Be(0, "we are not using");
-            r1.avgCurrentUsingL3.Should().Be(0, "we are not using");
+            r1.NrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
+            r1.CurrentUsingL1.Should().Be(0, "we are not using");
+            r1.CurrentUsingL2.Should().Be(0, "we are not using");
+            r1.CurrentUsingL3.Should().Be(0, "we are not using");
 
-            r1.avgCurrentChargingL1.Should().Be(2, "it is the average between 1 and 3");
-            r1.avgCurrentChargingL2.Should().Be(3, "it is the average between 2 and 4");
-            r1.avgCurrentChargingL3.Should().Be(4, "it is the average between 3 and 5");
+            r1.CurrentChargingL1.Should().Be(2, "it is the average between 1 and 3");
+            r1.CurrentChargingL2.Should().Be(3, "it is the average between 2 and 4");
+            r1.CurrentChargingL3.Should().Be(4, "it is the average between 3 and 5");
 
 
             // overflow the buffer with zero values
@@ -141,15 +141,15 @@ namespace EMS.Tests
             // since the buffer is now filled with zero's, lets check if the average does agree ;-)
             var r2 = mock.Object.CalculateAverageUsage();
 
-            r2.nrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
+            r2.NrOfDataPoints.Should().Be(bufferseconds, $"we have added {bufferseconds} times every second a value");
 
 
-            r2.avgCurrentUsingL1.Should().Be(0, "we are not using");
-            r2.avgCurrentUsingL2.Should().Be(0, "we are not using");
-            r2.avgCurrentUsingL3.Should().Be(0, "we are not using");
-            r2.avgCurrentChargingL1.Should().Be(0, "since we filled the buffer with all 0 values");
-            r2.avgCurrentChargingL2.Should().Be(0, "since we filled the buffer with all 0 values");
-            r2.avgCurrentChargingL3.Should().Be(0, "since we filled the buffer with all 0 values");
+            r2.CurrentUsingL1.Should().Be(0, "we are not using");
+            r2.CurrentUsingL2.Should().Be(0, "we are not using");
+            r2.CurrentUsingL3.Should().Be(0, "we are not using");
+            r2.CurrentChargingL1.Should().Be(0, "since we filled the buffer with all 0 values");
+            r2.CurrentChargingL2.Should().Be(0, "since we filled the buffer with all 0 values");
+            r2.CurrentChargingL3.Should().Be(0, "since we filled the buffer with all 0 values");
         }
     }
 }

@@ -148,7 +148,7 @@ namespace EMS.Tests
             }
 
             using (new DateTimeProviderContext(dateTime))
-                mock.Object.Charging().Should().Be((6, 0, 0), "we have now enough overcapicity");
+                mock.Object.Charging().Should().Be((8, 0, 0), "we have now enough overcapicity and we take the last 15 seconds to determine the charge current");
 
             // there are some clouds ;-) so add some data with no return
             for (int i = 0; i < mock.Object.MinimumDataPoints / 4; i++)
@@ -186,7 +186,7 @@ namespace EMS.Tests
             }
 
             using (new DateTimeProviderContext(dateTime))
-                mock.Object.Charging().Should().Be((0, 0, 0), "enough overcapicity but transition was enough time in the past");
+                mock.Object.Charging().Should().Be((0, 0, 0), "enough overcapicity but transition was to recent");
 
             // there is still some sun for the second half minimum time
             for (int i = 0; i < ChargingStateMachine.MINIMUM_TIME_SECS / 2; i++)
