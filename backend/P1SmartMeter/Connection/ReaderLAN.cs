@@ -12,9 +12,6 @@ namespace P1SmartMeter.Connection
         private readonly int _port;
         private const int RECEIVE_BUFFER_SIZE = 2048;
 
-        //private readonly byte[] _buffer = new byte[4096];
-        //private readonly Memory<byte> _memmoryBuffer ;
-
         private TcpClient _tcpClient;
         private NetworkStream _stream;
         private SocketAsyncEventArgs _receiveEventArgs;
@@ -23,8 +20,6 @@ namespace P1SmartMeter.Connection
         {
             _host = host;
             _port = port;
-
-            //_memmoryBuffer = _buffer.AsMemory(0, _buffer.Length);
         }
 
         protected override void Dispose(bool disposing)
@@ -77,23 +72,14 @@ namespace P1SmartMeter.Connection
 
         private void ProcesReceivedData(SocketAsyncEventArgs receiveEventArgs)
         {
-            if (StopRequested(0))
-            {
-                Console.WriteLine($"stop is requested....");
-                return;
-            }
+            if (StopRequested(0)) { return; }
 
-            //Console.WriteLine($"bytes read {receiveEventArgs.BytesTransferred}");
-            //var tmp = new byte[receiveEventArgs.BytesTransferred];
-            //Buffer.BlockCopy(receiveEventArgs.Buffer, 0, tmp, 0, receiveEventArgs.BytesTransferred);
-            //var data = Encoding.ASCII.GetString(tmp);
-            
+           
             var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span.Slice(0, receiveEventArgs.BytesTransferred));
             OnDataArrived(new DataArrivedEventArgs() { Data = data });
 
             if (!_stream.Socket.ReceiveAsync(receiveEventArgs))
             {
-               // Console.WriteLine($"kuch2");
                 ProcesReceivedData(receiveEventArgs);
             }
         }
