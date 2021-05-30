@@ -7,6 +7,7 @@ using FluentAssertions;
 using System.Collections.Generic;
 using static EMS.Compute;
 using EMS.Library.Adapter;
+using EMS.Library.Core;
 
 namespace EMS.Tests
 {

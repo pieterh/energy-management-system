@@ -1,9 +1,9 @@
 ﻿using System;
 using EMS.Library.Adapter;
-
-namespace EMS.Library
+using EMS.Library.TestableDateTime;
+namespace EMS.Library.Adapter.SmartMeter
 {
-    public class MeasurementBase: ICurrentMeasurement
+    public class SmartMeterMeasurementBase: ICurrentMeasurement
     {
         public DateTime Received { get; set; }
 
@@ -28,14 +28,14 @@ namespace EMS.Library
         public double? Electricity2ToGrid { get; protected set; }
 
 
-        public MeasurementBase() { }
+        public SmartMeterMeasurementBase() { }
 
-        public MeasurementBase(double? c1, double? c2, double? c3, double? v1, double? v2, double? v3)
-            : this(DateTimeProvider.DateTimeProvider.Now, c1, c2, c3, v1, v2, v3)
+        public SmartMeterMeasurementBase(double? c1, double? c2, double? c3, double? v1, double? v2, double? v3)
+            : this(DateTimeProvider.Now, c1, c2, c3, v1, v2, v3)
         {            
         }
 
-        public MeasurementBase(DateTime received, double? c1, double? c2, double? c3, double? v1, double? v2, double? v3)
+        public SmartMeterMeasurementBase(DateTime received, double? c1, double? c2, double? c3, double? v1, double? v2, double? v3)
         {
             Received = received;
 
@@ -54,7 +54,7 @@ namespace EMS.Library
         }
     }
 
-    public class Measurement : MeasurementBase
+    public class SmartMeterMeasurement : SmartMeterMeasurementBase
     {
 
     }

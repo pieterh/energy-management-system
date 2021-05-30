@@ -1,6 +1,7 @@
 ﻿using System;
 using EMS.Engine;
 using EMS.Library;
+using EMS.Library.Core;
 using FluentAssertions;
 using Xunit;
 using static EMS.Engine.ChargingStateMachine;

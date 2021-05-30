@@ -3,7 +3,7 @@ using System.Collections;
 using System.Threading;
 
 // inspired by akazemis https://github.com/akazemis
-namespace EMS.Library.DateTimeProvider
+namespace EMS.Library.TestableDateTime
 {
     public class DateTimeProviderContext : IDisposable
     {

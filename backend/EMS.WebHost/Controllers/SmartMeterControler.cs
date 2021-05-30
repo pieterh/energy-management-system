@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using EMS.Library;
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
+using EMS.Library.Adapter.SmartMeter;
 
 namespace EMS.WebHosts
 {

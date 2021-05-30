@@ -3,35 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EMS.Library;
-using EMS.Library.DateTimeProvider;
+using EMS.Library.TestableDateTime;
+using EMS.Library.Core;
 
 namespace EMS.Engine
 {
-    internal class Measurement
-    {
-        public DateTime Received { get; init; }
-        public double L1 { get; init; }
-        public double L2 { get; init; }
-        public double L3 { get; init; }
-        public double L { get; init; }
-
-        public double CL1 { get; init; }
-        public double CL2 { get; init; }
-        public double CL3 { get; init; }
-
-        public Measurement(double l1, double l2, double l3, double cl1, double cl2, double cl3)
-        {
-            Received = DateTimeProvider.Now;
-            L1 = l1;
-            L2 = l2;
-            L3 = l3;
-            L = l1 + l2 + l3;
-            CL1 = cl1;
-            CL2 = cl2;
-            CL3 = cl3;
-        }        
-    }
-
     public class AverageUsage
     {
         public AverageUsage() { }
@@ -90,6 +66,19 @@ namespace EMS.Engine
             }
         }
 
+        /***
+         * Returns a copy the measurements
+         */
+        public IEnumerable<Measurement> GetMeasurements()
+        {
+            IEnumerable<Measurement> retval;
+            lock (_measurements)
+            {
+                retval = _measurements.ToArray();
+            }
+            return retval;
+        }
+
         public AverageUsage CalculateAverageUsage()
         {
             return CalculateAverageUsage(default);
@@ -107,7 +96,6 @@ namespace EMS.Engine
 
         private static AverageUsage CalculateAverageUsage(IEnumerable<Measurement> m, DateTime? timeFrame)
         {
-            //var mark = DateTimeProvider.Now.AddMinutes(-5);
             if (timeFrame.HasValue)
                 m = m.Where((x) => x.Received >= timeFrame);            
 
