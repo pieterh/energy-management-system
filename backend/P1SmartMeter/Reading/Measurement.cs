@@ -1,9 +1,10 @@
 ﻿using System;
+using EMS.Library.Adapter.SmartMeter;
 using P1SmartMeter.Telegram.DSMR;
 
 namespace P1SmartMeter.Reading
 {
-    public class Measurement : EMS.Library.Measurement
+    public class Measurement : SmartMeterMeasurement
     {
         public Measurement(DSMRTelegram t)
         {

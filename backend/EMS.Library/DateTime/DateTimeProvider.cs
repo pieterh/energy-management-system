@@ -1,7 +1,7 @@
 ﻿using System;
 
 // inspired by akazemis https://github.com/akazemis
-namespace EMS.Library.DateTimeProvider
+namespace EMS.Library.TestableDateTime
 {
     public static class DateTimeProvider
     {

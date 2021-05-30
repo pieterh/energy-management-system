@@ -4,7 +4,8 @@ using EMS.Engine;
 using EMS.Library;
 using EMS.Library.Adapter;
 using EMS.Library.Adapter.EVSE;
-using EMS.Library.DateTimeProvider;
+using EMS.Library.Core;
+using EMS.Library.TestableDateTime;
 using Microsoft.Extensions.Logging;
 
 namespace EMS
@@ -56,14 +57,15 @@ namespace EMS
             {
                 case ChargingMode.MaxCharge:
                     var t = MaxCharging();
-                    Info = new ChargeControlInfo(ChargingMode.MaxCharge, _state.Current, _state.LastStateChange, t.l1, t.l2, t.l3); 
+                    Info = new ChargeControlInfo(ChargingMode.MaxCharge, _state.Current, _state.LastStateChange, t.l1, t.l2, t.l3, _measurements.GetMeasurements()); 
                     return t;
                 case ChargingMode.MaxEco:
                     var t2 = EcoMode();
+                    Info = new ChargeControlInfo(ChargingMode.MaxSolar, _state.Current, _state.LastStateChange, t2.l1, t2.l2, t2.l3, _measurements.GetMeasurements());
                     return t2;                    
                 case ChargingMode.MaxSolar:
                     var t3 =  MaxSolar();
-                    Info = new ChargeControlInfo(ChargingMode.MaxSolar, _state.Current, _state.LastStateChange, t3.l1, t3.l2, t3.l3);
+                    Info = new ChargeControlInfo(ChargingMode.MaxSolar, _state.Current, _state.LastStateChange, t3.l1, t3.l2, t3.l3, _measurements.GetMeasurements());
                     return t3;
                 default:
                     return (-1, -1, -1);
