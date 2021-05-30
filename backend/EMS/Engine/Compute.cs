@@ -4,6 +4,7 @@ using EMS.Engine;
 using EMS.Library;
 using EMS.Library.Adapter;
 using EMS.Library.Adapter.EVSE;
+using EMS.Library.DateTimeProvider;
 using Microsoft.Extensions.Logging;
 
 namespace EMS
@@ -74,20 +75,20 @@ namespace EMS
 
             var avg = _measurements.CalculateAverageUsage();
 
-            if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
-            LoggerState.Info($"avg current {avg.avgCurrentUsingL1}, {avg.avgCurrentUsingL2} , {avg.avgCurrentUsingL3}");
+            if (avg.NrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
+            LoggerState.Info($"avg current {avg.CurrentUsingL1}, {avg.CurrentUsingL2} , {avg.CurrentUsingL3}");
 
-            var retval1 = (float)Math.Round(LimitCurrent(avg.avgCurrentChargingL1, avg.avgCurrentUsingL1), 2);
-            var retval2 = (float)Math.Round(LimitCurrent(avg.avgCurrentChargingL2, avg.avgCurrentUsingL2), 2);
-            var retval3 = (float)Math.Round(LimitCurrent(avg.avgCurrentChargingL3, avg.avgCurrentUsingL3), 2);
+            var retval1 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL1, avg.CurrentUsingL1), 2);
+            var retval2 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL2, avg.CurrentUsingL2), 2);
+            var retval3 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL3, avg.CurrentUsingL3), 2);
 
-            Logger?.LogInformation($"{(float)Math.Round(avg.avgCurrentUsingL1, 2)}, {(float)Math.Round(avg.avgCurrentUsingL2, 2)}, {(float)Math.Round(avg.avgCurrentUsingL3, 2)} => {retval1}, {retval2}, {retval3}");
+            Logger?.LogInformation($"{(float)Math.Round(avg.CurrentUsingL1, 2)}, {(float)Math.Round(avg.CurrentUsingL2, 2)}, {(float)Math.Round(avg.CurrentUsingL3, 2)} => {retval1}, {retval2}, {retval3}");
             return (retval1, retval2, retval3);
         }
 
         private (double l1, double l2, double l3) EcoMode()
         {
-            var avg = _measurements.CalculateAggregatedAverageUsage();
+            var avg = _measurements.CalculateAggregatedAverageUsage();            
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
             LoggerState.Info($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge} with {avg.nrOfDataPoints} datapoints");
@@ -107,9 +108,12 @@ namespace EMS
                 Logger?.LogInformation($"{chargeCurrent}");
                 if (AllowToCharge())                
                 {
-                    // charge as fast as possible, but keep the minimum in mind
-                    chargeCurrent = chargeCurrent >= MinimumChargeCurrent ? chargeCurrent : MinimumChargeCurrent;
-                    return ((float)Math.Round(chargeCurrent, 2), 0, 0);
+                    // charge as fast as possible and as close to the current available capicity as possible
+                    var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-15));
+                    var chargeCurrentShort = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
+                    chargeCurrentShort = chargeCurrentShort >= MinimumChargeCurrent ? chargeCurrentShort : MinimumChargeCurrent;
+                    Logger?.LogInformation($"charging {chargeCurrent} -> {chargeCurrentShort}");
+                    return ((float)Math.Round(chargeCurrentShort, 2), 0, 0);
                 }
                 else
                 {
