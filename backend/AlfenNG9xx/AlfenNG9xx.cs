@@ -105,6 +105,7 @@ namespace AlfenNG9xx
                     Logger.Error("Unhandled, we try later again");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
+                    await Task.Delay(10000, stoppingToken);
                 }
             }
             Logger.Info($"Canceled");

@@ -152,15 +152,10 @@ namespace EMS.Library
         {
             if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                 return true;
-            for (var i = 0; i < ms / 100; i++)
-            {
-                Thread.Sleep(100);
-                if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
-                    return true;
-            }
-            return false;
+            if (ms == 0) return false;
+
+            Task.Delay(ms, _tokenSource.Token);
+            return (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested);
         }
-
-
     }
 }

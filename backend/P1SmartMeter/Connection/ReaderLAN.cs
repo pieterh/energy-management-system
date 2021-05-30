@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
@@ -9,18 +10,21 @@ namespace P1SmartMeter.Connection
     {
         private readonly string _host;
         private readonly int _port;
-        private readonly byte[] _buffer = new byte[4096];
-        private readonly Memory<byte> _memmoryBuffer ;
+        private const int RECEIVE_BUFFER_SIZE = 2048;
+
+        //private readonly byte[] _buffer = new byte[4096];
+        //private readonly Memory<byte> _memmoryBuffer ;
 
         private TcpClient _tcpClient;
         private NetworkStream _stream;
+        private SocketAsyncEventArgs _receiveEventArgs;
 
         public ReaderLAN(string host, int port)
         {
             _host = host;
             _port = port;
 
-            _memmoryBuffer = _buffer.AsMemory(0, _buffer.Length);
+            //_memmoryBuffer = _buffer.AsMemory(0, _buffer.Length);
         }
 
         protected override void Dispose(bool disposing)
@@ -33,6 +37,9 @@ namespace P1SmartMeter.Connection
 
         private void DisposeStream()
         {
+            _receiveEventArgs?.Dispose();
+            _receiveEventArgs = null;
+
             _stream?.Close();
             _stream?.Dispose();
             _stream = null;
@@ -44,11 +51,23 @@ namespace P1SmartMeter.Connection
 
         protected override void Start()
         {
-            _tcpClient = new TcpClient(_host, _port);
-            _tcpClient.ReceiveBufferSize = 4096;
-            _tcpClient.ReceiveTimeout = 30000;
+            _tcpClient = new TcpClient(_host, _port)
+            {
+                ReceiveBufferSize = RECEIVE_BUFFER_SIZE,
+                ReceiveTimeout = 30000
+            };
 
             _stream = _tcpClient.GetStream();
+
+            _receiveEventArgs = new SocketAsyncEventArgs();
+            _receiveEventArgs.SetBuffer(new Byte[RECEIVE_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
+            _receiveEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceive);
+
+            if (!_stream.Socket.ReceiveAsync(_receiveEventArgs))
+            {
+                Console.WriteLine($"kuch1");
+                ProcesReceivedData(_receiveEventArgs);
+            }
         }
 
         protected override void Stop()
@@ -56,25 +75,46 @@ namespace P1SmartMeter.Connection
             DisposeStream();
         }
 
-        // would like to have an event when data arrives at the socket instead of this polling.... :-(
-        protected override int Interval { get { return 200; } }
-        protected override async void DoBackgroundWork()
+        private void ProcesReceivedData(SocketAsyncEventArgs receiveEventArgs)
         {
-            try
+            if (StopRequested(0))
             {
-                if (_stream.DataAvailable)
-                {
-                    var nrCharsRead = await _stream.ReadAsync(_memmoryBuffer, TokenSource.Token);
-                    var data = Encoding.ASCII.GetString(_memmoryBuffer.Span.Slice(0, nrCharsRead));
-                    OnDataArrived(new DataArrivedEventArgs() { Data = data });                    
-                }
+                Console.WriteLine($"stop is requested....");
+                return;
             }
-            catch (OperationCanceledException oce)
+
+            //Console.WriteLine($"bytes read {receiveEventArgs.BytesTransferred}");
+            //var tmp = new byte[receiveEventArgs.BytesTransferred];
+            //Buffer.BlockCopy(receiveEventArgs.Buffer, 0, tmp, 0, receiveEventArgs.BytesTransferred);
+            //var data = Encoding.ASCII.GetString(tmp);
+            
+            var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span.Slice(0, receiveEventArgs.BytesTransferred));
+            OnDataArrived(new DataArrivedEventArgs() { Data = data });
+
+            if (!_stream.Socket.ReceiveAsync(receiveEventArgs))
             {
-                if (!StopRequested(0))
-                    Logger.Error("Unexpected ", oce);
+               // Console.WriteLine($"kuch2");
+                ProcesReceivedData(receiveEventArgs);
             }
         }
-    }
 
+        private void OnReceive(object sender, SocketAsyncEventArgs e)
+        {
+            ProcesReceivedData(e);
+        }
+
+        protected override void DoBackgroundWork()
+        {
+            if (!_stream.Socket.Connected)
+            {
+                Console.WriteLine($"Lost connection... stop");
+                Stop();
+                if (!StopRequested(10000))
+                {
+                    Console.WriteLine($"Lost connection... and try again");
+                    Start();
+                }
+            }                
+        }
+    }
 }
