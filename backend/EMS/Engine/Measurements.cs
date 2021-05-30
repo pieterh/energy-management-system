@@ -32,6 +32,31 @@ namespace EMS.Engine
         }        
     }
 
+    public class AverageUsage
+    {
+        public AverageUsage() { }
+        public AverageUsage(int nrOfDataPoints,
+            double currentUsingL1, double currentUsingL2, double currentUsingL3,
+            double currentChargingL1, double currentChargingL2, double currentChargingL3)
+        {
+            NrOfDataPoints = nrOfDataPoints;
+            CurrentUsingL1 = currentUsingL1;
+            CurrentUsingL2 = currentUsingL2;
+            CurrentUsingL3 = currentUsingL3;
+            CurrentChargingL1 = currentChargingL1;
+            CurrentChargingL2 = currentChargingL2;
+            CurrentChargingL3 = currentChargingL3;
+        }
+
+        public int NrOfDataPoints {get;set; }
+        public double CurrentUsingL1 { get; set; }
+        public double CurrentUsingL2 { get; set; }
+        public double CurrentUsingL3 {get;set; }
+        public double CurrentChargingL1 { get; set; }
+        public double CurrentChargingL2 { get; set; }
+        public double CurrentChargingL3 { get; set; }
+    }
+
     public class Measurements
     {
         private readonly Queue<Measurement> _measurements = new(60);
@@ -65,23 +90,28 @@ namespace EMS.Engine
             }
         }
 
-        //todo create proper return obj
-        public (
-                int nrOfDataPoints,
-                double avgCurrentUsingL1, double avgCurrentUsingL2, double avgCurrentUsingL3,
-                double avgCurrentChargingL1, double avgCurrentChargingL2, double avgCurrentChargingL3
-            ) CalculateAverageUsage()
+        public AverageUsage CalculateAverageUsage()
+        {
+            return CalculateAverageUsage(default);
+        }
+
+        public AverageUsage CalculateAverageUsage(DateTime? timeFrame)
         {
             Measurement[] m;
             lock (_measurements)
             {
                 m = _measurements.ToArray();
             }
-            if (m.Length == 0) {
-                return (
-                    nrOfDataPoints: 0,
-                    avgCurrentUsingL1: 0, avgCurrentUsingL2: 0, avgCurrentUsingL3: 0,
-                    avgCurrentChargingL1:0, avgCurrentChargingL2:0, avgCurrentChargingL3:0); }
+            return CalculateAverageUsage(m, timeFrame);
+        }
+
+        private static AverageUsage CalculateAverageUsage(IEnumerable<Measurement> m, DateTime? timeFrame)
+        {
+            //var mark = DateTimeProvider.Now.AddMinutes(-5);
+            if (timeFrame.HasValue)
+                m = m.Where((x) => x.Received >= timeFrame);            
+
+            if (!m.Any()) { return new AverageUsage(); }
 
             double avgCurrentUsingL1 = 0, avgCurrentUsingL2 = 0, avgCurrentUsingL3 = 0;
             double avgCurrentChargingL1 = 0, avgCurrentChargingL2 = 0, avgCurrentChargingL3 = 0;
@@ -93,22 +123,27 @@ namespace EMS.Engine
                 () => { avgCurrentChargingL2 = m.Average(x => x.CL2); },
                 () => { avgCurrentChargingL3 = m.Average(x => x.CL3); }
                 );
-            
-            return (
-                nrOfDataPoints: m.Length,
-                avgCurrentUsingL1: avgCurrentUsingL1, avgCurrentUsingL2: avgCurrentUsingL2, avgCurrentUsingL3: avgCurrentUsingL3,
-                avgCurrentChargingL1: avgCurrentChargingL1, avgCurrentChargingL2: avgCurrentChargingL2, avgCurrentChargingL3: avgCurrentChargingL3
+
+            return new AverageUsage(
+                 m.Count(),
+                 avgCurrentUsingL1, avgCurrentUsingL2, avgCurrentUsingL3,
+                 avgCurrentChargingL1, avgCurrentChargingL2, avgCurrentChargingL3
                 );
         }
 
         public (int nrOfDataPoints, double averageUsage, double averageCharge) CalculateAggregatedAverageUsage()
         {
-            var (nrOfDataPoints, avgCurrentUsingL1, avgCurrentUsingL2, avgCurrentUsingL3, avgCurrentChargingL1, avgCurrentChargingL2, avgCurrentChargingL3) = CalculateAverageUsage();
+            return CalculateAggregatedAverageUsage(default);
+        }
 
-            var avgCurrent = Math.Round(avgCurrentUsingL1 + avgCurrentUsingL2 + avgCurrentUsingL3, 2);
-            var averageCharge = Math.Round(avgCurrentChargingL1 + avgCurrentChargingL2 + avgCurrentChargingL3, 2);
+        public (int nrOfDataPoints, double averageUsage, double averageCharge) CalculateAggregatedAverageUsage(DateTime? timeFrame)
+        {
+            var avg = CalculateAverageUsage(timeFrame);
 
-            return (nrOfDataPoints: nrOfDataPoints, averageUsage: avgCurrent, averageCharge: averageCharge);
+            var avgCurrent = Math.Round(avg.CurrentUsingL1 + avg.CurrentUsingL2 + avg.CurrentUsingL3, 2);
+            var averageCharge = Math.Round(avg.CurrentChargingL1 + avg.CurrentChargingL2 + avg.CurrentChargingL3, 2);
+
+            return (nrOfDataPoints: avg.NrOfDataPoints, averageUsage: avgCurrent, averageCharge: averageCharge);
         }
 
         private void RemoveUnneededSamples()
