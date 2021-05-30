@@ -12,6 +12,7 @@ using NLog.Extensions.Logging;
 using EMS.Library.Configuration;
 using EMS.WebHost;
 using EMS.Library;
+using EMS.Library.Core;
 
 namespace EMS
 {

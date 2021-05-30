@@ -6,6 +6,7 @@ using FluentAssertions;
 
 using EMS.Library;
 using EMS.Library.Adapter;
+using EMS.Library.Core;
 
 namespace EMS.Tests
 {

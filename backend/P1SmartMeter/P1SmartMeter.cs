@@ -4,8 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using EMS.Library;
+using EMS.Library.Adapter.SmartMeter;
 using EMS.Library.Configuration;
-using EMS.Library.DateTimeProvider;
+using EMS.Library.TestableDateTime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -30,10 +31,10 @@ namespace P1SmartMeter
         private MessageBuffer _buffer = null;
         private readonly P1RelayServer _relayServer = null;
 
-        public MeasurementBase LastMeasurement { get => _measurement; }
+        public SmartMeterMeasurementBase LastMeasurement { get => _measurement; }
 
-        private Measurement _measurement;
-        protected Measurement Measurement
+        private SmartMeterMeasurement _measurement;
+        protected SmartMeterMeasurement Measurement
         {
             set {         
                 _measurement = value;
