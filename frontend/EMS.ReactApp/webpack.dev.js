@@ -1,7 +1,8 @@
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common.js');
+import path from 'path';
+import { merge } from 'webpack-merge';
+import {config as commonConfig, __dirname} from './webpack.common.js';
 
-module.exports = merge(common, {
+export default merge(commonConfig, {
     mode: 'development',
     devServer: {
         contentBase: path.join(__dirname, 'dist'),
