@@ -11,7 +11,7 @@
     "@material-ui/utils": "^4.11.2",
     "@reduxjs/toolkit": "^1.5.1",
     "@testing-library/dom": "^7.31.2",
-    "@testing-library/jest-dom": "^5.11.10",
+    "@testing-library/jest-dom": "^5.13.0",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^13.1.9",
     "@types/history": "^4.7.8",
