@@ -70,9 +70,5 @@ namespace P1SmartMeter.Connection
             OnDataArrived(new DataArrivedEventArgs() { Data = indata });
         }
 
-        protected override void DoBackgroundWork()
-        {
-         
-        }
     }
 }

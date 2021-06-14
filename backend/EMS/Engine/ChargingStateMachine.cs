@@ -10,7 +10,14 @@ namespace EMS.Engine
 
         public ChargingState Current { get; set; } = ChargingState.NotCharging;
         public DateTime LastStateChange { get; set; } = DateTimeProvider.Now;
-        public const int MINIMUM_TIME_SECS = 240;
+        public const int DEFAULT_MINIMUM_TRANSITION_TIME = 240;
+
+        public int MinimumTransitionTime { get; set; }
+
+        public ChargingStateMachine()
+        {
+            MinimumTransitionTime = DEFAULT_MINIMUM_TRANSITION_TIME;
+        }
 
         public bool Start()
         {
@@ -40,7 +47,7 @@ namespace EMS.Engine
             if (Current == ChargingState.Charging)
             {
                 var secs = (DateTimeProvider.Now - LastStateChange).TotalSeconds;
-                if (secs >= MINIMUM_TIME_SECS)
+                if (secs >= MinimumTransitionTime)
                 {
                     UpdateState(ChargingState.ChargingPaused);
                     stateHasChanged = true;
@@ -62,7 +69,7 @@ namespace EMS.Engine
             if (Current == ChargingState.ChargingPaused)
             {
                 var secs = (DateTimeProvider.Now - LastStateChange).TotalSeconds;
-                if (secs >= MINIMUM_TIME_SECS)
+                if (secs >= MinimumTransitionTime)
                 {
                     UpdateState(ChargingState.Charging);
                     stateHasChanged = true;

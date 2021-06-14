@@ -32,7 +32,21 @@ function  CreateState() : LoginState {
   if (token !== undefined && token !== null){
     newState.state = LoginStateEnum.logged_in;
   }
-  return newState;
+
+  // retrieve authentication error and message from local session storage
+  var hasAuthenticationError = browserStorage.session.get('hasAuthenticationError');
+  if (hasAuthenticationError === true) {
+    newState.hasAuthenticationError = true;
+  }
+
+  var message = browserStorage.session.get('message');
+  if (message !== undefined && message !== null) {
+    newState.message = message;
+  }
+
+  browserStorage.session.remove("hasAuthenticationError");
+  browserStorage.session.remove("message");
+  return newState;  
 }
 
 const initialState = CreateState();
@@ -54,10 +68,15 @@ function UpdateState(state: LoginState, s : LoginStateEnum, user?:User | undefin
 }
 
 function UpdateStateAuthenticationError(state: LoginState, message: string){
-  window.location.reload();
   UpdateState(state, LoginStateEnum.logged_out);
-  state.hasAuthenticationError = true;
-  state.message = message;
+  /* Store information in local session storage.
+   * The reload will flush all redux data... 
+   * At lead time this is retrieved again from sessions storage
+   * and placed in redux
+   */
+  browserStorage.session.set("hasAuthenticationError", true, true);
+  browserStorage.session.set("message", message, true);
+  window.location.reload();
 }
 
 interface Response {
@@ -142,8 +161,6 @@ export const authenticationSlice = createSlice({
     initialState,
     reducers: {
       relogin(state) {
-        // force reload of screen to clear the redux state...
-        window.location.reload();
         UpdateStateAuthenticationError(state, "There was an authentication error. Please login."); 
       }
     },

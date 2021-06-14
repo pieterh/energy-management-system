@@ -21,6 +21,14 @@ namespace AlfenNG9xx
 
         public void UpdateSession(SocketMeasurement newMeasurement)
         {
+            if (newMeasurement == null) return;
+
+            // as long as the car is not connected, there is no session
+            if (!_isConnected && !newMeasurement.VehicleConnected && newMeasurement.Mode3State == Mode3State.A)
+            {
+                ChargeSessionInfo = DefaultSessionInfo();
+            }
+
             // start session as soon as the car is connected
             if (!_isConnected && newMeasurement.VehicleConnected)
             {

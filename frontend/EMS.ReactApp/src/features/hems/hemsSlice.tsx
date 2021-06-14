@@ -23,6 +23,7 @@ import axios from "axios";
 
 export interface HemsState {
   hemsInfo: hemsInfo;
+  measurements: hemsMeasurement[];
 }
 
 export interface hemsInfo {
@@ -32,6 +33,17 @@ export interface hemsInfo {
   currentAvailableL1Formatted: string;
   currentAvailableL2Formatted: string;
   currentAvailableL3Formatted: string;
+}
+
+export interface hemsMeasurement {
+  received: string;
+  l1 : number;
+  l2 : number;
+  l3 : number;
+  l : number;
+  cL1 : number;
+  cL2 : number;
+  cL3 : number;
 }
 
 function CreateState(): HemsState {
@@ -44,6 +56,7 @@ function CreateState(): HemsState {
       currentAvailableL2Formatted: "",
       currentAvailableL3Formatted: "",
     },
+    measurements: []
   };
   return newState;
 }
@@ -52,7 +65,7 @@ const initialState = CreateState();
 
 function UpdateStateSessionInfo(state: HemsState, sr: HemsInfoResponse) {
   var hi: hemsInfo = {
-    ...sr.info,
+    ...sr.info,     
     lastStateChangeFormatted: FormatFromISO(sr.info.lastStateChange),
   };
 
@@ -62,6 +75,8 @@ function UpdateStateSessionInfo(state: HemsState, sr: HemsInfoResponse) {
     state.hemsInfo = hi;
     console.log("new data 1;-)");
   }
+
+  state.measurements = sr.measurements;
 }
 
 interface Response {
@@ -72,6 +87,7 @@ interface Response {
 
 interface HemsInfoResponse extends Response {
   info: hemsR;
+  measurements: hemsMeasurementR[];
 }
 
 export interface hemsR {
@@ -81,6 +97,17 @@ export interface hemsR {
   currentAvailableL1Formatted: string;
   currentAvailableL2Formatted: string;
   currentAvailableL3Formatted: string;
+}
+
+export interface hemsMeasurementR {
+  received: string;
+  l1 : number;
+  l2 : number;
+  l3 : number;
+  l : number;
+  cL1 : number;
+  cL2 : number;
+  cL3 : number;
 }
 
 export const getHemsInfoAsync = createAsyncThunk<HemsInfoResponse, undefined, { rejectValue: Response }>(
@@ -118,3 +145,5 @@ export const hemsSlice = createSlice({
 export default hemsSlice.reducer;
 
 export const selectHemsInfo = (state: RootState) => state.hems.hemsInfo;
+
+export const selectMeasurements = (state: RootState) => state.hems.measurements;
