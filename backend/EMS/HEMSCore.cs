@@ -12,8 +12,9 @@ using EMS.Library.Adapter.SmartMeter;
 
 namespace EMS
 {
-    public class HEMSCore : BackgroundService, IHEMSCore, IHostedService    //NOSONAR
+    public class HEMSCore : Microsoft.Extensions.Hosting.BackgroundService, IHEMSCore, IHostedService    //NOSONAR
     {
+
         private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
         private readonly Compute _compute;
 
@@ -46,8 +47,12 @@ namespace EMS
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
-            base.StartAsync(cancellationToken);
             Logger.LogInformation("1. StartAsync has been called.");
+            _smartMeter.MeasurementAvailable += SmartMeter_MeasurementAvailable;
+            _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
+            _compute.StateUpdate += Compute_StateUpdate;
+
+            base.StartAsync(cancellationToken);
 
             return Task.CompletedTask;
         }
@@ -76,9 +81,6 @@ namespace EMS
         private void OnStarted()
         {
             Logger.LogInformation("2. OnStarted has been called.");
-
-            _smartMeter.MeasurementAvailable += SmartMeter_MeasurementAvailable;
-            _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
         }
 
         private void OnStopping()
@@ -87,6 +89,7 @@ namespace EMS
 
             _smartMeter.MeasurementAvailable -= SmartMeter_MeasurementAvailable;
             _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
+            _compute.StateUpdate -= Compute_StateUpdate;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -112,7 +115,12 @@ namespace EMS
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
         {
             Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered} ");
-            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3State}, {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}");
+            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3State}, {e.Status?.Measurement?.Mode3StateMessage}, session ended {e.SessionEnded}, energy delivered {e.EnergyDelivered}");
+        }
+
+        private void Compute_StateUpdate(object sender, Compute.StateEventArgs e)
+        {
+            LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
         }
     }
 }

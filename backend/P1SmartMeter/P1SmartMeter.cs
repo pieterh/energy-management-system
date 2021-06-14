@@ -15,7 +15,7 @@ using P1SmartMeter.Telegram.DSMR;
 
 namespace P1SmartMeter
 {
-    public class P1SmartMeter : BackgroundService, ISmartMeter
+    public class P1SmartMeter : Microsoft.Extensions.Hosting.BackgroundService, ISmartMeter
     {
         private readonly ILogger Logger;
         private bool _disposed = false;
