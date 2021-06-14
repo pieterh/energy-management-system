@@ -30,18 +30,18 @@ namespace EMS.WebHosts
         [Route("api/[controller]/info")]
         public ActionResult<SessionInfoModel> GetHemsInfo()
         {
-            var retval = new HemsInfoModel();
+            var info = new HemsInfoModel();
             var t = Hems.ChargeControlInfo;
-            retval.Mode = t.Mode.ToString();
-            retval.State = t.State.ToString();
-            retval.LastStateChange = t.LastStateChange;
-            retval.CurrentAvailableL1Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
-            retval.CurrentAvailableL2Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
-            retval.CurrentAvailableL3Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
-            var lst = new List<Measurement>();
-            retval.Measurements = lst;
+            info.Mode = t.Mode.ToString();
+            info.State = t.State.ToString();
+            info.LastStateChange = t.LastStateChange;
+            info.CurrentAvailableL1Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
+            info.CurrentAvailableL2Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
+            info.CurrentAvailableL3Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
+            var measurements = new List<Measurement>();
+
             foreach (var m in t.Measurements){
-                lst.Add(new Measurement() {
+                measurements.Add(new Measurement() {
                     Received = m.Received,
                     L1 = m.L1,
                     L2 = m.L2,
@@ -52,7 +52,7 @@ namespace EMS.WebHosts
                 });
             }
             
-            return new JsonResult(new HemsInfoResponse() { Info = retval });
+            return new JsonResult(new HemsInfoResponse() { Info = info, Measurements = measurements });
         }
 
         private static string PrepareDouble(double f, int digits, string unitOfMeasurement)
@@ -66,6 +66,7 @@ namespace EMS.WebHosts
     public class HemsInfoResponse : Response
     {
         public HemsInfoModel Info { get; set; }
+        public IEnumerable<Measurement> Measurements { get; set; }
     }
 
     public class HemsInfoModel
@@ -75,8 +76,7 @@ namespace EMS.WebHosts
         public DateTime LastStateChange { get; set; }
         public string CurrentAvailableL1Formatted { get; set; }
         public string CurrentAvailableL2Formatted { get; set; }
-        public string CurrentAvailableL3Formatted { get; set; }
-        public IEnumerable<Measurement> Measurements  { get; set; }
+        public string CurrentAvailableL3Formatted { get; set; }        
     }
 
     public class Measurement
