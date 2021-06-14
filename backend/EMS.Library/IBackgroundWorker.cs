@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace EMS.Library
 {
-    public interface IBackgroundWorker : IHostedService, IDisposable
+    public interface IBackgroundWorker 
     {
         public Task BackgroundTask { get; }
     }

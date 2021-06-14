@@ -4,42 +4,22 @@ using System.Threading.Tasks;
 
 namespace EMS.Library
 {
-    public abstract class BackgroundWorker : IBackgroundWorker
+    public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
-        protected static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private bool _disposed = false;
         private Task _backgroundTask = null;
-
-        private CancellationTokenSource _tokenSource = null;
-
         public Task BackgroundTask { get { return _backgroundTask; } }
 
-        public CancellationTokenSource TokenSource { get => _tokenSource; private set => _tokenSource = value; }
-
         protected abstract void DoBackgroundWork();
-        protected abstract void Start();
-        protected abstract void Stop();
-
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);  // Suppress finalization.
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            Logger.Trace($"Dispose({disposing}) _disposed {_disposed}");
-
             if (_disposed) return;
+            base.Dispose(disposing);
 
             if (disposing)
             {
                 DisposeBackgroundTask();
-                DisposeTokenSource();
             }
 
-            _disposed = true;
-            Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
         }
 
         private void DisposeBackgroundTask()
@@ -53,7 +33,7 @@ namespace EMS.Library
 
                 try
                 {
-                    _tokenSource.Cancel();
+                    TokenSource.Cancel();
                     WaitForBackgroundTaskToFinish();
                 }
                 catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */}
@@ -94,19 +74,8 @@ namespace EMS.Library
             }
         }
 
-        private void DisposeTokenSource()
+        protected override void Start()
         {
-            _tokenSource?.Cancel();
-            _tokenSource?.Dispose();
-            _tokenSource = null;
-        }
-
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            Logger.Trace($"Starting");
-            this.Start();
-
-            _tokenSource = new CancellationTokenSource();
             _backgroundTask = Task.Run(() =>
             {
                 Logger.Trace($"BackgroundTask running");
@@ -121,20 +90,10 @@ namespace EMS.Library
                     throw;
                 }
                 Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
-            }, _tokenSource.Token);
-
-            return Task.CompletedTask;
+            }, TokenSource.Token);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _tokenSource?.Cancel();
-
-            this.Stop();
-            return Task.CompletedTask;
-        }
-
-        protected virtual int Interval { get { return 2500;} }
+        protected virtual int Interval { get { return 2500; } }
         private void Run()
         {
             while (!StopRequested(Interval))
@@ -142,20 +101,10 @@ namespace EMS.Library
                 DoBackgroundWork();
             }
 
-            if (_tokenSource.Token.IsCancellationRequested)
+            if (TokenSource.Token.IsCancellationRequested)
             {
                 throw new OperationCanceledException();
             }
-        }
-
-        protected bool StopRequested(int ms)
-        {
-            if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
-                return true;
-            if (ms == 0) return false;
-
-            Task.Delay(ms, _tokenSource.Token);
-            return (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested);
         }
     }
 }

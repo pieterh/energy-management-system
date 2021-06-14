@@ -56,7 +56,7 @@ namespace AlfenNG9xx.Tests
             var pi = mock.Object.ReadProductIdentification();
 
             Assert.Equal("ALF-0000300", pi.Name);
-            Assert.Equal("Alfen NV", pi.Manufacterer);
+            Assert.Equal("Alfen NV", pi.Manufacturer);
             Assert.Equal(1, pi.TableVersion);
             Assert.Equal("4.00.0-3999", pi.FirmwareVersion);
             Assert.Equal("NG910", pi.PlatformType);
@@ -84,7 +84,7 @@ namespace AlfenNG9xx.Tests
             var ss = mock.Object.ReadStationStatus();
 
             Assert.Equal(expectedStationStatus.ActiveMaxCurrent, ss.ActiveMaxCurrent);
-            Assert.Equal(expectedStationStatus.Temparature, ss.Temparature);
+            Assert.Equal(expectedStationStatus.Temperature, ss.Temperature);
             Assert.Equal(expectedStationStatus.OCCPState, ss.OCCPState);
             Assert.Equal(expectedStationStatus.NrOfSockets, ss.NrOfSockets);
         }
@@ -138,13 +138,13 @@ namespace AlfenNG9xx.Tests
             yield return new object[]
             {
                 new byte[] { 0x80, 0x41, 0x00, 0x00, 0x98, 0x41, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00 },
-                new StationStatus {ActiveMaxCurrent = 16F, Temparature=19F, OCCPState = OccpState.Connected, NrOfSockets =(uint)1},
+                new StationStatus {ActiveMaxCurrent = 16F, Temperature=19F, OCCPState = OccpState.Connected, NrOfSockets =(uint)1},
             };
 
             yield return new object[]
              {
                 new byte[] { 0x80, 0x41, 0x00, 0x00, 0x98, 0x41, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00 },
-                new StationStatus {ActiveMaxCurrent = 16F, Temparature=19F, OCCPState = OccpState.Disconnected, NrOfSockets =(uint)2},
+                new StationStatus {ActiveMaxCurrent = 16F, Temperature=19F, OCCPState = OccpState.Disconnected, NrOfSockets =(uint)2},
              };
         }
 

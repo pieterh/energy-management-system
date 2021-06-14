@@ -4,7 +4,7 @@ namespace AlfenNG9xx.Model
     public class ProductIdentification
     {
         public string Name {get; set;}
-        public string Manufacterer {get; set; }
+        public string Manufacturer {get; set; }
         public UInt16 TableVersion{get; set; }
         public string FirmwareVersion{get; set; }
         public string PlatformType{get; set; }                
