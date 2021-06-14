@@ -15,7 +15,8 @@ namespace EMS
         private static readonly NLog.Logger LoggerState = NLog.LogManager.GetLogger("chargingstate");
 
         private readonly ILogger Logger;
-        private readonly Measurements _measurements = new(60);        
+        private readonly Measurements _measurements = new(60);
+        private readonly ChargingStateMachine _state = new();
 
         private ChargingMode _mode;
         public ChargingMode  Mode {
@@ -24,6 +25,7 @@ namespace EMS
                 _mode = value;
                 // changing the mode also means that the buffer size is going to change
                 _measurements.BufferSeconds = MaxBufferSeconds;
+                if (_mode == ChargingMode.MaxEco) _state.MinimumTransitionTime = 0; else _state.MinimumTransitionTime = ChargingStateMachine.DEFAULT_MINIMUM_TRANSITION_TIME;
             }
         }
 
@@ -40,9 +42,10 @@ namespace EMS
         private const double MinimumChargeCurrent = 6.0f;            // IEC 61851 minimum current
         private const double MaxCurrentMain = 25.0f;
         private const double MaxCurrentChargePoint = 16.0f;
-        public const double MinimumEcoModeExport = 3.0f;
+        public const double MinimumEcoModeExportStart = 6.0f;
+        public const double MinimumEcoModeExportStop = 3.0f;
 
-        private readonly ChargingStateMachine _state = new ();
+       
 
         public Compute(ILogger logger, ChargingMode mode)
         {
@@ -99,11 +102,17 @@ namespace EMS
             var chargeCurrent = Math.Round(LimitEco(avg.averageCharge, avg.averageUsage), 2);
             Logger?.LogInformation($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge} with {avg.nrOfDataPoints} datapoints (buffer size {MaxBufferSeconds} seconds)");
 
-            if (chargeCurrent < MinimumEcoModeExport)
+            if ((_state.Current == ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStop) ||
+                (_state.Current != ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStart))
             {
-                bool stateHasChanged;
-                (chargeCurrent, stateHasChanged) = NotEnoughOverCapicity();
-                return ((float)Math.Round(chargeCurrent, 2), 0, 0);
+                if (_state.Current != ChargingState.NotCharging)
+                {
+                    _state.Pause();
+                }
+
+                chargeCurrent = 0.0;
+                
+                return (0, 0, 0);
             }
             else
             {
@@ -112,10 +121,11 @@ namespace EMS
                 {
                     // charge as fast as possible and as close to the current available capicity as possible
                     var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-15));
-                    var chargeCurrentShort = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
-                    chargeCurrentShort = chargeCurrentShort >= MinimumChargeCurrent ? chargeCurrentShort : MinimumChargeCurrent;
-                    Logger?.LogInformation($"charging {chargeCurrent} -> {chargeCurrentShort}");
-                    return ((float)Math.Round(chargeCurrentShort, 2), 0, 0);
+                    var chargeCurrentShort1 = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
+                    var chargeCurrentShort2 = chargeCurrentShort1 - 0; //- 0.15; /* adjust 0.15A/ 35Wh just to be on the safe side*/
+                    var chargeCurrentShort3 = chargeCurrentShort2 >= MinimumChargeCurrent ? chargeCurrentShort2 : MinimumChargeCurrent;
+                    Logger?.LogInformation($"charging {chargeCurrent} -> {chargeCurrentShort1} -> {chargeCurrentShort2} -> -> {chargeCurrentShort3}");
+                    return ((float)Math.Round(chargeCurrentShort3, 2), 0, 0);
                 }
                 else
                 {
@@ -132,7 +142,6 @@ namespace EMS
             LoggerState.Info($"avg current {avg.averageUsage} and charging at {avg.averageCharge}");
 
             var chargeCurrent = Math.Round(LimitCurrentSolar(avg.averageCharge, avg.averageUsage), 2);
-
 
             bool stateHasChanged;
             if (chargeCurrent < MinimumChargeCurrent)
@@ -227,7 +236,7 @@ namespace EMS
             }
             else
             {
-                retval = res < MinimumEcoModeExport ? 0.0 : res;
+                retval = res < MinimumEcoModeExportStop ? 0.0 : res;
             }
             return retval;
         }

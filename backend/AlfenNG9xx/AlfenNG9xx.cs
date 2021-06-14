@@ -12,7 +12,7 @@ using EMS.Library.TestableDateTime;
 
 namespace AlfenNG9xx
 {
-    public class Alfen : BackgroundService, IChargePoint
+    public class Alfen : Microsoft.Extensions.Hosting.BackgroundService, IChargePoint
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
@@ -137,7 +137,7 @@ namespace AlfenNG9xx
             {
                 var pi = ReadProductIdentification();
                 Logger.Info("Name                       : {0}", pi.Name);
-                Logger.Info("Manufacterer               : {0}", pi.Manufacterer);
+                Logger.Info("Manufacturer               : {0}", pi.Manufacturer);
                 Logger.Info("Table version              : {0}", pi.TableVersion);
                 Logger.Info("Firmware version           : {0}", pi.FirmwareVersion);
                 Logger.Info("Platform type              : {0}", pi.PlatformType);
@@ -159,7 +159,7 @@ namespace AlfenNG9xx
             var status = ReadStationStatus();
 
             Logger.Info($"Station Active Max Current : {status.ActiveMaxCurrent}");
-            Logger.Info($"Temparature                : {status.Temparature}");
+            Logger.Info($"Temperature                : {status.Temperature}");
             Logger.Info($"OCCP                       : {status.OCCPState}");
             Logger.Info($"Nr of sockets              : {status.NrOfSockets}");
         }
@@ -195,7 +195,7 @@ namespace AlfenNG9xx
             Logger.Trace(HexDumper.ConvertToHexDump(pi));
 
             result.Name = Converters.ConvertRegistersToString(pi, 0, 17);
-            result.Manufacterer = Converters.ConvertRegistersToString(pi, 17, 5);
+            result.Manufacturer = Converters.ConvertRegistersToString(pi, 17, 5);
             result.TableVersion = Converters.ConvertRegistersShort(pi, 22);
             result.FirmwareVersion = Converters.ConvertRegistersToString(pi, 23, 11);
             result.PlatformType = Converters.ConvertRegistersToString(pi, 40, 17);
@@ -224,7 +224,7 @@ namespace AlfenNG9xx
             Logger.Trace(HexDumper.ConvertToHexDump(stationStatus));
 
             ss.ActiveMaxCurrent = Converters.ConvertRegistersFloat(stationStatus, 0);
-            ss.Temparature = Converters.ConvertRegistersFloat(stationStatus, 2);
+            ss.Temperature = Converters.ConvertRegistersFloat(stationStatus, 2);
             ss.OCCPState = Converters.ConvertRegistersShort(stationStatus, 4) == 0 ? OccpState.Disconnected : OccpState.Connected;
             ss.NrOfSockets = Converters.ConvertRegistersShort(stationStatus, 5);
             return ss;
