@@ -44,8 +44,11 @@ namespace P1SmartMeter
         /// <returns></returns>
         protected int AddInternal(string data)
         {
-            LoggerP1Stream.Info($"---------- start ----------{Environment.NewLine}{data}");
-            LoggerP1Stream.Info($"---------- end   ----------");
+            if (LoggerP1Stream.IsTraceEnabled)
+            {
+                LoggerP1Stream.Trace($"---------- start ----------{Environment.NewLine}{data}");
+                LoggerP1Stream.Trace($"---------- end   ----------");
+            }
 
             if (data.Length == 0) return position;
             if (data.Length > BufferCapacity) throw new ArgumentOutOfRangeException(nameof(data));
@@ -148,8 +151,11 @@ namespace P1SmartMeter
             if (string.Equals(msgChecksum, calculatedChecksum, StringComparison.OrdinalIgnoreCase))
             {
                 msg = Encoding.ASCII.GetString(mbytes);
-                LoggerP1Messages.Debug($"---------- start ----------{Environment.NewLine}{msg}");
-                LoggerP1Messages.Debug($"---------- end   ----------");
+                if (LoggerP1Messages.IsTraceEnabled)
+                {
+                    LoggerP1Messages.Trace($"---------- start ----------{Environment.NewLine}{msg}");
+                    LoggerP1Messages.Trace($"---------- end   ----------");
+                }
             }
             else
             {
@@ -171,8 +177,6 @@ namespace P1SmartMeter
             int start = 0;
             while (buffer[start] != '/' && start < position)
                 start++;
-
-            Logger.Debug($"check partial message {position}, {start}");
 
             if ((buffer[start] == '/' && start > 0))
             {

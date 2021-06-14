@@ -134,6 +134,33 @@ namespace AlfenNG9xx.Tests
             }
         }
 
+        [Fact]
+        public void SessionResetWhenStandby()
+        {
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            using (new DateTimeProviderContext(fakeDate))
+            {
+                var t = new ChargingSession();
+                var sm = new SocketMeasurement
+                {
+                    Mode3State = Mode3State.E,
+                    RealEnergyDeliveredSum = 1000
+                };
+
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.E);       // 30 seconden op E  (disconnected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 10, Mode3State.B1);      // 30 seconden op B1 (connected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 10, Mode3State.B2);      // 30 seconden op B2 (connected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 3600, 5000, Mode3State.B2);  // 1uur        op C2 (connected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.E);       // 30 seconden op E  (disconnected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.A);       // 30 seconden op A  (standby)
+                Assert.Null(t.ChargeSessionInfo.Start);
+                Assert.Null(t.ChargeSessionInfo.End);
+                Assert.Equal(0, t.ChargeSessionInfo.EnergyDelivered);
+                Assert.Equal((uint)0, t.ChargeSessionInfo.ChargingTime);
+                Assert.False(t.ChargeSessionInfo.SessionEnded); 
+            }
+        }
+
         private static DateTime NextMeasurement(DateTime fakeDate, ChargingSession t, SocketMeasurement sm, int duration, double energy, Mode3State state)
         {
             using (new DateTimeProviderContext(fakeDate))

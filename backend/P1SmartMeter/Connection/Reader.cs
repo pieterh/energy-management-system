@@ -4,7 +4,7 @@ using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
 {
-    public abstract class Reader : BackgroundWorker, IP1Interface
+    public abstract class Reader : BackgroundService, IP1Interface
     {
         public event EventHandler<DataArrivedEventArgs> DataArrived;
 
