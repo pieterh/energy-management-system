@@ -12,7 +12,7 @@ using EMS.Library.Adapter.SmartMeter;
 
 namespace EMS
 {
-    public class HEMSCore : BackgroundService, IHEMSCore, IHostedService    //NOSONAR
+    public class HEMSCore : Microsoft.Extensions.Hosting.BackgroundService, IHEMSCore, IHostedService    //NOSONAR
     {
         private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
         private readonly Compute _compute;
