@@ -13,7 +13,7 @@
     "@nivo/core": "^0.70.1",
     "@nivo/line": "^0.70.1",
     "@reduxjs/toolkit": "^1.6.0",
-    "@testing-library/dom": "^7.31.2",
+    "@testing-library/dom": "^8.0.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^13.1.9",
