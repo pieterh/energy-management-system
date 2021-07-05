@@ -11,6 +11,7 @@ using EMS.Library.TestableDateTime;
 using EMS.Library.Adapter;
 using static EMS.Compute;
 using EMS.Library.Core;
+using EMS.Engine.Model;
 
 namespace EMS.Tests
 {
@@ -56,7 +57,7 @@ namespace EMS.Tests
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-12.0, 0.62, 0.40), new CurrentMeasurement(0, 0, 0));
 
-            mock.Object.Charging().Should().Be((10.98f, 0, 0));
+            mock.Object.Charging().Should().Be((10.83f, 0, 0));
         }
 
         [Theory]
@@ -76,12 +77,12 @@ namespace EMS.Tests
             var allData = new List<object[]>
             {
                 new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(0, 0, 0), new CurrentMeasurement(0, 0, 0), "we are not charging and return is not enough to charge" },
-                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(6f, 0, 0), new CurrentMeasurement(8.17f, 0, 0), "we are charging at 6A, so we can increase charging" },
-                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(8f, 0, 0), new CurrentMeasurement(10.17f, 0, 0), "we are charging at 8A, so we can increase charging" },
-                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(10f, 0, 0), new CurrentMeasurement(12.17f, 0, 0), "we are charging at 10A, so we can increase charging" },
-                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(12f, 0, 0), new CurrentMeasurement(14.17f, 0, 0), "we are charging at 12A, so we can increase charging" },
-                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(14f, 0, 0), new CurrentMeasurement(16f, 0, 0), "we are charging at 14A, so we can increase charging to the max" },
-                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(16f, 0, 0), new CurrentMeasurement(16f, 0, 0), "we are charging at 16A, so we are already at the max" }
+                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(6f, 0, 0), new CurrentMeasurement(8.02f, 0, 0), "we are charging at 6A, so we can increase charging" },
+                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(8f, 0, 0), new CurrentMeasurement(10.02f, 0, 0), "we are charging at 8A, so we can increase charging" },
+                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(10f, 0, 0), new CurrentMeasurement(12.02f, 0, 0), "we are charging at 10A, so we can increase charging" },
+                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(12f, 0, 0), new CurrentMeasurement(14.02f, 0, 0), "we are charging at 12A, so we can increase charging" },
+                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(14f, 0, 0), new CurrentMeasurement(15.85f, 0, 0), "we are charging at 14A, so we can increase charging to the max" },
+                new object[] { new CurrentMeasurement(-3.19, 0.62, 0.40), new CurrentMeasurement(16f, 0, 0), new CurrentMeasurement(15.85f, 0, 0), "we are charging at 16A, so we are already at the max" }
             };
             return allData;
         }
@@ -117,7 +118,7 @@ namespace EMS.Tests
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-8.02, 0.62, 0.40), new CurrentMeasurement(0f, 0f, 0f));
 
-            mock.Object.Charging().Should().Be((7.0f, 0, 0), "we have more than enough energy return available so that we can increase above minimum");
+            mock.Object.Charging().Should().Be((6.85f, 0, 0), "we have more than enough energy return available so that we can increase above minimum");
         }
 
         [Fact]
@@ -131,7 +132,7 @@ namespace EMS.Tests
             {
                 using (new DateTimeProviderContext(dateTime))
                 {
-                    mock.Object.AddMeasurement(new CurrentMeasurement(1 - MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
+                    mock.Object.AddMeasurement(new CurrentMeasurement(1 - EcoFriendly.MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
                 }
                 dateTime = dateTime.AddSeconds(1);
             }
@@ -143,13 +144,13 @@ namespace EMS.Tests
             {
                 using (new DateTimeProviderContext(dateTime))
                 {
-                    mock.Object.AddMeasurement(new CurrentMeasurement(-15 - MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
+                    mock.Object.AddMeasurement(new CurrentMeasurement(-15 - EcoFriendly.MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
                 }
                 dateTime = dateTime.AddSeconds(1);
             }
 
             using (new DateTimeProviderContext(dateTime))
-                mock.Object.Charging().Should().Be((16, 0, 0), "we have now enough overcapicity and we take the last 15 seconds to determine the charge current");
+                mock.Object.Charging().Should().Be((15.85f, 0, 0), "we have now enough overcapicity and we take the last 15 seconds to determine the charge current");
 
             // there are some clouds ;-) so add some data with no return
             for (int i = 0; i < mock.Object.MinimumDataPoints / 4; i++)
@@ -187,14 +188,14 @@ namespace EMS.Tests
             }
 
             using (new DateTimeProviderContext(dateTime))
-                mock.Object.Charging().Should().Be((12.5f, 0, 0), "enough overcapicity, and 15 seconds is used");
+                mock.Object.Charging().Should().Be((12.35f, 0, 0), "enough overcapicity, and 15 seconds is used");
 
             // there is still some sun for the second half minimum time
             for (int i = 0; i < ChargingStateMachine.DEFAULT_MINIMUM_TRANSITION_TIME / 2; i++)
             {
                 using (new DateTimeProviderContext(dateTime))
                 {
-                    mock.Object.AddMeasurement(new CurrentMeasurement(0 - MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
+                    mock.Object.AddMeasurement(new CurrentMeasurement(0 - EcoFriendly.MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
                 }
                 dateTime = dateTime.AddSeconds(1);
             }

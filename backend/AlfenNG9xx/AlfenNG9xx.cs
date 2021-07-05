@@ -17,7 +17,8 @@ namespace AlfenNG9xx
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
 
-        ModbusMaster _modbusMaster = null;
+        private readonly object _modbusMasterLock = new();
+        private ModbusMaster _modbusMaster = null;
         private readonly string _alfenIp;
         private readonly int _alfenPort;
         private readonly ChargingSession _chargingSession = new();
@@ -68,8 +69,11 @@ namespace AlfenNG9xx
 
         private void DisposeModbusMaster()
         {
-            _modbusMaster?.Dispose();
-            _modbusMaster = null;
+            lock (_modbusMasterLock)
+            {
+                _modbusMaster?.Dispose();
+                _modbusMaster = null;
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -86,7 +90,7 @@ namespace AlfenNG9xx
                 {
                     HandleWork();
 
-                    await Task.Delay(2500, stoppingToken);
+                    await Task.Delay(1250, stoppingToken);
                 }
                 catch (TaskCanceledException tce)
                 {
@@ -105,7 +109,7 @@ namespace AlfenNG9xx
                     Logger.Error("Unhandled, we try later again");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
-                    await Task.Delay(10000, stoppingToken);
+                    await Task.Delay(2500, stoppingToken);
                 }
             }
             Logger.Info($"Canceled");
@@ -114,6 +118,7 @@ namespace AlfenNG9xx
         private void HandleWork()
         {
             var sm = ReadSocketMeasurement(1);
+            if (sm == null) return;
 
             _chargingSession.UpdateSession(sm);
 
@@ -136,6 +141,7 @@ namespace AlfenNG9xx
             try
             {
                 var pi = ReadProductIdentification();
+                if (pi == null) return;
                 Logger.Info("Name                       : {0}", pi.Name);
                 Logger.Info("Manufacturer               : {0}", pi.Manufacturer);
                 Logger.Info("Table version              : {0}", pi.TableVersion);
@@ -167,6 +173,8 @@ namespace AlfenNG9xx
         private void ShowSocketMeasurement()
         {
             var sm = ReadSocketMeasurement(1);
+            if (sm == null) return;
+
             Logger.Info($"Meter State                : {sm.MeterState}");
             Logger.Info($"Meter Timestamp            : {sm.MeterTimestamp}");
             Logger.Info($"Meter Type                 : {sm.MeterType}");
@@ -191,6 +199,7 @@ namespace AlfenNG9xx
         {
             var result = new ProductIdentification();
             var pi = ReadHoldingRegisters(200, 100, 79);
+            if (pi == null) return null;
 
             Logger.Trace(HexDumper.ConvertToHexDump(pi));
 
@@ -292,12 +301,18 @@ namespace AlfenNG9xx
 
         protected virtual ushort[] ReadHoldingRegisters(byte slave, ushort address, ushort count)
         {
-            if (_modbusMaster == null)
-                _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
-
-            lock (_modbusMaster)
+            lock (_modbusMasterLock)
             {
-                return _modbusMaster.ReadHoldingRegisters(slave, address, count);
+                if (_modbusMaster == null)
+                    _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort);
+
+                if (_modbusMaster == null)
+                {
+                    Logger.Info($"ReadHoldingRegisters() -> failed, no connection");
+                    return null;
+                }            
+             
+                return _modbusMaster.ReadHoldingRegisters(slave, address, count);             
             }
         }
 
@@ -305,8 +320,18 @@ namespace AlfenNG9xx
         public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
         {
             Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
-            lock (_modbusMaster)
-            {
+
+            lock (_modbusMasterLock)
+            {                
+                if (_modbusMaster == null)
+                    _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort);
+
+                if (_modbusMaster == null)
+                {
+                    Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3}) -> failed, no connection");
+                    return;
+                }
+           
                 if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return;
                 ushort phases;
                 float maxCurrent;
