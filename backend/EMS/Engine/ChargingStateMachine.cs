@@ -10,7 +10,7 @@ namespace EMS.Engine
 
         public ChargingState Current { get; set; } = ChargingState.NotCharging;
         public DateTime LastStateChange { get; set; } = DateTimeProvider.Now;
-        public const int DEFAULT_MINIMUM_TRANSITION_TIME = 240;
+        public const int DEFAULT_MINIMUM_TRANSITION_TIME = (6*60); // seconds
 
         public int MinimumTransitionTime { get; set; }
 

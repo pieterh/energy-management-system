@@ -26,4 +26,12 @@
   <ItemGroup>
     <ProjectReference Include="..\EMS\EMS.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Engine.Model\" />
+    <None Remove="Engine\Model\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Engine\" />
+    <Folder Include="Engine\Model\" />
+  </ItemGroup>
 </Project>
