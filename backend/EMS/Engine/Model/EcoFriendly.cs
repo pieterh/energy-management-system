@@ -1,29 +1,29 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 using EMS.Library.Core;
 using EMS.Library.TestableDateTime;
-using Microsoft.Extensions.Logging;
 
 namespace EMS.Engine.Model
 {
-    public class EcoFriendly: Base
+    public class EcoFriendly : Base
     {
-        public const double MinimumEcoModeExportStart = 6.0f;
-        public const double MinimumEcoModeExportStop = 4.0f;
+        public double MinimumEcoModeExportStart { get { return 6.75f; } }
+        public double MinimumEcoModeExportStop { get { return 6.0f; } }
 
         public override ushort MinimumDataPoints
         {
-            get { return  (ushort)300 ; }
+            get { return (ushort)300; }
         }
 
         public override ushort MaxBufferSeconds
         {
-            get { return  (ushort)900; }  // 15min or 1min buffer size
+            //get { return (ushort)900; }   // 15min buffer size
+            get { return (ushort)750; }     // 12,5 min buffer size
         }
 
         public EcoFriendly(ILogger logger, Measurements measurements, ChargingStateMachine state) :
             base(logger, measurements, state)
         {
-
         }
 
         public override (double l1, double l2, double l3) Get()
@@ -69,12 +69,13 @@ namespace EMS.Engine.Model
                 }
                 else
                 {
+                    Logger?.LogInformation($"charging {chargeCurrent} -> not yet allowed");
                     return (0, 0, 0);
                 }
             }
         }
 
-        private static double LimitEco(double c, double avgCurrentFromGrid)
+        private double LimitEco(double c, double avgCurrentFromGrid)
         {
             var res = c - avgCurrentFromGrid;
 
