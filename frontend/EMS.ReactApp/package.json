@@ -47,7 +47,7 @@
     "react-router-dom": "^5.2.0",
     "redux-thunk": "^2.3.0",
     "store2": "^2.12.0",
-    "url-parse": "^1.5.1"
+    "url-parse": "^1.5.3"
   },
   "scripts": {
     "start": "webpack serve --config webpack.dev.js",
