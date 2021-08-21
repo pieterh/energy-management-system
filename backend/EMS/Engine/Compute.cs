@@ -20,6 +20,7 @@ namespace EMS
         private MaxCharging _maxCharging;
         private EcoFriendly _ecoFriendly;
         private MaxSolar _maxSolar;
+        private SlowCharge _slowCharge;
 
         public ushort MinimumDataPoints
         {
@@ -46,6 +47,9 @@ namespace EMS
                         break;
                     case ChargingMode.MaxSolar:
                         _model = _maxSolar;
+                        break;
+                    case ChargingMode.SlowCharge:
+                        _model = _slowCharge;
                         break;
                 }
 
@@ -87,6 +91,7 @@ namespace EMS
             _maxCharging = new (logger, _measurements, _state);
             _ecoFriendly = new(logger, _measurements, _state);
             _maxSolar = new(logger, _measurements, _state);
+            _slowCharge = new(logger, _measurements, _state);
 
             Logger = logger;
             Mode = mode;
