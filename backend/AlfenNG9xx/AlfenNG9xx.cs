@@ -304,7 +304,7 @@ namespace AlfenNG9xx
             lock (_modbusMasterLock)
             {
                 if (_modbusMaster == null)
-                    _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort);
+                    _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
 
                 if (_modbusMaster == null)
                 {
@@ -324,7 +324,7 @@ namespace AlfenNG9xx
             lock (_modbusMasterLock)
             {                
                 if (_modbusMaster == null)
-                    _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort);
+                    _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
 
                 if (_modbusMaster == null)
                 {
