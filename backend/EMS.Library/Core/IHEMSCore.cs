@@ -1,7 +1,7 @@
 ﻿using System;
 namespace EMS.Library.Core
 {
-    public enum ChargingMode { MaxCharge, MaxEco, MaxSolar };
+    public enum ChargingMode { MaxCharge, MaxEco, MaxSolar, SlowCharge };
     public enum ChargingState { NotCharging, Charging, ChargingPaused }
 
     public interface IHEMSCore                                              //NOSONAR
