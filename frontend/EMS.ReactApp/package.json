@@ -21,7 +21,7 @@
     "@types/d3-time-format": "^4.0.0",
     "@types/history": "^4.7.9",
     "@types/jest": "^27.0.1",
-    "@types/luxon": "^2.0.0",
+    "@types/luxon": "^2.0.1",
     "@types/material-ui": "^0.21.9",
     "@types/node": "^16.6.2",
     "@types/react": "^17.0.19",
