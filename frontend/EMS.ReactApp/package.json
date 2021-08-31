@@ -74,7 +74,7 @@
     "@babel/plugin-transform-react-jsx": "^7.14.9",
     "@babel/preset-env": "^7.15.0",
     "@babel/preset-react": "^7.14.5",
-    "@hookform/devtools": "^3.1.0",
+    "@hookform/devtools": "^4.0.0",
     "@types/deep-equal": "^1.0.1",
     "@types/url-parse": "^1.4.4",
     "babel-loader": "^8.2.2",
