@@ -1,5 +1,5 @@
 import React,{ useMemo } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import Divider from '@material-ui/core/Divider';
@@ -32,7 +32,7 @@ interface AccountMenuProps {
 
 export function AccountMenu(props: AccountMenuProps): JSX.Element{ 
     const dispatch = useAppDispatch();
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const isLoggedIn = useAppSelector(selectIsLoggedIn);
     const themeName = useAppSelector( state => state.customTheme.themeName ) as string;
@@ -72,15 +72,15 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
           setTopBarState(topbarstate.Appearance);
           break;
         case "menu-login":
-          history.push('/login');
+          navigate('/login');
           setAnchorEl(null);
           break;          
         case "menu-logout":
-          history.push('/logout');
+          navigate('/logout');
           setAnchorEl(null);
           break;
         case "menu-settings":
-          history.push('/settings');
+          navigate('/settings');
           setAnchorEl(null);
           break;
         case "menu-theme-device":

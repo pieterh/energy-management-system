@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import  browserStorage  from 'store2';
 
 import { useForm, Controller, FormProvider } from "react-hook-form";
@@ -108,7 +108,7 @@ export function Login() {
     });  
   }
 
-  if (isLoggedIn) { return (<Redirect to='/'/>); } else
+  if (isLoggedIn) { return (<Navigate to='/'/>); } else
   return (
     <Container maxWidth="xs">     
       <div className={classes.paper}>
