@@ -119,8 +119,8 @@ export function Login() {
           Sign in
         </Typography>
         <FormProvider {...formRegistration}>
-          {process.env.NODE_ENV === 'development' &&  
-          <DevTool control={formRegistration.control} placement="top-right"/> }
+          {/* {process.env.NODE_ENV === 'development' &&  
+          <DevTool control={formRegistration.control} placement="top-right"/> } */}
           
           <form className={classes.form} onSubmit={formRegistration.handleSubmit(onSubmit)}>
             <Controller
