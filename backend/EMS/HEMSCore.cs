@@ -59,7 +59,7 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            ChargingMode = ChargingMode.MaxCharge;
+            ChargingMode = ChargingMode.SlowCharge;
 
             while (!stoppingToken.IsCancellationRequested)
             {
