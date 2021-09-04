@@ -87,7 +87,7 @@ export function GraphWidget(props: IGraphWidget) {
         }
       >
         <Grid container item xs={12} spacing={1} style={{height: 400}}>
-            <ResponsiveLine
+{/*             <ResponsiveLine
                 // height={150}
                 // width={800}
                 data={data}
@@ -127,8 +127,6 @@ export function GraphWidget(props: IGraphWidget) {
                 enableGridX={true}
                 curve="monotoneX"
                 animate={true}
-                motionStiffness={120}
-                motionDamping={50}
                 isInteractive={false}
                 enableSlices={false}
                 useMesh={true}
@@ -158,7 +156,7 @@ export function GraphWidget(props: IGraphWidget) {
                         ]
                     }
                 ]}
-            />
+            /> */}
         </Grid>
       </DashboardCard>
     </React.Fragment>
