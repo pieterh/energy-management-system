@@ -36,11 +36,11 @@ export function AddInterceptors() {
     // and are accessing the api
     axios.interceptors.request.use(function (config) {
         var parsedUrl = URLParse(config.url as string, true);
-        if (parsedUrl.pathname.startsWith('/api')){
+        if (parsedUrl.pathname.startsWith('/api') && config.headers != null){
             const token = browserStorage.session.get('token');
             if (token !== undefined && token !== null)  
-                config.headers.Authorization = `Bearer ${token}`;
+                    config.headers .Authorization = `Bearer ${token}`;
         }
-        return config;
+        return config; 
     });
 }
