@@ -1468,10 +1468,10 @@
   resolved "https://registry.yarnpkg.com/@types/luxon/-/luxon-2.0.5.tgz#29d3b095d55ee50df8f4cf109b16009334d9828e"
   integrity sha512-GKrG5v16BOs9XGpouu33hOkAFaiSDi3ZaDXG9F2yAoyzHRBtksZnI60VWY5aM/yAENCccBejrxw8jDY+9OVlxw==
 
-"@types/material-ui@^0.21.9":
-  version "0.21.10"
-  resolved "https://registry.yarnpkg.com/@types/material-ui/-/material-ui-0.21.10.tgz#7a793256b4c49c38ad9745b4d6ac6f6c6314e15f"
-  integrity sha512-IC5HJA5u/+oyBqdSFB0H9+3Bgq5YuJFudsYwfkPxHStg3cPW+cIk9fqIJpFJTBmaHEkxx3ShvsttkQGgZn8AjA==
+"@types/material-ui@^0.21.11":
+  version "0.21.11"
+  resolved "https://registry.yarnpkg.com/@types/material-ui/-/material-ui-0.21.11.tgz#809deb93b118090f36e2b7aa58fb3122a0540a74"
+  integrity sha512-VjmlntSR0xyMCC9nM/7MwThOGZLbLRItVANrNtWqPgItTgzT91odd2tYLXPogeQX2Fy4VcHGZe5ciz3hgznu0Q==
   dependencies:
     "@types/react" "*"
     "@types/react-addons-linked-state-mixin" "*"
