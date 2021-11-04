@@ -79,7 +79,7 @@
     "@types/url-parse": "^1.4.4",
     "babel-loader": "^8.2.3",
     "copy-webpack-plugin": "^9.0.1",
-    "css-loader": "^6.5.0",
+    "css-loader": "^6.5.1",
     "html-webpack-plugin": "^5.5.0",
     "interpolate-html-plugin": "^4.0.0",
     "style-loader": "^3.3.1",
