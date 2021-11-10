@@ -4767,10 +4767,10 @@ react-dom@^17.0.2:
     object-assign "^4.1.1"
     scheduler "^0.20.2"
 
-react-hook-form@^7.18.0:
-  version "7.18.0"
-  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.18.0.tgz#2ba847096be0209e1f6e4d82e7168a037a2fe103"
-  integrity sha512-aTFs1jXGvpBBv4vYuhheVd9KbAZw/l3DOZhLIadNDyFddaDQmn+yJa63IZ14GDFz4NFgIi+ROkubfGJG2x6q2Q==
+react-hook-form@^7.19.2:
+  version "7.19.2"
+  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.19.2.tgz#684a5f0a1060c8784744830e0d1877dbd6fa9b54"
+  integrity sha512-XFsfgn0vY61AmbGonJyvbqRQ7du0hrvMBIv8nVgA8JjXX2RSNAnlSLYJeXM6TDBFBccgH6HknRIkgCD4E2/M8A==
 
 react-hot-loader@^4.13.0:
   version "4.13.0"
