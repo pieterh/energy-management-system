@@ -34,7 +34,7 @@
     "d3": "^7.2.1",
     "d3-interpolate": "^3.0.1",
     "d3-time": "^3.0.0",
-    "d3-time-format": "^4.0.0",
+    "d3-time-format": "^4.1.0",
     "deep-equal": "^2.0.5",
     "luxon": "^2.1.1",
     "pretty-ms": "^7.0.1",
