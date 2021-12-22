@@ -12,7 +12,7 @@
     "@material-ui/utils": "^4.11.2",
     "@nivo/core": "^0.73.0",
     "@nivo/line": "^0.73.0",
-    "@reduxjs/toolkit": "^1.6.2",
+    "@reduxjs/toolkit": "^1.7.1",
     "@testing-library/dom": "^8.11.1",
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
