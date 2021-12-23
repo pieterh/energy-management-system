@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 
 import List from '@material-ui/core/List';
@@ -135,7 +135,7 @@ interface IAppDrawerProps {
 }
 
 export default function AppDrawer(props: IAppDrawerProps) {
-  const history = useHistory();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const classes = useStyles(); 
   const isLoggedIn = useAppSelector(selectIsLoggedIn);    
@@ -153,7 +153,7 @@ export default function AppDrawer(props: IAppDrawerProps) {
   function onDrawerItemClick(event: React.MouseEvent<HTMLDivElement> | null) {
     var item = DrawerDefinition.items.find((x) => { return  x.id === event?.currentTarget?.id });
     if (!!item){
-      history.push(item.route);
+      navigate(item.route);
     } else {
       console.error("click item nog found ->" + event?.currentTarget?.id);
     }
