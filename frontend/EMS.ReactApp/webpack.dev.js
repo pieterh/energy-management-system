@@ -9,7 +9,7 @@ export default merge(commonConfig, {
             directory: path.join(__dirname, 'dist'),
         },
         compress: true,
-        port: 5010,
+        port: 5000,
         https: false,   
         hot: false,    
         onBeforeSetupMiddleware: function (devServer) {

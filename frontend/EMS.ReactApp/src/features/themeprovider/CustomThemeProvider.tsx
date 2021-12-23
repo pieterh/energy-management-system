@@ -1,5 +1,5 @@
 import React from 'react';
-import { createMuiTheme, Theme, useTheme } from '@material-ui/core/styles';
+import { createTheme, Theme, useTheme } from '@material-ui/core/styles';
 import { ThemeProvider } from '@material-ui/core/styles';
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 
@@ -18,14 +18,14 @@ type ThemeContext = {
 const CustomThemeContext = React.createContext<ThemeContext>({ currentTheme: '--' });
 CustomThemeContext.displayName = 'CustomThemeContext';
 
-const darkTheme = createMuiTheme({
+const darkTheme = createTheme({
   // ...theme,
   palette: {
     type: 'dark'
   }
 });
 
-const lightTheme = createMuiTheme({
+const lightTheme = createTheme({
   // ...theme,
   palette: {
     type: 'light' 
