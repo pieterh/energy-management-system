@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import Button from '@material-ui/core/Button';
 
@@ -21,7 +21,7 @@ export function Logout() {
         console.error(e);
       });  
   }
-  if (!isLoggedIn) { return (<Redirect to='/'/>); } else
+  if (!isLoggedIn) { return (<Navigate to='/'/>); } else
   return (
       <Container maxWidth="xs"> 
         <Button onClick={(event) => onLogoutClick(event)} color="inherit">Logout</Button>

@@ -1,9 +1,9 @@
 import ReactDOM from 'react-dom';
 import { Provider } from "react-redux";
+import { BrowserRouter } from "react-router-dom";
 import { ConnectedRouter } from 'connected-react-router'
 
 import { store } from './app/store';
-import { history } from './app/history';
 import App from './app/App';
 
 import { AddInterceptors } from './features/authentication/AxiosInterceptors';
@@ -17,9 +17,9 @@ ReactDOM.render(
   // ie. toggle theme creates each time a set of styles in the header
   // <React.StrictMode>
   <Provider store={store}>
-    <ConnectedRouter history={history}>
+    <BrowserRouter>
       <App />
-    </ConnectedRouter>
+     </BrowserRouter>
    </Provider>,
   // </React.StrictMode>,
   document.getElementById('root')
