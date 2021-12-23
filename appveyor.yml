@@ -1,5 +1,5 @@
 version: 1.0.{build}
-image: Visual Studio 2019
+image: Visual Studio 2022
 environment:
   SONARCLOUD_TOKEN:
       secure: VS2sS9yIjj8hIYWyp4460eAh0tSenN3plfajevcasZvGA72w6a2/GO+L5bzEoV81
