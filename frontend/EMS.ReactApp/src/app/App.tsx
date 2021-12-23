@@ -1,5 +1,5 @@
 import { useEffect, useState  } from 'react';
-import { Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
 
@@ -60,7 +60,7 @@ function App() {
   },[initialized, initializing]);
 
   const routesFromDrawer = DrawerDefinition.items.map((item, i) => (
-    <Route key={item.key} path={item.route}> {item.component} </Route>
+    <Route key={item.key} path={item.route} element= {item.component} />
   ));
 
   return (
@@ -71,12 +71,15 @@ function App() {
       <CheckAuthentication/>
       <AppHeader ></AppHeader>    
       <AppDrawer persistent={isLoggedIn && isScreenXS}/>
-      <main className={classes.content} >
-        <Route path='/' exact> <Main/> </Route>
-        <Route path='/login'> <Login/> </Route>
-        <Route path='/logout'> <Logout/> </Route>
-        {routesFromDrawer}
-      </main>             
+      <main className={classes.content} > 
+        <Routes> 
+          <Route path='/' element={<Main/>} />
+          <Route path='/' element={<Main/>} />
+          <Route path='/login' element={<Login/>} />
+          <Route path='/logout' element={<Logout/>} />
+          {routesFromDrawer} 
+        </Routes> 
+        </main>   
       
     </MyThemeProvider>
   );
