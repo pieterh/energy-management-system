@@ -10,14 +10,15 @@ export default merge(commonConfig, {
         },
         compress: true,
         port: 5010,
-        https: false,   
-        hot: false,    
-        onBeforeSetupMiddleware: function (devServer) {
+        https: false,
+        hot: false,
+        setupMiddlewares: function (middlewares, devServer) {
             devServer.app.use('/', function (req, res,next) {
                 console.log(`${(new Date()).toLocaleTimeString()} - from ${req.ip} - ${req.method} - ${req.originalUrl}`);
                 next();
-            });            
+            });
+            return middlewares;
         }
-    },   
+    },
     devtool: 'inline-source-map',
 });
