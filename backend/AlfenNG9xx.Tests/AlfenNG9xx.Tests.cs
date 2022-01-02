@@ -9,6 +9,9 @@ using AlfenNG9xx;
 using AlfenNG9xx.Model;
 using EMS.Library.Configuration;
 using EMS.Library.Adapter.EVSE;
+using EMS.Library.Adapter.PriceProvider;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace AlfenNG9xx.Tests
 {
@@ -26,7 +29,7 @@ namespace AlfenNG9xx.Tests
             //    .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
             //mock.Object.Dispose();
 
-            var alf = new AlfenNG9xx.Alfen(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
+            var alf = new AlfenNG9xx.Alfen(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
             alf.Dispose();
         }
 
@@ -48,7 +51,7 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
             
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
+            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
@@ -76,7 +79,7 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
+            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
@@ -96,7 +99,7 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters_300 = ConvertBytesToRegisters(piBytes_300);
             ushort[] piRegisters_1200 = ConvertBytesToRegisters(piBytes_1200);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" });
+            var mock = new Mock<Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) =>
@@ -253,5 +256,31 @@ namespace AlfenNG9xx.Tests
                     }
                 };
         }
+    }
+
+    public class TestPriceProvider : IPriceProvider
+    {
+        public Task<Tariff[]> GetTariff(DateTime start, DateTime end)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Tariff GetTariff()
+        {
+            var tariff = new Tariff(DateTime.Now, 0.23d, 0.08d);
+            return tariff;
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+
     }
 }

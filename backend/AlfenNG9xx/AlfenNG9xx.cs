@@ -9,6 +9,7 @@ using EMS.Library.Configuration;
 using AlfenNG9xx.Model;
 using EMS.Library.Adapter.EVSE;
 using EMS.Library.TestableDateTime;
+using EMS.Library.Adapter.PriceProvider;
 
 namespace AlfenNG9xx
 {
@@ -17,11 +18,13 @@ namespace AlfenNG9xx
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
 
+        private readonly IPriceProvider _priceProvider;
+
         private readonly object _modbusMasterLock = new();
         private ModbusMaster _modbusMaster = null;
         private readonly string _alfenIp;
         private readonly int _alfenPort;
-        private readonly ChargingSession _chargingSession = new();
+        private readonly ChargingSession _chargingSession = new();        
 
         public SocketMeasurementBase LastSocketMeasurement { get; private set; }
         public ChargeSessionInfoBase ChargeSessionInfo { get { return _chargingSession.ChargeSessionInfo; } }
@@ -29,17 +32,20 @@ namespace AlfenNG9xx
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
         public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
 
+     
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
             BackgroundServiceHelper.CreateAndStart<IChargePoint, Alfen>(services, instance.Config);
         }
 
-        public Alfen(Config config)
+        public Alfen(Config config, IPriceProvider priceProvider)
         {
             dynamic cfg = config;
             Logger.Info($"Alfen({config.ToString().Replace(Environment.NewLine, " ")})");
             _alfenIp = cfg.Host;
             _alfenPort = cfg.Port;
+
+            _priceProvider = priceProvider;
         }
 
         public override void Dispose()
@@ -120,7 +126,8 @@ namespace AlfenNG9xx
             var sm = ReadSocketMeasurement(1);
             if (sm == null) return;
 
-            _chargingSession.UpdateSession(sm);
+            var tariff = _priceProvider.GetTariff();
+            _chargingSession.UpdateSession(sm, tariff);
 
             var chargingStateChanged = LastSocketMeasurement?.Mode3State != sm.Mode3State;
             
@@ -130,8 +137,8 @@ namespace AlfenNG9xx
             {
                 var sessionEnded = _chargingSession.ChargeSessionInfo.SessionEnded;
                 var energyDelivered = _chargingSession.ChargeSessionInfo.EnergyDelivered;
-
-                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered));
+                var cost = _chargingSession.ChargeSessionInfo.Cost;
+                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost));
             }
         }
 

@@ -1,0 +1,59 @@
+﻿{
+	"definitions": {},
+	"$schema": "http://json-schema.org/draft-07/schema#", 
+	"$id": "https://example.com/object1641037760.json", 
+	"title": "Root", 
+	"type": "array",
+	"default": [],
+	"items":{
+		"$id": "#root/items", 
+		"title": "Items", 
+		"type": "object",
+		"required": [
+			"Timestamp",
+			"SupplierId",
+			"TariffUsage",
+			"TariffReturn"
+		],
+		"properties": {
+			"Timestamp": {
+				"$id": "#root/items/Timestamp", 
+				"title": "Timestamp", 
+				"type": "string",
+				"default": "",
+				"examples": [
+					"2021-12-30T19:00:00+00:00"
+				],
+				"pattern": "^.*$"
+			},
+			"SupplierId": {
+				"$id": "#root/items/SupplierId", 
+				"title": "Supplierid", 
+				"type": "integer",
+				"examples": [
+					0
+				],
+				"default": 0
+			},
+			"TariffUsage": {
+				"$id": "#root/items/TariffUsage", 
+				"title": "Tariffusage", 
+				"type": "number",
+				"examples": [
+					0.1710093
+				],
+				"default": 0.0
+			},
+			"TariffReturn": {
+				"$id": "#root/items/TariffReturn", 
+				"title": "Tariffreturn", 
+				"type": "number",
+				"examples": [
+					0.14133
+				],
+				"default": 0.0
+			}
+		}
+	}
+
+}

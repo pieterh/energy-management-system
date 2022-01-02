@@ -39,11 +39,13 @@ namespace EMS.Library
             public Status Status { get; set; }
             public bool SessionEnded { get; set; }
             public double? EnergyDelivered { get; set; }
-            public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered)
+            public double Costs { get; set; }
+            public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered, double costs)
             {
                 Status = new Status(measurement);
                 SessionEnded = sessionEnded;
                 EnergyDelivered = sessionEnded ? energyDelivered.Value : null;
+                Costs = costs;
             }
         }
 
