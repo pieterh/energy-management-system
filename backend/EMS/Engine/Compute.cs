@@ -17,10 +17,10 @@ namespace EMS
 
         // TODO refactor
         private Base _model;
-        private MaxCharging _maxCharging;
-        private EcoFriendly _ecoFriendly;
-        private MaxSolar _maxSolar;
-        private SlowCharge _slowCharge;
+        private readonly MaxCharging _maxCharging;
+        private readonly EcoFriendly _ecoFriendly;
+        private readonly MaxSolar _maxSolar;
+        private readonly SlowCharge _slowCharge;
 
         public ushort MinimumDataPoints
         {
@@ -33,9 +33,11 @@ namespace EMS
         }
 
         private ChargingMode _mode;
-        public ChargingMode  Mode {
-             get { return _mode; }
-             set {
+        public ChargingMode Mode
+        {
+            get { return _mode; }
+            set
+            {
                 _mode = value;
                 switch (_mode)
                 {
@@ -60,15 +62,25 @@ namespace EMS
         }
 
         private ChargeControlInfo _info;
-        public ChargeControlInfo Info {
+        public ChargeControlInfo Info
+        {
             get { return _info; }
             private set
             {
                 var org = _info;
                 _info = value;
-                if ((org == null && _info != null) || org.Mode != value.Mode || org.State != value.State)
+
+                if (org != null && _info != null)
                 {
-                    RaiseStateUpdate(value);
+                    if ((org.Mode != _info.Mode) || (org.State != _info.State))
+                    {
+                        RaiseStateUpdate(_info);
+                    }
+                }
+                else
+                {
+                    if (org != null || _info != null)
+                        RaiseStateUpdate(_info);
                 }
             }
         }
@@ -88,14 +100,14 @@ namespace EMS
 
         public Compute(ILogger logger, ChargingMode mode)
         {
-            _maxCharging = new (logger, _measurements, _state);
+            _maxCharging = new(logger, _measurements, _state);
             _ecoFriendly = new(logger, _measurements, _state);
             _maxSolar = new(logger, _measurements, _state);
             _slowCharge = new(logger, _measurements, _state);
 
             Logger = logger;
             Mode = mode;
-            Info = new();            
+            Info = new();
         }
 
         public (double l1, double l2, double l3) Charging()
@@ -112,7 +124,7 @@ namespace EMS
         }
 
         private void RaiseStateUpdate(ChargeControlInfo nfo)
-        {            
+        {
             StateUpdate?.Invoke(this, new StateEventArgs(nfo));
         }
     }

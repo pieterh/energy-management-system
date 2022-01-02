@@ -31,11 +31,14 @@ namespace P1SmartMeter
         private MessageBuffer _buffer = null;
         private readonly P1RelayServer _relayServer = null;
 
-        public SmartMeterMeasurementBase LastMeasurement { get => _measurement; }
+        public SmartMeterMeasurementBase LastMeasurement { get => Measurement; }
 
         private SmartMeterMeasurement _measurement;
         protected SmartMeterMeasurement Measurement
         {
+            private get {
+                return _measurement;
+            }
             set {         
                 _measurement = value;
                 MeasurementAvailable?.Invoke(this, new ISmartMeter.MeasurementAvailableEventArgs() { Measurement = value });
@@ -68,7 +71,7 @@ namespace P1SmartMeter
             else if (string.CompareOrdinal(config.Type.ToString(), "TTY") == 0)
             {
                 _connectionType = ConnectionType.TTY;
-                _usbPort = "/dev/sttyUSB1"; //config.Port;
+                _usbPort = config.Device; // ie "/dev/sttyUSB1"
             }
         }
 
@@ -96,7 +99,6 @@ namespace P1SmartMeter
 
         private void DisposeReader()
         {
-            //_reader?. ?.Stop();
             _reader?.Dispose();
             _reader = null;
         }

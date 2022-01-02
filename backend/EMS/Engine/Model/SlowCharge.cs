@@ -25,12 +25,8 @@ namespace EMS.Engine.Model
         {
             if (_measurements.ItemsInBuffer < MinimumDataPoints) return (-1, -1, -1);
 
-            //var avg = _measurements.CalculateAverageUsage();
-
             var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
             var chargeCurrentShort1 = Math.Round(LimitCurrent(avgShort.averageCharge, avgShort.averageUsage), 2);
-            //var chargeCurrentShort2 = chargeCurrentShort1 - 0.15; /* adjust 0.15A/ 35Wh just to be on the safe side*/
-            //var chargeCurrentShort3 = chargeCurrentShort2 >= MinimumChargeCurrent ? chargeCurrentShort2 : MinimumChargeCurrent;
                         
             return ((float)Math.Round(chargeCurrentShort1, 2), 0, 0);
         }
@@ -38,7 +34,7 @@ namespace EMS.Engine.Model
         private static double LimitCurrent(double c, double avgCurrentFromGrid)
         {
             var res = c - avgCurrentFromGrid;
-            res -= 0.15; /* adjust 0.15A/ 35Wh just to be on the safe side*/;
+            res -= 0.15; /* adjust 0.15A/ 35Wh just to be on the safe side*/
             double retval = res <= MinimumChargeCurrent ? MinimumChargeCurrent : res;
             return retval;
         }

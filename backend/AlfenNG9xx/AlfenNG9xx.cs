@@ -315,8 +315,8 @@ namespace AlfenNG9xx
 
                 if (_modbusMaster == null)
                 {
-                    Logger.Info($"ReadHoldingRegisters() -> failed, no connection");
-                    return null;
+                    Logger.Error($"ReadHoldingRegisters() -> failed, no connection");
+                    return Array.Empty<ushort>();
                 }            
              
                 return _modbusMaster.ReadHoldingRegisters(slave, address, count);             
