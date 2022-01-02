@@ -7,8 +7,8 @@ namespace EMS.Engine.Model
 {
     public class EcoFriendly : Base
     {
-        public double MinimumEcoModeExportStart { get { return 6.75f; } }
-        public double MinimumEcoModeExportStop { get { return 6.0f; } }
+        public static double MinimumEcoModeExportStart { get { return 6.6f; } }
+        public static double MinimumEcoModeExportStop { get { return 6.0f; } }
 
         public override ushort MinimumDataPoints
         {
@@ -17,7 +17,6 @@ namespace EMS.Engine.Model
 
         public override ushort MaxBufferSeconds
         {
-            //get { return (ushort)900; }   // 15min buffer size
             get { return (ushort)750; }     // 12,5 min buffer size
         }
 
@@ -32,8 +31,6 @@ namespace EMS.Engine.Model
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
 
-            //Logger?.LogInformation($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge} with {avg.nrOfDataPoints} datapoints");
-
             var chargeCurrent = Math.Round(LimitEco(avg.averageCharge, avg.averageUsage), 2);
             Logger?.LogInformation($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge}; limitted chargecurrent = {chargeCurrent} ({avg.nrOfDataPoints} datapoints (buffer size {MaxBufferSeconds} seconds)");
 
@@ -46,26 +43,22 @@ namespace EMS.Engine.Model
                     LoggerState.Info($"Charging state pause {chargeCurrent}");
                 }
 
-                chargeCurrent = 0.0;
-
                 return (0, 0, 0);
             }
             else
             {
-                //Logger?.LogInformation($"{chargeCurrent}");
                 var t = AllowToCharge();
                 if (t.allow)
                 {
                     // charge as fast as possible and as close to the current available capicity as possible
                     var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
                     var chargeCurrentShort1 = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
-                    var chargeCurrentShort2 = chargeCurrentShort1 - 0.15; /* adjust 0.15A/ 35Wh just to be on the safe side*/
-                    var chargeCurrentShort3 = chargeCurrentShort2 >= MinimumChargeCurrent ? chargeCurrentShort2 : MinimumChargeCurrent;
-                    Logger?.LogInformation($"charging {chargeCurrent} -> {chargeCurrentShort1} -> {chargeCurrentShort2} -> -> {chargeCurrentShort3}");
-                    if (t.changed)
-                        LoggerState?.Info($"charging {chargeCurrent} -> {chargeCurrentShort1} -> {chargeCurrentShort2} -> -> {chargeCurrentShort3}");
 
-                    return ((float)Math.Round(chargeCurrentShort3, 2), 0, 0);
+                    Logger?.LogInformation($"charging {chargeCurrent} -> {chargeCurrentShort1}");
+                    if (t.changed)
+                        LoggerState?.Info($"charging {chargeCurrent} -> {chargeCurrentShort1}");
+
+                    return ((float)Math.Round(chargeCurrentShort1, 2), 0, 0);
                 }
                 else
                 {
@@ -75,7 +68,7 @@ namespace EMS.Engine.Model
             }
         }
 
-        private double LimitEco(double c, double avgCurrentFromGrid)
+        private static double LimitEco(double c, double avgCurrentFromGrid)
         {
             var res = c - avgCurrentFromGrid;
 
@@ -88,7 +81,11 @@ namespace EMS.Engine.Model
             {
                 retval = res < MinimumEcoModeExportStop ? 0.0 : res;
             }
-            return retval;
+
+            var chargeCurrentShort2 = retval - 0.15d; /* adjust 0.15A/ 35Wh just to be on the safe side*/
+            var chargeCurrentShort3 = chargeCurrentShort2 >= MinimumChargeCurrent ? chargeCurrentShort2 : MinimumChargeCurrent;
+
+            return chargeCurrentShort3;
         }
     }
 }

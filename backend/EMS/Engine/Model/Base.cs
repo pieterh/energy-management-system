@@ -18,7 +18,7 @@ namespace EMS.Engine.Model
         public abstract ushort MinimumDataPoints { get; }
         public abstract ushort MaxBufferSeconds { get; }
 
-        public Base(ILogger logger, Measurements measurements, ChargingStateMachine state)
+        protected Base(ILogger logger, Measurements measurements, ChargingStateMachine state)
         {
             Logger = logger;
             _measurements = measurements;

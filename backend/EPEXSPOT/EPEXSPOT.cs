@@ -11,6 +11,7 @@ using EMS.Library.Adapter.PriceProvider;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Schema;
+using EMS.Library.TestableDateTime;
 
 namespace EPEXSPOT
 {
@@ -19,7 +20,7 @@ namespace EPEXSPOT
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed = false;
 
-        private string _endpoint;           // ie. https://mijn.easyenergy.com
+        private readonly string _endpoint;           // ie. https://mijn.easyenergy.com
         private readonly IHttpClientFactory _httpClientFactory;
 
         private readonly double INKOOP = 0.01331;    // inkoopkosten per kWh (incl. btw)
@@ -103,14 +104,14 @@ namespace EPEXSPOT
 
             if (_tariffs.Length > 8) return;
 
-            var t = GetTariff(DateTime.Now.Date, DateTime.Now.Date.AddDays(1)).Result;
+            var t = GetTariff(DateTimeProvider.Now.Date, DateTimeProvider.Now.Date.AddDays(1)).Result;
  
             _tariffs = RemoveOld(t);            
         }
 
         public Tariff? GetTariff()
         {
-            var tariff = FindTariff(_tariffs, DateTime.Now);
+            var tariff = FindTariff(_tariffs, DateTimeProvider.Now);
             return tariff;
         }
 
@@ -198,7 +199,7 @@ namespace EPEXSPOT
             }
 
             using Stream? resource = assembly.GetManifestResourceStream(schemaFile);
-            if (resource == null) throw new Exception($"Unable to load embedded resource {schemaFile}");
+            if (resource == null) throw new FileNotFoundException($"Unable to load embedded resource {schemaFile}");
 
             using var r = new StreamReader(resource);
             using JsonTextReader reader = new(r);

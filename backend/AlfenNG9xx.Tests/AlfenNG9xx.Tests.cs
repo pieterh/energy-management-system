@@ -12,6 +12,7 @@ using EMS.Library.Adapter.EVSE;
 using EMS.Library.Adapter.PriceProvider;
 using System.Threading.Tasks;
 using System.Threading;
+using EMS.Library.TestableDateTime;
 
 namespace AlfenNG9xx.Tests
 {
@@ -267,7 +268,7 @@ namespace AlfenNG9xx.Tests
 
         public Tariff GetTariff()
         {
-            var tariff = new Tariff(DateTime.Now, 0.23d, 0.08d);
+            var tariff = new Tariff(DateTimeProvider.Now, 0.23d, 0.08d);
             return tariff;
         }
 

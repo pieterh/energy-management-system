@@ -94,7 +94,8 @@ namespace AlfenNG9xx
             {
                 ChargeSessionInfo.ChargingTime += (uint)(DateTimeProvider.Now - _chargingStart).TotalSeconds;
 
-                _cost += (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff) * _currentTariff.TariffUsage;
+                if (_currentTariff != null)
+                    _cost += (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff) * _currentTariff.TariffUsage;
                 ChargeSessionInfo.Cost = _cost;                
             }
 
