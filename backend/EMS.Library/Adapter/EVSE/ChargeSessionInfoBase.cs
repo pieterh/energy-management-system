@@ -8,5 +8,6 @@ namespace EMS.Library.Adapter.EVSE
         public UInt32 ChargingTime { get; set; }
         public double EnergyDelivered { get; set; }
         public bool SessionEnded { get; set; }
+        public double Cost { get; set; }
     }
 }

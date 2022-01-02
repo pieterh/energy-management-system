@@ -1,7 +1,7 @@
 ﻿using System;
 namespace EMS.Library.Configuration
 {
-    public class Instance
+    public record class Instance
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
@@ -9,10 +9,11 @@ namespace EMS.Library.Configuration
         public Config Config { get; set; }
     }
 
-    public class Config
+    public record Config
     {        
         public string Type { get; set; }
         public string Host { get; set; }
         public int Port { get; set; }
+        public string EndPoint { get; set; }
     }
 }

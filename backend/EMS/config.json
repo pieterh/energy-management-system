@@ -17,6 +17,15 @@
         "assembly": "P1SmartMeter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
         "type": "P1SmartMeter.P1SmartMeter"
       }
+    },
+    {
+      "id": "f5c39ed5-4fe7-4f81-b7bb-c477aac47fd4",
+      "type": "priceprovider",
+      "name": "EPEXSPOT Price Provider",
+      "driver": {
+        "assembly": "EPEXSPOT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+        "type": "EPEXSPOT.EPEXSPOT"
+      }
     }
   ],
   "instances": [
@@ -37,6 +46,14 @@
         "type": "LAN",
         "host": "192.168.1.7",
         "port": 3010
+      }
+    },
+    {
+      "id": "4c74eebb-3eb6-4168-945b-29cd6072d320",
+      "name": "EPEXSPOT",
+      "adapterid": "f5c39ed5-4fe7-4f81-b7bb-c477aac47fd4",
+      "config": {
+        "endpoint": "https://mijn.easyenergy.com"
       }
     }
   ],

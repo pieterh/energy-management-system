@@ -32,7 +32,7 @@ namespace EMS
         {
             Options options = new();
 
-            Parser.Default.ParseArguments<Options>(args).WithParsed<Options>(o =>
+            Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
             {
                 options = o;
             });
@@ -53,10 +53,9 @@ namespace EMS
             
             var t = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((builderContext, configuration) =>
-                {
+                {                    
                     IHostEnvironment env = builderContext.HostingEnvironment;
-                    Logger.Info($"Hosting environment: {env.EnvironmentName}");
-
+                    Logger.Info($"Hosting environment: {env.EnvironmentName}");                    
                     if (ConfigurationManager.ValidateConfig(options.ConfigFile))
                     {
                         configuration.Sources.Clear();
@@ -77,6 +76,7 @@ namespace EMS
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
+                    services.AddHttpClient();
                     ConfigureInstances(builderContext, services);
 
                     BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
@@ -99,7 +99,7 @@ namespace EMS
 
                     webBuilder.UseStartup<Startup>();
                 }).Build();
-
+            
             return t;
         }
 

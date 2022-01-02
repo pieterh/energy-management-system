@@ -57,9 +57,9 @@ namespace EMS
             {
                 Logger.Trace($"resource file {s}");
             }
-            Stream resource = assembly.GetManifestResourceStream("EMS.config.schema.json");
-            var r = new StreamReader(resource);
-            var schema = r.ReadToEnd();
+            using Stream resource = assembly.GetManifestResourceStream("EMS.config.schema.json");
+            using var r = new StreamReader(resource);
+            var schema = r.ReadToEnd();            
             return JSchema.Parse(schema);
         }
     }
