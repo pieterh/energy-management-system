@@ -14,6 +14,7 @@ namespace EMS.Library.Configuration
         public string Type { get; set; }
         public string Host { get; set; }
         public int Port { get; set; }
+        public string Device { get; set; }
         public string EndPoint { get; set; }
     }
 }
