@@ -23,7 +23,7 @@
     "@types/jest": "^27.4.0",
     "@types/luxon": "^2.0.8",
     "@types/material-ui": "^0.21.12",
-    "@types/node": "^17.0.5",
+    "@types/node": "^17.0.8",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "@types/react-redux": "^7.1.21",
