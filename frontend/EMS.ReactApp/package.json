@@ -19,7 +19,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/d3-time": "^3.0.0",
     "@types/d3-time-format": "^4.0.0",
-    "@types/history": "^4.7.10",
+    "@types/history": "^4.7.11",
     "@types/jest": "^27.4.0",
     "@types/luxon": "^2.0.9",
     "@types/material-ui": "^0.21.12",
