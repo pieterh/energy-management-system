@@ -77,7 +77,7 @@
     "@babel/preset-react": "^7.16.7",
     "@hookform/devtools": "^4.0.2",
     "@types/deep-equal": "^1.0.1",
-    "@types/url-parse": "^1.4.5",
+    "@types/url-parse": "^1.4.7",
     "babel-loader": "^8.2.3",
     "copy-webpack-plugin": "10.2.0",
     "css-loader": "^6.5.1",
