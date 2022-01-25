@@ -23,9 +23,9 @@ namespace EPEXSPOT
         private readonly string _endpoint;           // ie. https://mijn.easyenergy.com
         private readonly IHttpClientFactory _httpClientFactory;
 
-        private readonly double INKOOP = 0.01331;    // inkoopkosten per kWh (incl. btw)
-        private readonly double ODE = 0.03691;       // opslag doorzame energie per kWh (incl. btw)
-        private readonly double EB = 0.04452;        // energie belasting per kWh (incl. btw)
+        private readonly Decimal INKOOP = 0.01331m;    // inkoopkosten per kWh (incl. btw)
+        private readonly Decimal ODE = 0.03691m;       // opslag doorzame energie per kWh (incl. btw)
+        private readonly Decimal EB = 0.04452m;        // energie belasting per kWh (incl. btw)
 
         private Tariff[] _tariffs = Array.Empty<Tariff>();   // time sorted array of tariffs that where fetched
 
