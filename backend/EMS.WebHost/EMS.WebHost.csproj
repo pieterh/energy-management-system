@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
+    <ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="wwwroot\index.html">

@@ -12,6 +12,8 @@ using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
 using EMS.Library.Core;
 using System.Collections.Generic;
+using EMS.DataStore;
+using System.Linq;
 
 namespace EMS.WebHosts
 {
@@ -40,8 +42,10 @@ namespace EMS.WebHosts
             info.CurrentAvailableL3Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
             var measurements = new List<Measurement>();
 
-            foreach (var m in t.Measurements){
-                measurements.Add(new Measurement() {
+            foreach (var m in t.Measurements)
+            {
+                measurements.Add(new Measurement()
+                {
                     Received = m.Received,
                     L1 = m.L1,
                     L2 = m.L2,
@@ -51,8 +55,37 @@ namespace EMS.WebHosts
                     CL3 = m.CL3,
                 });
             }
-            
+
             return new JsonResult(new HemsInfoResponse() { Info = info, Measurements = measurements });
+        }
+
+        [Route("api/[controller]/sessions")]
+        public ActionResult<HemsLastSessionsResponse> GetSessionInfo()
+        {
+            var sessions = new List<Session>();
+
+            using (var db = new HEMSContext())
+            {
+
+                Logger.LogInformation($"Database path: {db.DbPath}.");
+
+                var items = db.ChargingTransactions.OrderByDescending((x) => x.Timestamp);
+                foreach (var item in items)
+                {
+                    Logger.LogInformation(item.ToString());
+                    var session = new Session()
+                    {
+                        Timestamp = item.Timestamp,
+                        EnergyDelivered = (decimal)item.EnergyDelivered,
+                        Price = (decimal)item.Price,
+                        Cost = (decimal)item.Cost
+                    };
+
+                    sessions.Add(session);
+                }
+            }
+
+            return new JsonResult(new HemsLastSessionsResponse() { Sessions = sessions });
         }
 
         private static string PrepareDouble(double f, int digits, string unitOfMeasurement)
@@ -76,7 +109,7 @@ namespace EMS.WebHosts
         public DateTime LastStateChange { get; set; }
         public string CurrentAvailableL1Formatted { get; set; }
         public string CurrentAvailableL2Formatted { get; set; }
-        public string CurrentAvailableL3Formatted { get; set; }        
+        public string CurrentAvailableL3Formatted { get; set; }
     }
 
     public class Measurement
@@ -89,7 +122,19 @@ namespace EMS.WebHosts
 
         public double CL1 { get; init; }
         public double CL2 { get; init; }
-        public double CL3 { get; init; }        
+        public double CL3 { get; init; }
     }
 
+    public class HemsLastSessionsResponse : Response
+    {
+        public IEnumerable<Session> Sessions { get; set; }
+    }
+
+    public class Session
+    {
+        public DateTime Timestamp { get; set; }
+        public decimal EnergyDelivered { get; set; }
+        public decimal Cost { get; set; }
+        public decimal Price { get; set; }
+    }
 }

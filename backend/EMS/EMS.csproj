@@ -12,6 +12,7 @@
     <ProjectReference Include="..\P1SmartMeter\P1SmartMeter.csproj" />
     <ProjectReference Include="..\EMS.WebHost\EMS.WebHost.csproj" />
     <ProjectReference Include="..\EPEXSPOT\EPEXSPOT.csproj" />
+    <ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NLog" Version="4.7.13" />

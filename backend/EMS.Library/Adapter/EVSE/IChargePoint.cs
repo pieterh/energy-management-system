@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using EMS.Library.Adapter.EVSE;
+using EMS.Library.Core;
 using Microsoft.Extensions.Hosting;
 
 namespace EMS.Library
@@ -39,12 +41,14 @@ namespace EMS.Library
             public Status Status { get; set; }
             public bool SessionEnded { get; set; }
             public double? EnergyDelivered { get; set; }
-            public double Costs { get; set; }
-            public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered, double costs)
+            public Decimal Cost { get; set; }
+            public IList<Cost> Costs { get; set; }
+            public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered, Decimal cost, IList<Cost> costs)
             {
                 Status = new Status(measurement);
                 SessionEnded = sessionEnded;
-                EnergyDelivered = sessionEnded ? energyDelivered.Value : null;
+                EnergyDelivered = sessionEnded ? (energyDelivered ?? 0.0d) : null;
+                Cost = cost;
                 Costs = costs;
             }
         }

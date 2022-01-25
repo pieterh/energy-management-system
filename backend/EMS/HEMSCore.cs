@@ -9,6 +9,8 @@ using EMS.Library.Adapter.EVSE;
 using EMS.Engine;
 using EMS.Library.Core;
 using EMS.Library.Adapter.SmartMeter;
+using EMS.Library.TestableDateTime;
+using EMS.DataStore;
 
 namespace EMS
 {
@@ -16,6 +18,7 @@ namespace EMS
     {
 
         private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
+        private static readonly NLog.Logger LoggerChargingcost = NLog.LogManager.GetLogger("chargingcost");
         private readonly Compute _compute;
 
         private readonly ILogger Logger;
@@ -60,6 +63,25 @@ namespace EMS
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             ChargingMode = ChargingMode.MaxCharge;
+
+            using (var db = new HEMSContext())
+            {
+
+                Logger.LogInformation($"Database path: {db.DbPath}.");
+
+                var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
+                foreach (var item in items)
+                {
+                    Logger.LogInformation(item.ToString());
+                    db.Entry(item)
+                        .Collection(b => b.CostDetails)
+                        .Load();
+                    foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp ))
+                    {
+                        Logger.LogInformation(detail.ToString());
+                    }
+                }
+            }
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -114,8 +136,53 @@ namespace EMS
 
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
         {
-            Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}, €{e.Costs} ");
+            Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}, €{e.Cost} ");
+
+
             LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3State}, {e.Status?.Measurement?.Mode3StateMessage}, session ended {e.SessionEnded}, energy delivered {e.EnergyDelivered}");
+
+            if (e.SessionEnded)
+            {
+
+                using (var db = new HEMSContext())
+                {
+
+                    var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
+
+                    var transaction = new ChargingTransaction
+                    {
+                        ID = new Random().Next(),
+                        Timestamp = DateTimeProvider.Now,
+                        EnergyDelivered = (double)energyDelivered,
+                        Cost = (double)e.Cost,
+                        Price = (double)(e.Cost / energyDelivered)
+                    };
+
+                    LoggerChargingcost.Debug(transaction.ToString());
+
+                    foreach (var c in e.Costs)
+                    {
+                        var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.01m;
+                        var detail = new CostDetail()
+                        {
+                            ID = new Random().Next(),
+                            Timestamp = c.Timestamp,
+                            EnergyDelivered = (double)energy,
+                            Cost = (double)(energy * c.Tariff.TariffUsage),
+                            TarifStart = c.Tariff.Timestamp,
+                            TarifUsage = (double)c.Tariff.TariffUsage
+                        };
+                        db.Add(detail);
+
+                        LoggerChargingcost.Debug(detail.ToString());
+                        
+                        transaction.CostDetails.Add(detail);
+                    }
+
+                    db.Add(transaction);
+                    db.SaveChanges();
+                }
+            }
         }
 
         private void Compute_StateUpdate(object sender, Compute.StateEventArgs e)
