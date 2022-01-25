@@ -112,7 +112,7 @@ namespace AlfenNG9xx
                 catch (Exception e)
                 {
                     Logger.Error("Exception: " + e.Message);
-                    Logger.Error("Unhandled, we try later again");
+                    Logger.Error(e, "Unhandled, we try later again");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
                     await Task.Delay(2500, stoppingToken);
@@ -138,7 +138,13 @@ namespace AlfenNG9xx
                 var sessionEnded = _chargingSession.ChargeSessionInfo.SessionEnded;
                 var energyDelivered = _chargingSession.ChargeSessionInfo.EnergyDelivered;
                 var cost = _chargingSession.ChargeSessionInfo.Cost;
-                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost));
+                var costs = _chargingSession.ChargeSessionInfo.Costs;
+
+                foreach (var c in _chargingSession.ChargeSessionInfo.Costs)
+                {
+                    Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff.TariffUsage );
+                }
+                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
             }
         }
 
