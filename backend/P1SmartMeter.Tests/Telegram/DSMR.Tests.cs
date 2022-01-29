@@ -18,6 +18,13 @@ namespace P1SmartMeter.Tests.Telegram
             t.TextMessage.Should().BeEmpty();
             t.ActualPowerUse.Should().Be(0);
             t.ActualPowerReturn.Should().Be(0.662);
+            t.PowerFailure.Events.Count.Should().Be(2);
+            t.PowerFailure.Events[0].Duration.Should().Be(336);
+            t.PowerFailure.Events[0].Timestamp.Should().Be(new DateTime(2019, 9, 11, 15, 49, 33));
+
+            t.PowerFailure.Events[1].Duration.Should().Be(861); 
+            t.PowerFailure.Events[1].Timestamp.Should().Be(new DateTime(2020, 10, 17, 08, 16, 00));
+
             t.Timestamp.Should().Be(new DateTime(2021, 03, 07, 12, 37, 21));
             t.PowerUsedL1.Should().Be(0);
             t.PowerUsedL2.Should().Be(0.213);
