@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace P1SmartMeter.Telegram.DSMR
 {
@@ -23,6 +24,16 @@ namespace P1SmartMeter.Telegram.DSMR
             TariffIndicator = GetValue<int?>(TelegramDefinition.TariffIndicator);
             ActualPowerUse = GetValue<(double, string)?>(TelegramDefinition.ActualPowerUse)?.Item1;
             ActualPowerReturn = GetValue<(double, string)?>(TelegramDefinition.ActualPowerReturn)?.Item1;
+
+            var t = GetValues(TelegramDefinition.PowerFailureEventLog);
+            PowerFailure = new PowerFailure() ;
+            PowerFailure.Events = new List<PowerFailureEvent>();
+            var nr = GetValue<int>(TelegramDefinition.PowerFailureEventLog);
+            for(int i=2; i < 2 +(nr*2); i+=2){
+                PowerFailure.Events.Add(new PowerFailureEvent((DateTime)t[i], ((ValueTuple<int, string>)t[i+1]).Item1));
+            }
+
+
             TextMessage = GetValue<string>(TelegramDefinition.TextMessage);
 
             VoltageL1 = GetValue<(double, string)?>(TelegramDefinition.VoltageL1)?.Item1;
@@ -40,6 +51,8 @@ namespace P1SmartMeter.Telegram.DSMR
 
         public double? ActualPowerUse { get; }
         public double? ActualPowerReturn { get; }
+
+        public PowerFailure PowerFailure {get; }
 
         public int? TariffIndicator { get; }
 
@@ -70,6 +83,20 @@ namespace P1SmartMeter.Telegram.DSMR
         public override string ToString()
         {
             return $"Timestamp: {Timestamp}\nE1: {Electricity1FromGrid}\nE2: {Electricity1FromGrid}\nTariff: {TariffIndicator}\nActualPower: {ActualPowerUse}\nTextMessage: {TextMessage}";
+        }
+    }
+
+    public record PowerFailure {
+        public IList<PowerFailureEvent> Events {get; set;}
+    }
+
+    public record PowerFailureEvent {
+        public DateTime Timestamp {get; }
+        public int Duration {get;}
+
+        public PowerFailureEvent(DateTime timeStamp, int duration) {
+            Timestamp = timeStamp;
+            Duration = duration;
         }
     }
 }
