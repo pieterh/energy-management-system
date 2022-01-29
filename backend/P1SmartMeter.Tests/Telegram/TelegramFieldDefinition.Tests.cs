@@ -85,7 +85,7 @@ namespace P1SmartMeter.Tests.Telegram
         [Fact]
         public void ProperlyConvertsTheNumericWithUnitTypeAsAnInt()
         {
-            var def = new TelegramFieldDefinition() { Code = "1 - 0:31.7.0", Name = "Current L1" };
+            var def = new TelegramFieldDefinition() { Code = "1-0:31.7.0", Name = "Current L1" };
             def.Types.Add(TelegramFieldType.NumericWithUnit);
             const string rawValue = "003*A";
             var result = def.ParseValue(0, rawValue);

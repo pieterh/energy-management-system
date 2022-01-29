@@ -19,6 +19,9 @@
         public const string TariffIndicator = "0-0:96.14.0";
         public const string ActualPowerUse = "1-0:1.7.0";
         public const string ActualPowerReturn = "1-0:2.7.0";
+
+        public const string PowerFailureEventLog = "1-0:99.97.0";
+
         public const string TextMessage = "0-0:96.13.0";
 
         public const string VoltageL1 = "1-0:32.7.0";
@@ -43,7 +46,7 @@
             DefineField(ActualPowerReturn, "Actual power return");
             DefineField("0-0:96.7.21", "Number of power failures", TelegramFieldType.Numeric);
             DefineField("0-0:96.7.9", "Number of long power failures", TelegramFieldType.Numeric);
-            DefineField("1-0:99.97.0", "Long power failure log", TelegramFieldType.Timestamp, TelegramFieldType.Numeric);
+            DefineField(PowerFailureEventLog, "Long power failure log", TelegramFieldType.Numeric, TelegramFieldType.Plain, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit, TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnit);
             DefineField("1-0:32.32.0", "Num voltage sags L1", TelegramFieldType.Numeric);
             DefineField("1-0:52.32.0", "Num voltage sags L2", TelegramFieldType.Numeric);
             DefineField("1-0:72.32.0", "Num voltage sags L3", TelegramFieldType.Numeric);
