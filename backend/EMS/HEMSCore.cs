@@ -143,15 +143,12 @@ namespace EMS
 
             if (e.SessionEnded)
             {
-
-                using (var db = new HEMSContext())
-                {
-
+                using (var db = new HEMSContext()){
+                
                     var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
 
                     var transaction = new ChargingTransaction
                     {
-                        ID = new Random().Next(),
                         Timestamp = DateTimeProvider.Now,
                         EnergyDelivered = (double)energyDelivered,
                         Cost = (double)e.Cost,
@@ -165,7 +162,6 @@ namespace EMS
                         var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.01m;
                         var detail = new CostDetail()
                         {
-                            ID = new Random().Next(),
                             Timestamp = c.Timestamp,
                             EnergyDelivered = (double)energy,
                             Cost = (double)(energy * c.Tariff.TariffUsage),

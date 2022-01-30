@@ -15,7 +15,6 @@ namespace EMS.DataStore
             DbPath = System.IO.Path.Join(folder, "hems.db");
         }
 
-
         // The following configures EF to create a Sqlite database file in the
         // special "local" folder for your platform.
         protected override void OnConfiguring(DbContextOptionsBuilder options)

@@ -1,21 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.13" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Adapter\" />
-    <Folder Include="Configuration\" />
-    <Folder Include="Adapter\EVSE\" />
-    <Folder Include="DateTime\" />
-    <Folder Include="Core\" />
-    <Folder Include="Adapter\SmartMeter\" />
-    <Folder Include="Adapter\PriceProvider\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Adapter\PriceProvider\" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="NLog" Version="4.7.13"/>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Adapter\"/>
+		<Folder Include="Configuration\"/>
+		<Folder Include="Adapter\EVSE\"/>
+		<Folder Include="DateTime\"/>
+		<Folder Include="Core\"/>
+		<Folder Include="Adapter\SmartMeter\"/>
+		<Folder Include="Adapter\PriceProvider\"/>
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Adapter\PriceProvider\"/>
+	</ItemGroup>
 </Project>

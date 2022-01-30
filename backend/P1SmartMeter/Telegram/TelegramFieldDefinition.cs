@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace P1SmartMeter.Telegram
 {
     public class TelegramFieldDefinition
     {
+        private static readonly Regex NumericWithUnitParser = new(@"^([\d\.]*)\*?(.*)$");
         public string Code { get; set; }
         public string Name { get; set; }
         public IList<TelegramFieldType> Types { get; set; } = new List<TelegramFieldType>();
@@ -68,9 +70,20 @@ namespace P1SmartMeter.Telegram
                         return int.Parse(rawValue, CultureInfo.InvariantCulture);
 
                     case TelegramFieldType.NumericWithUnit:
-                        var parts = rawValue.Split("*");
-                        var unit = parts[1];
-                        var numericValue = parts[0];
+                    case TelegramFieldType.NumericWithUnitAsDouble:
+                        // found some examples where the unit of measurement is
+                        // 1) behind the value seperated with a star '*'
+                        // 2) behind the value without seperator
+                        // 3) without the unit of measurement in the case that the meter didn't had a reading (all zero's)
+                        // 4) the reading was all zero's and there was no decimal point
+                        // We make it a bit more robust by only taking the digits and dots
+
+                        var match = NumericWithUnitParser.Match(rawValue);
+                        var numericValue= match.Groups[1].Value;
+                        var unit= match.Groups[2].Value;
+                        // var parts = rawValue.Split("*");
+                        // var unit = parts[1];
+                        // var numericValue = parts[0];
                         if (numericValue.Contains("."))
                         {
                             var number = double.Parse(numericValue, CultureInfo.InvariantCulture);
@@ -79,8 +92,15 @@ namespace P1SmartMeter.Telegram
                         else
                         {
                             var number = int.Parse(numericValue, CultureInfo.InvariantCulture);
-                            return (number, unit);
-                        }
+                            object o;
+                            if (type == TelegramFieldType.NumericWithUnitAsDouble ) {
+                                o = new ValueTuple<double, string>((double)number, unit);
+                            }else{
+                                o = new ValueTuple<int, string>((int)number, unit);
+                            }
+                            return o;
+                            //return ((type == TelegramFieldType.NumericWithUnitAsDouble ? (double)number : (int)number), unit);
+                        }                        
 
                     case TelegramFieldType.String:
                         return GetStringFromHex(rawValue);

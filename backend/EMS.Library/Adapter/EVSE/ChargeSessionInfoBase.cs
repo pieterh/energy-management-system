@@ -16,8 +16,11 @@ namespace EMS.Library.Adapter.EVSE
         {
             get
             {
-                var d = Costs.Sum((x) => { var energy = x.Energy >= 0.0m ? x.Energy / 1000.0m : 0.0m; return x.Tariff.TariffUsage * energy; })
-                       + RunningCost;
+                var d = Costs.Sum((x) => { 
+                    var energy = x.Energy >= 0.0m ? x.Energy / 1000.0m : 0.0m; 
+                    var tariffUsage = x?.Tariff?.TariffUsage ?? 0.0m;
+                    return tariffUsage * energy; 
+                }) + RunningCost;
                 return d;
             }
         }

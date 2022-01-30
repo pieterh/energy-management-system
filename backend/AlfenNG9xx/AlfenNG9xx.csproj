@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.13" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
-    <PackageReference Include="SharpModbus" Version="1.0.13" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="NLog" Version="4.7.13"/>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
+		<PackageReference Include="SharpModbus" Version="1.0.13"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj"/>
+	</ItemGroup>
 </Project>

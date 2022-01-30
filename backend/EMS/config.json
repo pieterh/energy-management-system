@@ -58,7 +58,7 @@
     }
   ],
   "web": {
-    "port": 5000,
+    "port": 5005,
     "host": "localhost",
     "jwt": {
       "issuer": "hems",

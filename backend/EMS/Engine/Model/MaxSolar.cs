@@ -6,6 +6,7 @@ namespace EMS.Engine.Model
 {
     public class MaxSolar: Base
     {
+        protected static readonly NLog.Logger LoggerCurrent = NLog.LogManager.GetLogger("chargingcurrent");
         public override ushort MinimumDataPoints
         {
             get { return (ushort)15; }
@@ -40,7 +41,7 @@ namespace EMS.Engine.Model
             {
                 var t = AllowToCharge();
                 if (t.changed)
-                    LoggerState?.Info($"charging {chargeCurrent}");
+                    LoggerCurrent?.Info($"charging {chargeCurrent}");
 
                 if (!t.allow)
                 {
