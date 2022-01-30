@@ -14,6 +14,8 @@ using EMS.Library.Core;
 using System.Collections.Generic;
 using EMS.DataStore;
 using System.Linq;
+using EMS.Library.Adapter.PriceProvider;
+
 
 namespace EMS.WebHosts
 {
@@ -23,7 +25,7 @@ namespace EMS.WebHosts
         private ILogger Logger { get; init; }
         private IHEMSCore Hems { get; init; }
 
-        public HEMSController(ILogger<HEMSController> logger, IHEMSCore hems)
+        public HEMSController(ILogger<HEMSController> logger, IHEMSCore hems, IPriceProvider priceProvider)
         {
             Logger = logger;
             Hems = hems;

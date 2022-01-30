@@ -13,7 +13,10 @@
             "args": ["--config", "config.json", "--nlogcfg", "NLog.config"],
             "cwd": "${workspaceFolder}/EMS",
             "console": "internalConsole",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": ".NET Core Launch (Terminal)",
@@ -24,7 +27,10 @@
             "args": ["--config", "config.json", "--nlogcfg", "NLog.config"],
             "cwd": "${workspaceFolder}/EMS",
             "console": "integratedTerminal",
-            "stopAtEntry": false
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": ".NET Core Attach",

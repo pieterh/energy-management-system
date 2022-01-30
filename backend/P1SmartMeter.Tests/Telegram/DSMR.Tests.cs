@@ -18,12 +18,12 @@ namespace P1SmartMeter.Tests.Telegram
             t.TextMessage.Should().BeEmpty();
             t.ActualPowerUse.Should().Be(0);
             t.ActualPowerReturn.Should().Be(0.662);
-            t.PowerFailure.Events.Count.Should().Be(2);
-            t.PowerFailure.Events[0].Duration.Should().Be(336);
-            t.PowerFailure.Events[0].Timestamp.Should().Be(new DateTime(2019, 9, 11, 15, 49, 33));
+            t.PowerFailureEventLog.Count.Should().Be(2);
+            t.PowerFailureEventLog[0].Duration.Should().Be(336);
+            t.PowerFailureEventLog[0].Timestamp.Should().Be(new DateTime(2019, 9, 11, 15, 49, 33));
 
-            t.PowerFailure.Events[1].Duration.Should().Be(861); 
-            t.PowerFailure.Events[1].Timestamp.Should().Be(new DateTime(2020, 10, 17, 08, 16, 00));
+            t.PowerFailureEventLog[1].Duration.Should().Be(861); 
+            t.PowerFailureEventLog[1].Timestamp.Should().Be(new DateTime(2020, 10, 17, 08, 16, 00));
 
             t.Timestamp.Should().Be(new DateTime(2021, 03, 07, 12, 37, 21));
             t.PowerUsedL1.Should().Be(0);
@@ -75,6 +75,66 @@ namespace P1SmartMeter.Tests.Telegram
             t.Crc16.Should().Be("8F46");
         }
 
+        [Fact]
+        public void ParsesExampleTelegramFromDSMR()
+        {
+            var t = new DSMRTelegram(MsgToString(telegram_4), true);
+            t.Should().NotBeNull();
+            t.Timestamp.Should().Be(new DateTime(2010, 12, 09, 11, 30, 20));
+            t.Electricity1FromGrid.Should().Be(123456.789);
+            t.Electricity2FromGrid.Should().Be(123456.789);
+            t.Electricity1ToGrid.Should().Be(123456.789);
+            t.Electricity2ToGrid.Should().Be(123456.789);            
+            t.PowerFailureEventLog.Count.Should().Be(2);
+
+            t.PowerFailureEventLog[0].Timestamp.Should().Be(new DateTime(2010, 12, 08, 15, 24, 15));    // requirements mention 15:20:15, but seems 15:24:15
+            t.PowerFailureEventLog[0].Duration.Should().Be(240);
+            t.PowerFailureEventLog[1].Timestamp.Should().Be(new DateTime(2010, 12, 08, 15, 10, 04));    // requirements mention 15:05:03, but seems 15:10:04
+            t.PowerFailureEventLog[1].Duration.Should().Be(301);
+            t.PowerSagsL1.Should().Be(2);
+            t.PowerSagsL2.Should().Be(1); //(poly phase meters only)
+            t.PowerSagsL3.Should().Be(0); //(poly phase meters only)
+            t.PowerSwellsL1.Should().Be(0);
+            t.PowerSwellsL2.Should().Be(3); //(poly phase meters only)
+            t.PowerSwellsL3.Should().Be(0); //(poly phase meters only)
+            t.TextMessage.Should().Be(@"0123456789:;<=>?0123456789:;<=>?0123456789:;<=>?0123456789:;<=>?0123456789:;<=>?");
+
+            t.TariffIndicator.Should().Be(2);
+            t.VoltageL1.Should().Be(220.1);
+            t.VoltageL2.Should().Be(220.2);
+            t.VoltageL3.Should().Be(220.3);
+            t.CurrentL1.Should().Be(1);
+            t.CurrentL2.Should().Be(2);
+            t.CurrentL3.Should().Be(3);
+            t.PowerUsedL1.Should().Be(01.111);
+            t.PowerUsedL2.Should().Be(02.222);
+            t.PowerUsedL3.Should().Be(03.333);
+            t.PowerReturnedL1.Should().Be(04.444);
+            t.PowerReturnedL2.Should().Be(05.555);
+            t.PowerReturnedL3.Should().Be(06.666);
+            t.MBusDevice1.Should().NotBeNull();
+            t.MBusDevice1.DeviceType.Should().Be(MBusDevice.DeviceTypeEnum.Gas);
+            t.MBusDevice1.Measurement.Should().Be(12785.123);
+            t.MBusDevice1.UnitOfMeasurement.Should().Be("m3");
+            t.Crc16.Should().Be("EF2F");
+        }
+
+        [Fact]
+        public void ParsesExampleTelegramFromInternet()
+        {
+            var t = new DSMRTelegram(MsgToString(telegram_5), true);
+            t.Should().NotBeNull();
+            t.MBusDevice1.Should().NotBeNull();
+        }
+
+        // [Fact]
+        // public void ParsesExampleTelegramFromFluvius_1phase()
+        // {
+        //     var t = new DSMRTelegram(MsgToString(telegram_6_fluvius), true);
+        //     t.Should().NotBeNull();
+        //     t.MBusDevice1.Should().NotBeNull();
+        // }
+        
         private static string MsgToString(string[] message)
         {
             var str = new StringBuilder();
@@ -189,5 +249,117 @@ namespace P1SmartMeter.Tests.Telegram
             @"0-1:24.2.1(171105201000W)(00016.713*m3)",
             @"!8F46"
         };
+
+        // This example telegram is taken from "Dutch Smart Meter Requirements v5.0.2 Final P1.docx" page 25
+        // P1 telegram that is in accordance to IEC 62056-21 Mode D.
+        private static string[] telegram_4 = {
+            @"/ISk5\2MT382-1000",
+            @"1-3:0.2.8(50)",
+            @"0-0:1.0.0(101209113020W)",
+            @"0-0:96.1.1(4B384547303034303436333935353037)",
+            @"1-0:1.8.1(123456.789*kWh)",
+            @"1-0:1.8.2(123456.789*kWh)",
+            @"1-0:2.8.1(123456.789*kWh)",
+            @"1-0:2.8.2(123456.789*kWh)",
+            @"0-0:96.14.0(0002)",
+            @"1-0:1.7.0(01.193*kW)",
+            @"1-0:2.7.0(00.000*kW)",
+            @"0-0:96.7.21(00004)",
+            @"0-0:96.7.9(00002)",
+            @"1-0:99.97.0(2)(0-0:96.7.19)(101208152415W)(0000000240*s)(101208151004W)(0000000301*s)",
+            @"1-0:32.32.0(00002)",
+            @"1-0:52.32.0(00001)",
+            @"1-0:72.32.0(00000)",
+            @"1-0:32.36.0(00000)",
+            @"1-0:52.36.0(00003)",
+            @"1-0:72.36.0(00000)",
+            @"0-0:96.13.0(303132333435363738393A3B3C3D3E3F303132333435363738393A3B3C3D3E3F303132333435363738393A3B3C3D3E3F303132333435363738393A3B3C3D3E3F303132333435363738393A3B3C3D3E3F)",
+            @"1-0:32.7.0(220.1*V)",
+            @"1-0:52.7.0(220.2*V)",
+            @"1-0:72.7.0(220.3*V)",
+            @"1-0:31.7.0(001*A)",
+            @"1-0:51.7.0(002*A)",
+            @"1-0:71.7.0(003*A)",
+            @"1-0:21.7.0(01.111*kW)",
+            @"1-0:41.7.0(02.222*kW)",
+            @"1-0:61.7.0(03.333*kW)",
+            @"1-0:22.7.0(04.444*kW)",
+            @"1-0:42.7.0(05.555*kW)",
+            @"1-0:62.7.0(06.666*kW)",
+            @"0-1:24.1.0(003)",
+            @"0-1:96.1.0(3232323241424344313233343536373839)",
+            @"0-1:24.2.1(101209112500W)(12785.123*m3)",
+            @"!EF2F"
+        };
+
+        // telegram found on internet with some interresting items
+        // 1) units of measurements directly after measurement (not sure if this is within spec)
+        // 2) gas meter connected on sbus device 2
+        // CRC isn't correct!
+        private static string[] telegram_5 = {
+            @"/ISK5\2M550E-1012",
+            @"",
+            @"1-3:0.2.8(50)",
+            @"0-0:1.0.0(201022191257S)",
+            @"0-0:96.1.1(453030343330300000000000000000)",
+            @"1-0:1.8.1(002303.700*kWh)",
+            @"1-0:1.8.2(001695.668*kWh)",
+            @"1-0:2.8.1(000548.374*kWh)",
+            @"1-0:2.8.2(001279.676*kWh)",
+            @"0-0:96.14.0(0002)",
+            @"1-0:1.7.0(00.452*kW)",
+            @"1-0:2.7.0(00.000*kW)",
+            @"0-0:96.7.21(00008)",
+            @"0-0:96.7.9(00005)",
+            @"1-0:99.97.0(3)(0-0:96.7.19)(190115011853W)(0000000389*s)(200217121327W)(0000000853*s)(200401114717S)(0000011165*s)",
+            @"1-0:32.32.0(00006)",
+            @"1-0:32.36.0(00001)",
+            @"0-0:96.13.0()",
+            @"1-0:32.7.0(232.4*V)",
+            @"1-0:31.7.0(002*A)",
+            @"1-0:21.7.0(00.449*kW)",
+            @"1-0:22.7.0(00.000*kW)",
+            @"0-1:24.1.0(003)",
+            @"0-1:96.1.0()",
+            @"0-1:24.2.1(700101010000W)(00000000)",
+            @"0-2:96.1.0(4730303339303031383433313135303138)",
+            @"0-2:24.2.1(201022191006S)(00847.336*m3)",
+            @"!465C"
+        };
+
+
+        // fluvius example (eMUCs – P1 V1.6 page 14)
+        // 1-phase meter with a Gas meter on CH1 and a Water meter on CH2)
+        private static string[] telegram_6_fluvius = {
+            @"/FLU5\253770234_A",
+            @"",            
+            @"0-0:96.1.4(50216)",
+            @"0-0:96.1.1(3153414731313030303030323331)",
+            @"0-0:1.0.0(200512145552S)",
+            @"1-0:1.8.1(000000.915*kWh)",
+            @"1-0:1.8.2(000001.955*kWh)",
+            @"1-0:2.8.1(000000.000*kWh)",
+            @"1-0:2.8.2(000000.030*kWh)",
+            @"0-0:96.14.0(0001)",
+            @"1-0:1.7.0(00.000*kW)",
+            @"1-0:2.7.0(00.000*kW)",
+            @"1-0:21.7.0(00.000*kW)",
+            @"1-0:22.7.0(00.000*kW)",
+            @"1-0:32.7.0(234.6*V)",
+            @"1-0:31.7.0(000.00*A)",
+            @"0-0:96.3.10(1)",
+            @"0-0:17.0.0(999.9*kW)",
+            @"1-0:31.4.0(999*A)",
+            @"0-0:96.13.0()",
+            @"0-1:24.1.0(003)",
+            @"0-1:96.1.1(37464C4F32313139303333373333)",
+            @"0-1:24.4.0(1)",
+            @"0-1:24.2.3(200512134558S)(00112.384*m3)",
+            @"0-2:24.1.0(007)",
+            @"0-2:96.1.1(3853414731323334353637383930)",
+            @"0-2:24.2.1(200512134558S)(00872.234*m3)",
+            @"!XXXX"
+        };
+
     }
 }

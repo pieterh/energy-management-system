@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace EMS.DataStore;
 public record ChargingTransaction
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
+	[Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ID { get; set; }
     public DateTime Timestamp { get; set; }
     public double EnergyDelivered { get; set; }
@@ -16,7 +18,6 @@ public record ChargingTransaction
         get { return _costDetails ??= _costDetails = new List<CostDetail>() ; }
         set { _costDetails = value ; }
     }
-
 
     protected virtual bool PrintMembers(StringBuilder stringBuilder)
     {

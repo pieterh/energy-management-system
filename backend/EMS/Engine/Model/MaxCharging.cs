@@ -5,6 +5,8 @@ namespace EMS.Engine.Model
 {
     public class MaxCharging : Base
     {
+        protected static readonly NLog.Logger LoggerCurrent = NLog.LogManager.GetLogger("chargingcurrent");
+
         public override ushort MinimumDataPoints
         {
             get { return  (ushort)15; }
@@ -27,7 +29,7 @@ namespace EMS.Engine.Model
             var avg = _measurements.CalculateAverageUsage();
 
             if (avg.NrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
-            LoggerState.Info($"avg current {avg.CurrentUsingL1}, {avg.CurrentUsingL2} , {avg.CurrentUsingL3}");
+            LoggerCurrent.Info($"avg current {avg.CurrentUsingL1}, {avg.CurrentUsingL2} , {avg.CurrentUsingL3}");
 
             var retval1 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL1, avg.CurrentUsingL1), 2);
             var retval2 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL2, avg.CurrentUsingL2), 2);

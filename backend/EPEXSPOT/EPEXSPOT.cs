@@ -74,7 +74,7 @@ namespace EPEXSPOT
                     HandleWork();
 
                     // pause for five minutes, before we handle some work again
-                    await Task.Delay(60000 * 5, stoppingToken);
+                    await Task.Delay(60000 * 5, stoppingToken);                    
                 }
                 catch (TaskCanceledException tce)
                 {
@@ -102,9 +102,9 @@ namespace EPEXSPOT
         {
             _tariffs = RemoveOld(_tariffs);
 
-            if (_tariffs.Length > 8) return;
+            if (_tariffs.Length > 12) return;
 
-            var t = GetTariff(DateTimeProvider.Now.Date, DateTimeProvider.Now.Date.AddDays(1)).Result;
+            var t = GetTariff(DateTimeProvider.Now.Date, DateTimeProvider.Now.Date.AddDays(2)).Result;
  
             _tariffs = RemoveOld(t);            
         }
