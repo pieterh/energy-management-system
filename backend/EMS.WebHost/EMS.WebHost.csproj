@@ -1,47 +1,40 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
-    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
-    <IsPackable>false</IsPackable>
-    <SpaRoot>ClientApp\</SpaRoot>
-    <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.1" />
-    <PackageReference Include="Rick.Docs.Samples.RouteInfo" Version="1.0.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Don't publish the SPA source files, but do show them in the project files list -->
-    <Content Remove="$(SpaRoot)**" />
-    <None Remove="$(SpaRoot)**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
-    <ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="wwwroot\index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="ExampleRequests\" />
-    <Folder Include="Helpers\" />
-    <Folder Include="Middleware\" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+		<TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+		<IsPackable>false</IsPackable>
+		<SpaRoot>ClientApp\</SpaRoot>
+		<DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0"/>
+		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="6.0.2"/>
+		<PackageReference Include="Rick.Docs.Samples.RouteInfo" Version="1.0.0.6"/>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.2"/>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5"/>
+	</ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App"/>
+	</ItemGroup>
+	<ItemGroup>
+		<!-- Don't publish the SPA source files, but do show them in the project files list -->
+		<Content Remove="$(SpaRoot)**"/>
+		<None Remove="$(SpaRoot)**"/>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj"/>
+		<ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj"/>
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="wwwroot\index.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="ExampleRequests\"/>
+		<Folder Include="Helpers\"/>
+		<Folder Include="Middleware\"/>
+	</ItemGroup>
 </Project>

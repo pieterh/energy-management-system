@@ -77,7 +77,6 @@ namespace AlfenNG9xx
             if (!newMeasurement.VehicleIsCharging && _isCharging)
             {
                 ChargeSessionInfo.ChargingTime += (uint)(DateTimeProvider.Now - _chargingStart).TotalSeconds;
-
                 //if (_currentTariff != null)
                     //_cost += (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff) * _currentTariff.TariffUsage;
 
