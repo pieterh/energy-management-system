@@ -10,18 +10,25 @@ namespace P1SmartMeter.Telegram
     public class TelegramBase
     {
         private static readonly Regex KeyValueParser = new(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$");
+        private static readonly CRC16 crc16 = new();
 
         public IList<TelegramField> Fields { get; } = new List<TelegramField>();
         public string Header { get; private set; }
         public string Crc16 { get; private set; }
+        public string Crc16Recalculated { get; private set; }
 
-        public TelegramBase(ITelegramDefinition definition, string raw)
+        public TelegramBase(ITelegramDefinition definition, string raw, bool validateCRC = false)
         {
             var fieldDefinitions = definition.GetFieldDefinitions();
 
             if (string.IsNullOrEmpty(raw))
             {
                 return;
+            }
+
+            if (validateCRC){
+                byte[] bytes = Encoding.ASCII.GetBytes(raw);
+                Crc16Recalculated = crc16.ComputeChecksumAsString(bytes, bytes.Length);
             }
 
             var lines = raw.Split(
