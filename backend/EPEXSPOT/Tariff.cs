@@ -3,10 +3,10 @@
 public record SpotTariff
 {
     public DateTime Timestamp { get; }
-    public double TariffUsage { get; }
-    public double TariffReturn { get; }
+    public Decimal TariffUsage { get; }
+    public Decimal TariffReturn { get; }
 
-    public SpotTariff(DateTime timestamp, double tariffUsage, double tariffReturn)
+    public SpotTariff(DateTime timestamp, Decimal tariffUsage, Decimal tariffReturn)
     {
         Timestamp = timestamp;
         TariffUsage = tariffUsage;

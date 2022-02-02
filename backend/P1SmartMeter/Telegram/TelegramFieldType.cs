@@ -3,6 +3,7 @@
     public enum TelegramFieldType
     {
         NumericWithUnit,
+        NumericWithUnitAsDouble,
         Numeric,
         String,
         Timestamp,

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace P1SmartMeter.Telegram
@@ -19,7 +20,8 @@ namespace P1SmartMeter.Telegram
                 // default: numeric with unit
                 types = new[] { TelegramFieldType.NumericWithUnit };
             }
-
+            if (_fieldDefinitions.Exists(x => x.Code == code))
+                throw new ArgumentException("The given code is already present as field", nameof(code));
             _fieldDefinitions.Add(new TelegramFieldDefinition(code, name, types));
         }
 

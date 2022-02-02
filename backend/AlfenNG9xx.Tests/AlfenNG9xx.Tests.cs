@@ -268,7 +268,7 @@ namespace AlfenNG9xx.Tests
 
         public Tariff GetTariff()
         {
-            var tariff = new Tariff(DateTimeProvider.Now, 0.23d, 0.08d);
+            var tariff = new Tariff(DateTimeProvider.Now, 0.23m, 0.08m);
             return tariff;
         }
 
