@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import Container from '@material-ui/core/Container';
-import Button from '@material-ui/core/Button';
+import Container from '@mui/material/Container';
+import Button from '@mui/material/Button';
 
 import { logoutAsync } from './authenticationSlice';
 

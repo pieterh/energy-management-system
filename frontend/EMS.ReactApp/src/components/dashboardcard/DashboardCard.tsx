@@ -1,35 +1,41 @@
 import React from 'react';
+import { styled } from '@mui/material/styles';
 
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
-import CardHeader from '@material-ui/core/CardHeader';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import CardHeader from '@mui/material/CardHeader';
 
-import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
+const PREFIX = 'DashboardCard';
+const classes = {
+  root: `${PREFIX}-root`,
+  paper: `${PREFIX}-paper`,
+  bullet: `${PREFIX}-bullet`,
+  title: `${PREFIX}-title`,
+  pos: `${PREFIX}-pos`,
+}
+const Root = styled('div')(({ theme }) => ({
+  [`&.${classes.root}`]: {
+    flexGrow: 1,
+  },
+  [`& .${classes.paper}`]: {
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+  },
+  [`& .${classes.bullet}`]: {
+    display: 'inline-block',
+    margin: '0 2px',
+    transform: 'scale(0.8)',
+  },
+  [`& .${classes.title}`]: {
+    fontSize: 14,
+  },
+  [`& .${classes.pos}`]: {
+    marginBottom: 12,
+  },     
+}))
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      flexGrow: 1,
-    },
-    paper: {
-      padding: theme.spacing(2),
-      textAlign: 'center',
-      color: theme.palette.text.secondary,
-    },
-    bullet: {
-      display: 'inline-block',
-      margin: '0 2px',
-      transform: 'scale(0.8)',
-    },
-    title: {
-      fontSize: 14,
-    },
-    pos: {
-      marginBottom: 12,
-    },
-  }),
-);
 
 export type IDashboardCardProps = {
   title: string;
@@ -38,11 +44,10 @@ export type IDashboardCardProps = {
   children?: React.ReactNode;
 }
 
-export function DashboardCard(props : IDashboardCardProps) {
-  const classes = useStyles();
-  
+export function DashboardCard(props : IDashboardCardProps) { 
   return(
     <React.Fragment>
+      <Root>
         <Card variant="outlined">
             <CardHeader
               avatar= { props.avatar }
@@ -58,6 +63,7 @@ export function DashboardCard(props : IDashboardCardProps) {
               {props.children}
             </CardContent>
         </Card>
+      </Root>
     </React.Fragment>
   )
 };

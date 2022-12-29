@@ -8,7 +8,7 @@ public record SpotTariff
 
     public SpotTariff(DateTime timestamp, Decimal tariffUsage, Decimal tariffReturn)
     {
-        Timestamp = timestamp;
+        Timestamp = timestamp.ToUniversalTime();
         TariffUsage = tariffUsage;
         TariffReturn = tariffReturn;
     }

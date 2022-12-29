@@ -1,25 +1,25 @@
 import React,{ useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import Divider from '@material-ui/core/Divider';
-import Grow from '@material-ui/core/Grow';
-import MenuItem from '@material-ui/core/MenuItem';
-import MenuList from '@material-ui/core/MenuList';
-import MuiIconButton from '@material-ui/core/IconButton';
-import Paper from '@material-ui/core/Paper';
-import Popper from '@material-ui/core/Popper';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Divider from '@mui/material/Divider';
+import Grow from '@mui/material/Grow';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import MuiIconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Popper from '@mui/material/Popper';
 
-import AccountBoxIcon from '@material-ui/icons/AccountBox';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import Brightness4Icon from '@material-ui/icons/Brightness4';
-import DesktopWindowsIcon from '@material-ui/icons/DesktopWindows';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import NightsStayIcon from '@material-ui/icons/NightsStay';
-import PersonIcon from '@material-ui/icons/Person';
-import SettingsIcon from '@material-ui/icons/Settings';
-import WbSunnyIcon from '@material-ui/icons/WbSunny';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import DesktopWindowsIcon from '@mui/icons-material/DesktopWindows';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import NightsStayIcon from '@mui/icons-material/NightsStay';
+import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
 
 import { useAppSelector, useAppDispatch } from  '../../common/hooks';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
@@ -52,7 +52,7 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
       setAnchorEl(buttonRef.current);
     };
     
-    const handleClose = (event: React.MouseEvent<{}>) => {
+    const handleClose = (/*event: React.MouseEvent<{}>*/) => {
       setAnchorEl(null);
     };
   
@@ -130,7 +130,7 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
           <MuiIconButton aria-label="account menu" ref={buttonRef} aria-controls={open ? 'menu-list-grow' : undefined} aria-haspopup="true" onClick={handleToggle}> 
               <PersonIcon/> 
           </MuiIconButton>       
-          <Popper open={open} anchorEl={anchorEl} role={undefined} transition disablePortal>
+          <Popper open={open} anchorEl={anchorEl} role={undefined} transition disablePortal onResize={undefined} onResizeCapture={undefined}>
             {({ TransitionProps, placement }) => (
               <Grow
               {...TransitionProps}
