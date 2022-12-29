@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {AxiosRequestConfig, AxiosHeaders } from 'axios';
 import browserStorage  from 'store2';
 import URLParse from 'url-parse';
 
@@ -34,12 +34,13 @@ export function AddInterceptors() {
     // interceptor that will add the bearer token in the header when 
     // we have a token in the browser sessions storage
     // and are accessing the api
-    axios.interceptors.request.use(function (config) {
+    axios.interceptors.request.use(function (config: AxiosRequestConfig) {
         var parsedUrl = URLParse(config.url as string, true);
         if (parsedUrl.pathname.startsWith('/api') && config.headers != null){
             const token = browserStorage.session.get('token');
-            if (token !== undefined && token !== null)  
-                    config.headers .Authorization = `Bearer ${token}`;
+            if (token !== undefined && token !== null) {
+                (config.headers as AxiosHeaders).set("Authorization", `Bearer ${token}`);
+            }                
         }
         return config; 
     });

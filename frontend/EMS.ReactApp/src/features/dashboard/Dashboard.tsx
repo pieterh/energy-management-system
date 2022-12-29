@@ -1,12 +1,15 @@
 
-import Box from '@material-ui/core/Box';
-import Container from '@material-ui/core/Container';
-import Grid from '@material-ui/core/Grid';
+import React from 'react';
+import { styled } from '@mui/material/styles';
 
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Grid from '@mui/material/Grid';
+
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+
 
 import { useAppSelector, useAppDispatch } from  '../../common/hooks';
 import { pingAsync, selectIsLoggedIn } from '../authentication/authenticationSlice';
@@ -16,108 +19,115 @@ import { InfoWidget as EVSEInfoWidget } from '../chargepoint/InfoWidget';
 import { SocketInfoWidget as EVSESocketInfoWidget } from '../chargepoint/SocketInfoWidget';
 import { SessionInfoWidget as EVSESessionInfoWidget } from '../chargepoint/SessionInfoWidget';
 
-
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      flexGrow: 1,
-    },
-    paper: {
-      padding: theme.spacing(2),
-      textAlign: 'center',
-      color: theme.palette.text.secondary,
-    },
-    bullet: {
-      display: 'inline-block',
-      margin: '0 2px',
-      transform: 'scale(0.8)',
-    },
-    title: {
-      fontSize: 14,
-    },
-    pos: {
-      marginBottom: 12,
-    },
-  }),
-);
+const PREFIX = 'Dashboard';
+const classes = {
+  root: `${PREFIX}-root`,
+  paper: `${PREFIX}-paper`,
+  pos: `${PREFIX}-pos`,
+  bullet: `${PREFIX}-bullet`,
+  title: `${PREFIX}-title`,
+}
+const Root = styled('div')(({ theme }) => ({
+  [`&.${classes.root}`]: {
+    flexGrow: 1,
+  },
+  [`& .${classes.paper}`]: {
+    padding: theme.spacing(2),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
+  },
+  [`& .${classes.pos}`]: {
+    marginBottom: 12,
+  },  
+  [`& .${classes.bullet}`]: {
+    display: 'inline-block',
+    margin: '0 2px',
+    transform: 'scale(0.8)',
+  },
+  [`& .${classes.title}`]: {
+    fontSize: 14,
+  },
+}))
 
 export default function Main() {
-  const classes = useStyles();  
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
   const dispatch = useAppDispatch();
   const bull = <span className={classes.bullet}>•</span>;
 
   async function onPing(){   
-    dispatch(pingAsync()).then((x) =>{
-
+    dispatch(pingAsync()).then((_x) =>{
     });
   }
 
   return(
-    <Container>
-      {isLoggedIn && 
-        <Grid container spacing={3} >
+    <Root>
+      <Container>
+        {isLoggedIn && 
+          <Grid container spacing={3} >
 
-          <Grid item xs={12} sm={12} md={6} lg={3} >
-            <EVSEInfoWidget />
-          </Grid>
+            <Grid item xs={12} sm={12} md={6} lg={3} >
+              <EVSEInfoWidget />
+            </Grid>
 
-          <Grid item xs={12} sm={12} md={6} lg={3} >
-            <EVSESocketInfoWidget socketnr={1}/>
-          </Grid>
+            <Grid item xs={12} sm={12} md={6} lg={3} >
+              <EVSESocketInfoWidget socketnr={1}/>
+            </Grid>
 
-          <Grid item xs={12} sm={12} md={6} lg={3} >
-            <EVSESessionInfoWidget socketnr={1}/>
-          </Grid>
-          
-          <Grid item xs={12} sm={12} md={12} lg={3} >
-            <DashboardCard title="tst">
-              <Grid container spacing={1}>
-                <Grid item xs={6}>
-                  <Paper className={classes.paper}>één</Paper>
+            <Grid item xs={12} sm={12} md={6} lg={3} >
+              <EVSESessionInfoWidget socketnr={1}/>
+            </Grid>
+            
+            <Grid item xs={12} sm={12} md={12} lg={3} >
+              <DashboardCard title="tst">
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <Paper className={classes.paper}>één</Paper>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Paper className={classes.paper}>twee</Paper>
+                  </Grid>              
+                  <Grid item xs={12}>
+                    <Button aria-label="ping" onClick={onPing} >ping</Button>
+                  </Grid>
                 </Grid>
-                <Grid item xs={6}>
-                  <Paper className={classes.paper}>twee</Paper>
-                </Grid>              
-                <Grid item xs={12}>
-                  <Button aria-label="ping" onClick={onPing} >ping</Button>
-                </Grid>
-              </Grid>
-            </DashboardCard>
-          </Grid>
+              </DashboardCard>
+            </Grid>
 
-          <Grid item xs={3} >
-            <DashboardCard title="1" >
-              <Typography className={classes.title} color="textSecondary" gutterBottom>
-                  Word of the Day
-              </Typography>
-              <Typography variant="h5" component="h2">
-                  be{bull}nev{bull}o{bull}lent
-              </Typography>
-              <Typography className={classes.pos} color="textSecondary">
-                  adjective
-              </Typography>
-              <Typography variant="body2" component="p">
-                  well meaning and kindly.
-                  <br />
-                  {'"a benevolent smile"'}
-              </Typography>
-            </DashboardCard>
-          </Grid>
-          <Grid item xs={3} >
-            <DashboardCard title="2">b</DashboardCard>
-          </Grid>
+            <Grid item xs={3} >
+              <DashboardCard title="1" >
+                <Typography className={classes.title} color="textSecondary" gutterBottom>
+                    Word of the Day
+                </Typography>
+                <Typography variant="h5" component="h2">
+                    be{bull}nev{bull}o{bull}lent
+                </Typography>
+                <Typography className={classes.pos} color="textSecondary">
+                    adjective
+                </Typography>
+                <Typography variant="body2" component="p">
+                    well meaning and kindly.
+                    <br />
+                    {'"a benevolent smile"'}
+                </Typography>
+              </DashboardCard>
+            </Grid>
+            <Grid item xs={3} >
+              <DashboardCard title="2">b</DashboardCard>
+            </Grid>
 
-        </Grid>
-      }
+          </Grid>
+        }
 
-      {!isLoggedIn && 
-        <Grid item xs={12} sm={4}>
-            <Box bgcolor="primary.main" color="primary.contrastText" p={2}>
-                voor iedereen!yihkkk
-            </Box>
-        </Grid>
-      } 
-    </Container>
+        {!isLoggedIn && 
+          <Grid item xs={12} sm={4}>
+            <>
+              <Box bgcolor="primary.main" color="primary.contrastText" p={2}>
+                  voor iedereen!yihkkk
+              </Box>
+            </>
+          </Grid>
+        } 
+      </Container>
+    </Root>
   )
 }

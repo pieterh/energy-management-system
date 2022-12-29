@@ -113,7 +113,7 @@ export const loginAsync = createAsyncThunk<
         }
         var data = {username: username, password: secret};
         var cfg = undefined;
-        var response = await axios.post<LoginResponse>('http://127.0.0.1:5000/api/users/authenticate', data, cfg);
+        var response = await axios.post<LoginResponse>('http://127.0.0.1:5005/api/users/authenticate', data, cfg);
         return response.data;
       }catch(err){        
         return rejectWithValue(
@@ -143,7 +143,7 @@ export const pingAsync = createAsyncThunk<
     async (undefined, /* thunkApi */ { rejectWithValue }) => {
       try{
         var cfg = undefined;
-        var response = await axios.get<LoginResponse>('http://127.0.0.1:5000/api/users/ping', cfg);
+        var response = await axios.get<LoginResponse>('http://127.0.0.1:5005/api/users/ping', cfg);
         return response.data;
       }catch(err){        
         return rejectWithValue(

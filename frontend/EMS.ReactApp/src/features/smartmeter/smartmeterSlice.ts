@@ -104,7 +104,7 @@ export const getSmartMeterInfoAsync = createAsyncThunk<smartmeterInfoResponse, u
   async (undefined, { rejectWithValue }) => {
     try {
       var cfg = undefined;
-      var response = await axios.get<smartmeterInfoResponse>(`http://127.0.0.1:5000/api/smartmeter/info/`, cfg);
+      var response = await axios.get<smartmeterInfoResponse>(`http://127.0.0.1:5005/api/smartmeter/info/`, cfg);
       return response.data;
     } catch (err) {
       return rejectWithValue({

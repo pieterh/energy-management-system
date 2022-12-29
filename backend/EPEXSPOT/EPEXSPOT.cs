@@ -120,6 +120,8 @@ namespace EPEXSPOT
             var startUtc = start.ToUniversalTime();
             var endUtc = end.ToUniversalTime();
 
+            var t = await GetTariffLastTimestamp();
+
             using var client = _httpClientFactory.CreateClient();
 
             var getapxtariffsUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffs");
@@ -134,13 +136,22 @@ namespace EPEXSPOT
             using var resultStream = await client.GetStreamAsync(uri);
 
             // read the objects directly from the stream, including schema validation
-            JsonTextReader reader = new(new StreamReader(resultStream));
+            using JsonTextReader reader = new(new StreamReader(resultStream));
             JSchemaValidatingReader validatingReader = new(reader);
             validatingReader.Schema = GetSchema();
             IList<string> messages = new List<string>();
             validatingReader.ValidationEventHandler += (o, a) => messages.Add(a.Message);
 
-            JsonSerializer serializer = new();
+            JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
+            // var jss = new JsonSerializerSettings
+            // {
+            //     DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            //     DateTimeZoneHandling = DateTimeZoneHandling.Utc, 
+            //     DateParseHandling = DateParseHandling.DateTimeOffset
+            // };
+
+           //  var result = JsonConvert.DeserializeObject<SpotTariff[]>(validatingReader, jss);
+
             var result = serializer.Deserialize<SpotTariff[]>(validatingReader);
 
             if (messages.Count > 0)
@@ -159,6 +170,20 @@ namespace EPEXSPOT
             var resultArray = r.ToArray();
             Array.Sort(resultArray, (x, y) => x.Timestamp.CompareTo(y.Timestamp));
             return resultArray;
+        }
+
+        public async Task<DateTime> GetTariffLastTimestamp()
+        {
+            using var client = _httpClientFactory.CreateClient();
+
+            var getapxtariffslasttimestampUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffslasttimestamp");
+            using var resultStream = await client.GetStreamAsync(getapxtariffslasttimestampUri);
+            using JsonTextReader reader = new(new StreamReader(resultStream));
+
+            JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
+            var result = serializer.Deserialize<DateTime>(reader);
+            Logger.Info($"taris lasttime -> {result}");
+            return result;
         }
 
         /// <summary>

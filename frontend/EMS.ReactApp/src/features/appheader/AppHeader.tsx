@@ -1,15 +1,16 @@
 import React from 'react';
+import { styled } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 
-import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
-import AppBar from '@material-ui/core/AppBar';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
-import MenuOpenIcon from '@material-ui/icons/MenuOpen';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
+import AppBar from '@mui/material/AppBar';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 
 import { useAppSelector, useAppDispatch } from '../../common/hooks';
 
@@ -21,22 +22,31 @@ interface IStyleProps {
   isScreenXS: boolean
 }
 
-const useStyles = makeStyles((theme: Theme) =>({
-  root: {
+const PREFIX = 'DashboardCard';
+const classes = {
+  root: `${PREFIX}-root`,
+  appBar: `${PREFIX}-appBar`,
+  menuButton: `${PREFIX}-menuButton`,
+  title: `${PREFIX}-title`,
+  toolbar: `${PREFIX}-toolbar`,
+}
+const Root = styled('div')(({ theme }) => ({
+  [`&.${classes.root}`]: {
     display: 'flex',
   },
-  appBar:{
+  [`& .${classes.appBar}`]: {
+
   },
-  menuButton: {
+  [`& .${classes.menuButton}`]: {
     marginRight: theme.spacing(2)
   },
-  title: {
+  [`& .${classes.title}`]: {
     flexGrow: 1
   },
-  toolbar: {
+  [`& .${classes.toolbar}`]: {
     paddingLeft: 16,
-  },
-}));
+  },     
+}))
 
 type Props = {
   children?: React.ReactNode;
@@ -49,7 +59,6 @@ export function AppHeader({children}: Props): JSX.Element {
 
     const isLoggedIn = useAppSelector(selectIsLoggedIn);    
     const isScreenXS = useMediaQuery(theme.breakpoints.only('xs'));
-    const classes = useStyles({isScreenXS: isScreenXS});   
 
     const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
     

@@ -57,6 +57,7 @@ namespace EMS.WebHost.Controllers
 
         [AllowAnonymous]
         [HttpPost("authenticate")]
+
         public IActionResult Authenticate([FromBody] LoginModel model)
         {
             var user = PerformAuth(model);
