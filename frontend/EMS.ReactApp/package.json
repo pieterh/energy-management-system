@@ -5,11 +5,13 @@
   "type": "module",
   "homepage": "",
   "dependencies": {
-    "@material-ui/core": "^4.12.3",
-    "@material-ui/icons": "^4.11.2",
-    "@material-ui/lab": "^4.0.0-alpha.60",
-    "@material-ui/styles": "^4.11.4",
-    "@material-ui/utils": "^4.11.2",
+    "@mui/base": "^5.0.0-alpha.110",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/lab": "^5.0.0-alpha.112",
+    "@mui/material": "^5.11.0",
+    "@mui/styles": "^5.11.0",
+    "@mui/types": "^7.2.3",
+    "@mui/utils": "^5.11.0",
     "@nivo/core": "^0.75.0",
     "@nivo/line": "^0.75.0",
     "@reduxjs/toolkit": "^1.7.2",
@@ -47,6 +49,7 @@
     "react-thunk": "^1.0.0",
     "redux-thunk": "^2.4.1",
     "store2": "^2.13.1",
+    "tss-react": "^4.5.0",
     "url-parse": "^1.5.10"
   },
   "scripts": {

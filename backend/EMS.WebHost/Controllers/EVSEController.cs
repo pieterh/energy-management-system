@@ -15,6 +15,8 @@ using EMS.WebHost.Helpers;
 namespace EMS.WebHosts
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ApiController]
+    [Route("api/[controller]")]
     public class EVSEController : ControllerBase                                    //NOSONAR
     {
         private ILogger Logger { get; init; }
@@ -26,7 +28,8 @@ namespace EMS.WebHosts
             ChargePoint = chargePoint;
         }
 
-        [Route("api/[controller]/station")]
+        //[Route("api/[controller]/station")]
+        [HttpGet("station")]
         public ActionResult<SessionInfoModel> GetStationInfo()
         {
             var retval = new SessionInfoModel();
@@ -35,9 +38,10 @@ namespace EMS.WebHosts
             //retval.VehicleIsCharging = ChargePoint.LastSocketMeasurement.VehicleIsCharging;
             return new JsonResult(retval);
         }
+ 
 
-
-        [Route("api/[controller]/socket/{id}")]
+        //[Route("api/[controller]/socket/{id}")]
+        [HttpGet("socket/{id}")]
         public ActionResult<SocketInfoResponse> GetSocketInfo(int id)
         {
             var socket = new SocketInfoModel();

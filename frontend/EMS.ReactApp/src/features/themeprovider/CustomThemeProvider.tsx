@@ -1,7 +1,7 @@
 import React from 'react';
-import { createTheme, Theme, useTheme } from '@material-ui/core/styles';
-import { ThemeProvider } from '@material-ui/core/styles';
-import useMediaQuery from "@material-ui/core/useMediaQuery";
+import { createTheme, Theme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { useAppSelector } from  '../../common/hooks';
 
@@ -21,14 +21,14 @@ CustomThemeContext.displayName = 'CustomThemeContext';
 const darkTheme = createTheme({
   // ...theme,
   palette: {
-    type: 'dark'
+    mode: 'dark'
   }
 });
 
 const lightTheme = createTheme({
   // ...theme,
   palette: {
-    type: 'light' 
+    mode: 'light' 
   }
 });
 

@@ -115,7 +115,7 @@ export const getHemsInfoAsync = createAsyncThunk<HemsInfoResponse, undefined, { 
   async (undefined, { rejectWithValue }) => {
     try {
       var cfg = undefined;
-      var response = await axios.get<HemsInfoResponse>(`http://127.0.0.1:5000/api/hems/info/`, cfg);
+      var response = await axios.get<HemsInfoResponse>(`http://127.0.0.1:5005/api/hems/info/`, cfg);
       return response.data;
     } catch (err) {
       return rejectWithValue({
