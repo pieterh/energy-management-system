@@ -19,7 +19,7 @@ namespace EMS.WebHost.Middleware
 
         public Task Invoke(HttpContext context)
         {
-            Logger.LogInformation($"{context.Request.Path}");
+            Logger.LogInformation($"SpaMiddleware Invoke -> {context.Request.Path}");
             var path = context.Request.Path;
             if (path.StartsWithSegments(new PathString("/app")) &&
                 string.IsNullOrEmpty(Path.GetExtension(path)))

@@ -75,6 +75,8 @@ namespace EMS.WebHost
                 options.SaveToken = true;
             });
 
+
+
             //In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
@@ -128,6 +130,14 @@ namespace EMS.WebHost
             app.UseMiddleware<Middleware.SpaMiddleware>(Logger);
 
             app.UseRouting();
+
+            app.UseCors(builder =>
+            {
+                builder.WithOrigins("http://127.0.0.1:5010")
+                .AllowCredentials()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            });
 
             // put this between UseRouting and UseEndpoints
             app.UseAuthentication();

@@ -1,16 +1,32 @@
 
 import React from 'react';
-import Container from '@material-ui/core/Container';
-import Typography from '@material-ui/core/Typography';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
 
-import Link from '@material-ui/core/Link';
-import { createStyles, withStyles, Theme } from '@material-ui/core/styles';
+import Link from '@mui/material/Link';
+import { styled } from '@mui/material/styles';
 
-const styles = ({ palette, spacing }: Theme) => createStyles({
-  });
+const PREFIX = 'MyCard';
+const classes = {
+  root: `${PREFIX}-root`,
+  content: `${PREFIX}-content`,
+}
+const Root = styled('div')(({ theme }) => ({
+      [`&.${classes.root}`]: {
+        display: 'flex',
+        alignItems: 'center',
+        backgroundColor: theme.palette.primary.main
+      },
+      [`& .${classes.content}`]: {
+        color: theme.palette.common.white,
+        fontSize: 16,
+        lineHeight: 1.7
+      },
+    }))
+    
 
 interface ICreditsProps {
-  classes: any
+  //classes: any
 }
   
 interface ICreditsState {
@@ -25,20 +41,23 @@ class Credits extends React.Component<ICreditsProps, ICreditsState> {
     }
     render () {
         return (
-            <Container>
-                <Typography variant="body2" color="textSecondary" align="center">
-                {'Energy Management System is open source under the '}
-                    <Link color="inherit" href="https://github.com/pieterh/energy-management-system/blob/main/LICENSE">
-                        BSD 3-Clause License
-                    </Link>     
-                    {' and is free for commercial use.'}                
-                </Typography>
-                <Typography variant="body2" color="textSecondary" align="center">
-                    {' Copyright (c) 2020, Pieter Hilkemeijer'}
-                </Typography>
-            </Container>
+            <Root className={classes.root}> 
+                <Container>
+                    <Typography variant="body2" color="textSecondary" align="center">
+                    {'Energy Management System is open source under the '}
+                        <Link color="inherit" href="https://github.com/pieterh/energy-management-system/blob/main/LICENSE">
+                            BSD 3-Clause License
+                        </Link>     
+                        {' and is free for commercial use.'}                
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary" align="center">
+                        {' Copyright (c) 2020, Pieter Hilkemeijer'}
+                    </Typography>
+                </Container>
+            </Root>
         );
     }
 }
 
-export default withStyles(styles)(Credits)
+export default Credits;
+

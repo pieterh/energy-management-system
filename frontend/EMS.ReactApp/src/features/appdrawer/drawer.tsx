@@ -1,23 +1,24 @@
 import React, { useEffect } from 'react';
+import { styled } from '@mui/material/styles';
+
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 
-import EvStationIcon from '@material-ui/icons/EvStation';
-import WbSunnyIcon from '@material-ui/icons/WbSunny';
-import DashboardIcon from '@material-ui/icons/Dashboard';
-import Drawer from '@material-ui/core/Drawer';
+import EvStationIcon from '@mui/icons-material/EvStation';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import Drawer from '@mui/material/Drawer';
 
 import { useAppDispatch, useAppSelector } from  '../../common/hooks';
 
 import CarElectric from '../../icons/CarElectric';
 import ElectricalServices from '../../icons/ElectricalServices';
-import SettingsPowerIcon from '@material-ui/icons/SettingsPower';
+import SettingsPowerIcon from '@mui/icons-material/SettingsPower';
 
 import { selectIsDrawerOpen, openDrawer, closeDrawer, toggleDrawer } from './drawerSlice';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
@@ -28,34 +29,43 @@ import { Page as EVPage } from '../ev/Page';
 import { Page as HEMSPage } from '../hems/Page';
 
 const drawerWidth = 240;
-const useStyles = makeStyles ((theme: Theme) => 
-  createStyles({   
-    drawer: {
-        flexShrink: 0,
-        whiteSpace: 'nowrap',    
-        position: 'fixed',
-        zIndex:10,
-      },
-    paper: {
-        top: 'unset',
-      },
-    drawerOpen: {
-        width: drawerWidth,
-        transition: theme.transitions.create('width', {
-          easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.enteringScreen,
-        }),
-      },
-    drawerClose: {
-        transition: theme.transitions.create('width', {
-          easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.leavingScreen,
-        }),
-        overflowX: 'hidden',
-        width: theme.spacing(7) + 1,
-      },
-  })
-);
+
+const PREFIX = 'drawerInfoWidget';
+const classes = {
+  root: `${PREFIX}-root`,
+  paper: `${PREFIX}-paper`,
+  drawer: `${PREFIX}-drawer`,
+  drawerOpen: `${PREFIX}-drawerOpen`,
+  drawerClose: `${PREFIX}-drawerClose`,    
+}
+const Root = styled('div')(({ theme }) => ({
+  [`&.${classes.root}`]: {
+    flexGrow: 1,
+  },
+  [`& .${classes.paper}`]: {
+    padding: theme.spacing(2),
+    textAlign: "center",
+    color: theme.palette.text.secondary,
+  },
+  [`& .${classes.drawer}`]: {
+    marginBottom: 12,
+  },
+  [`& .${classes.drawerOpen}`]: {
+    width: drawerWidth,
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  },  
+  [`& .${classes.drawerClose}`]: {
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.leavingScreen,
+    }),
+    overflowX: 'hidden',
+    width: theme.spacing(7) + 1,
+  },  
+}))
 
 export type DrawerItem = {
   id: string,
@@ -86,7 +96,7 @@ export const DrawerDefinition : DrawerDefinitionT = {
       id:"appdrawer-pvsystem",
       key: "pvsystem",
       icon: <WbSunnyIcon />,
-      title: "Solar Power!",
+      title: "Solar Power",
       route: "/pvsystem",
       exactRoute: false,
       component: <WbSunnyIcon />
@@ -137,7 +147,6 @@ interface IAppDrawerProps {
 export default function AppDrawer(props: IAppDrawerProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const classes = useStyles(); 
   const isLoggedIn = useAppSelector(selectIsLoggedIn);    
   const isDrawerOpen = useAppSelector(selectIsDrawerOpen);
 
@@ -167,25 +176,29 @@ export default function AppDrawer(props: IAppDrawerProps) {
   }, [isLoggedIn, isDrawerOpen]);
 
   return (
-    <Drawer
-        variant= {props.persistent ? "persistent" : "permanent"}
-        className={clsx(classes.drawer, {
-        [classes.drawerOpen]: isDrawerOpen,
-        [classes.drawerClose]: !isDrawerOpen,
-        })}
-        classes={{
-        paper: clsx(classes.paper,{
-            [classes.drawerOpen]: isDrawerOpen,
-            [classes.drawerClose]: !isDrawerOpen,
-        }),
-        }}            
-        anchor="left"
-        open={isDrawerOpen}
-        hidden={!isLoggedIn}
-    >
-      <React.Fragment>       
-        { drawerContent }  
-      </React.Fragment>
-    </Drawer>
+    <Root>
+      <Drawer
+          variant= {props.persistent ? "persistent" : "permanent"}
+          className={clsx(classes.drawer, {
+          [classes.drawerOpen]: isDrawerOpen,
+          [classes.drawerClose]: !isDrawerOpen,
+          })}
+          classes={{
+          paper: clsx(classes.paper,{
+              [classes.drawerOpen]: isDrawerOpen,
+              [classes.drawerClose]: !isDrawerOpen,
+          }),
+          }}            
+          anchor="left"
+          open={isDrawerOpen}
+          hidden={!isLoggedIn}
+      >
+        <React.Fragment>
+          
+            { drawerContent }  
+          
+        </React.Fragment>
+      </Drawer>
+    </Root>
   )
 }
