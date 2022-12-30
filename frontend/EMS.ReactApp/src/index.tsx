@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import React from 'react';
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { ConnectedRouter } from 'connected-react-router'
@@ -16,13 +17,11 @@ const root = createRoot(container!);
 AddInterceptors();
 
 root.render(
-  // Strict mode is not working properly with material-ui (in development mode)
-  // ie. toggle theme creates each time a set of styles in the header
-  // <React.StrictMode>
-  <Provider store={store}>
-    <BrowserRouter>
-      <App />
-     </BrowserRouter>
-   </Provider>,
-  // </React.StrictMode>,  
+  <React.StrictMode>
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
+  </React.StrictMode>
 );

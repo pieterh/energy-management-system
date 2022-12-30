@@ -22,7 +22,7 @@ interface IStyleProps {
   isScreenXS: boolean
 }
 
-const PREFIX = 'DashboardCard';
+const PREFIX = 'AppHeaderCard';
 const classes = {
   root: `${PREFIX}-root`,
   appBar: `${PREFIX}-appBar`,
@@ -77,26 +77,26 @@ export function AppHeader({children}: Props): JSX.Element {
       dispatch(closeDrawer());
     }
 
-
-
     return (
-      <React.Fragment>   
-        <div className={classes.root}>     
-          <AppBar color="inherit" position="static" className={classes.appBar}>
-            <Toolbar className={classes.toolbar}>
-              <IconButton hidden={isDrawerOpen} disabled={!isLoggedIn} edge="start" 
-                          className={classes.menuButton} color="inherit" aria-label="menu"
-                          onClick={onDrawerToggleClick}>
-                { !isDrawerOpen && <MenuIcon /> }
-                { isDrawerOpen && <MenuOpenIcon/> }
-              </IconButton>
-              <Typography variant="h6" className={classes.title}>
-              {title}
-              </Typography>
-              <AccountMenu />
-            </Toolbar>
-          </AppBar> 
-        </div>
+      <React.Fragment>
+        <Root>
+          <div className={classes.root}>     
+            <AppBar color="inherit" position="static" className={classes.appBar}>
+              <Toolbar className={classes.toolbar}>
+                <IconButton hidden={isDrawerOpen} disabled={!isLoggedIn} edge="start" 
+                            className={classes.menuButton} color="inherit" aria-label="menu"
+                            onClick={onDrawerToggleClick}>
+                  { !isDrawerOpen && <MenuIcon /> }
+                  { isDrawerOpen && <MenuOpenIcon/> }
+                </IconButton>
+                <Typography variant="h6" className={classes.title}>
+                {title}
+                </Typography>
+                <AccountMenu />
+              </Toolbar>
+            </AppBar> 
+          </div>
+        </Root>
       </React.Fragment>
     );
   }
