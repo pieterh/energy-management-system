@@ -3,19 +3,19 @@
 		<TargetFramework>net6.0</TargetFramework>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="NLog" Version="4.7.13"/>
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1"/>
+		<PackageReference Include="NLog" Version="5.1.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
 	</ItemGroup>
 	<ItemGroup>
-		<Folder Include="Adapter\"/>
-		<Folder Include="Configuration\"/>
-		<Folder Include="Adapter\EVSE\"/>
-		<Folder Include="DateTime\"/>
-		<Folder Include="Core\"/>
-		<Folder Include="Adapter\SmartMeter\"/>
-		<Folder Include="Adapter\PriceProvider\"/>
+		<Folder Include="Adapter\" />
+		<Folder Include="Configuration\" />
+		<Folder Include="Adapter\EVSE\" />
+		<Folder Include="DateTime\" />
+		<Folder Include="Core\" />
+		<Folder Include="Adapter\SmartMeter\" />
+		<Folder Include="Adapter\PriceProvider\" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Remove="Adapter\PriceProvider\"/>
+		<None Remove="Adapter\PriceProvider\" />
 	</ItemGroup>
 </Project>
