@@ -82,7 +82,7 @@
     "@types/deep-equal": "^1.0.1",
     "@types/url-parse": "^1.4.8",
     "babel-loader": "^9.1.0",
-    "copy-webpack-plugin": "10.2.4",
+    "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.1",
     "html-webpack-plugin": "^5.5.0",
     "interpolate-html-plugin": "^4.0.0",
