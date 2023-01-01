@@ -104,24 +104,27 @@ export function AccountMenu(props: AccountMenuProps): JSX.Element{
       if (showLoginMenuItem) 
         return [ <MenuItem id="menu-login" key="login" onClick={onMenuClick}>Login</MenuItem> ];
 
-        if (topBarState == topbarstate.Main)
-          return [                  
-            <MenuItem id="menu-theme" key="theme" onClick={onMenuClick}><ListItemIcon><Brightness4Icon/></ListItemIcon>Appearance: {themeName}</MenuItem>,
-            <MenuItem id="menu-myaccount" key="myaccount" onClick={onMenuClick}><ListItemIcon><AccountBoxIcon/></ListItemIcon>My account</MenuItem>,
-            <MenuItem id="menu-settings" key="settings" onClick={onMenuClick}><ListItemIcon><SettingsIcon/></ListItemIcon>Settings</MenuItem>,
-            <Divider key="divider-1" />,
-            <MenuItem id="menu-logout" key="logout" onClick={onMenuClick}><ListItemIcon><ExitToAppIcon/></ListItemIcon>Logout</MenuItem>,
-          ];
-        if (topBarState == topbarstate.Appearance) 
-          return [
-            <MenuItem key="menu-back" onClick={onMenuClick}><ListItemIcon><ArrowBackIcon/></ListItemIcon>Appearance</MenuItem>,
-            <Divider key="divider-1" />,
-            <div key="div-1" >Settings applies to this browser only</div>,
-            <MenuItem id="menu-theme-device" key="device" onClick={onMenuClick}><ListItemIcon><DesktopWindowsIcon/></ListItemIcon>Use device theme</MenuItem>,
-            <MenuItem id="menu-theme-dark" key="dark" onClick={onMenuClick}><ListItemIcon><NightsStayIcon/></ListItemIcon>Dark theme</MenuItem>,
-            <MenuItem id="menu-theme-light" key="light" onClick={onMenuClick}><ListItemIcon><WbSunnyIcon/></ListItemIcon>Light theme</MenuItem>,
-          ]; 
-        return [];
+      if (topBarState == topbarstate.Main)
+        return [                  
+          <MenuItem id="menu-theme" key="theme" onClick={onMenuClick}><ListItemIcon><Brightness4Icon/></ListItemIcon>Appearance: {themeName}</MenuItem>,
+          (isLoggedIn) ?           
+          <MenuItem id="menu-myaccount" key="myaccount" onClick={onMenuClick}><ListItemIcon><AccountBoxIcon/></ListItemIcon>My account</MenuItem> : null,
+          (isLoggedIn) ?  <MenuItem id="menu-settings" key="settings" onClick={onMenuClick}><ListItemIcon><SettingsIcon/></ListItemIcon>Settings</MenuItem> : null,
+          <Divider key="divider-1" />,
+          <MenuItem id="menu-logout" key="logout" onClick={onMenuClick}><ListItemIcon><ExitToAppIcon/></ListItemIcon>Logout</MenuItem>,
+        ];
+
+      if (topBarState == topbarstate.Appearance) 
+        return [
+          <MenuItem id="menu-back" key="menu-back" onClick={onMenuClick}><ListItemIcon><ArrowBackIcon/></ListItemIcon>Appearance</MenuItem>,
+          <Divider key="divider-1" />,
+          <div key="div-1" >Settings applies to this browser only</div>,
+          <MenuItem id="menu-theme-device" key="device" onClick={onMenuClick}><ListItemIcon><DesktopWindowsIcon/></ListItemIcon>Use device theme</MenuItem>,
+          <MenuItem id="menu-theme-dark" key="dark" onClick={onMenuClick}><ListItemIcon><NightsStayIcon/></ListItemIcon>Dark theme</MenuItem>,
+          <MenuItem id="menu-theme-light" key="light" onClick={onMenuClick}><ListItemIcon><WbSunnyIcon/></ListItemIcon>Light theme</MenuItem>,
+        ]; 
+
+      return [];
     }, [showLoginMenuItem, topBarState, themeName]);
 
 
