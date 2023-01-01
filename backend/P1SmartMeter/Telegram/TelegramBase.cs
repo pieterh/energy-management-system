@@ -7,9 +7,10 @@ using P1SmartMeter.Telegram.DSMR;
 
 namespace P1SmartMeter.Telegram
 {
-    public class TelegramBase
+    public partial class TelegramBase
     {
-        private static readonly Regex KeyValueParser = new(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$");
+         [GeneratedRegex(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$", RegexOptions.None, 100)]
+        private static partial Regex KeyValueParser();
         private static readonly CRC16 crc16 = new();
 
         public IList<TelegramField> Fields { get; } = new List<TelegramField>();
@@ -38,7 +39,7 @@ namespace P1SmartMeter.Telegram
 
             foreach (var line in lines)
             {
-                var m = KeyValueParser.Match(line);
+                var m = KeyValueParser().Match(line);
                 
                 if (!m.Success)
                 {
