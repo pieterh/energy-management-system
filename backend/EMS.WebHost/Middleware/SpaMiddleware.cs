@@ -21,18 +21,26 @@ namespace EMS.WebHost.Middleware
         {
             Logger.LogInformation($"SpaMiddleware Invoke -> {context.Request.Path}");
             var path = context.Request.Path;
-            if (path.StartsWithSegments(new PathString("/app")) &&
-                string.IsNullOrEmpty(Path.GetExtension(path)))
-            {
-                context.Response.ContentType = "text/html";
-                context.Request.Path = Path.Combine("/app", "index.html");
-            }
 
-            if (path.Equals(new PathString("/")))
-            {
-                context.Response.ContentType = "text/html";
-                context.Request.Path = Path.Combine("/app", "index.html");
+            // for api request, we don't do anything here and juts go to the next middleware
+            if (path.StartsWithSegments(new PathString("/api")))
+                return Next(context);
+
+            // request for app files
+            if (path.StartsWithSegments(new PathString("/app"))){
+                // loading the main page? then go to the index
+                if (string.IsNullOrEmpty(Path.GetExtension(path)))
+                {
+                    context.Response.ContentType = "text/html";
+                    context.Request.Path = Path.Combine("/app", "index.html");
+                }
+                return Next(context);
             }
+            
+            // it looks like the page is reloading, just serve the index page
+            context.Response.ContentType = "text/html";
+            context.Request.Path = Path.Combine("/app", "index.html");           
+            
             return Next(context);
         }    
     }
