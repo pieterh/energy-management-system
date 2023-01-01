@@ -19,6 +19,11 @@
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=sqale_index)](https://sonarcloud.io/dashboard?id=energy-management-system)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=coverage)](https://sonarcloud.io/dashboard?id=energy-management-system)
 
+## Startup
+backend: dotnet ems.dll --config config.json --nlogcfg NLog.config (listening on 5005)
+frontend: npm start (listening on 5010)
+browser: http://127.0.0.1:5005 (connecting to the backend that also services the static content)
+
 <!-- CONTRIBUTING -->
 ## Contributing
 
