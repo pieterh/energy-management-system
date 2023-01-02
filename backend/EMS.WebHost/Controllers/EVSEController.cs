@@ -28,19 +28,13 @@ namespace EMS.WebHosts
             ChargePoint = chargePoint;
         }
 
-        //[Route("api/[controller]/station")]
         [HttpGet("station")]
         public ActionResult<SessionInfoModel> GetStationInfo()
         {
             var retval = new SessionInfoModel();
-            //retval.Mode3State = ChargePoint.LastSocketMeasurement.Mode3State.ToString();
-            //retval.VehicleIsConnected = ChargePoint.LastSocketMeasurement.VehicleConnected;
-            //retval.VehicleIsCharging = ChargePoint.LastSocketMeasurement.VehicleIsCharging;
             return new JsonResult(retval);
         }
  
-
-        //[Route("api/[controller]/socket/{id}")]
         [HttpGet("socket/{id}")]
         public ActionResult<SocketInfoResponse> GetSocketInfo(int id)
         {

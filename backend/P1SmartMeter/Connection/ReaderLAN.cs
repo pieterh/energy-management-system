@@ -60,8 +60,11 @@ namespace P1SmartMeter.Connection
                 Logger.Trace($"BackgroundTask running");
                 try
                 {
-                    while (!Connect() && !StopRequested(5000))
-                        ;                   
+                    bool run;
+                    do {
+                        run = !Connect() && !StopRequested(5000);
+                    }
+                    while (run);                   
                 }
                 catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
                 catch (Exception ex)
