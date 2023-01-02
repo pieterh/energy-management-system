@@ -68,7 +68,7 @@ namespace P1SmartMeter.Telegram.DSMR
             var timestamp = (DateTime)measurementInfo[0];
             var measurement = (System.ValueTuple<double,System.String>) measurementInfo[1];                        
                 
-            var retval = new MBusDevice((MBusDevice.DeviceTypeEnum)mbusClient, ident, timestamp, (double)measurement.Item1, measurement.Item2);                    
+            var retval = new MBusDevice((MBusDevice.DeviceTypeEnum)mbusClient, ident, timestamp, measurement.Item1, measurement.Item2);                    
             return retval;
         }
 

@@ -15,7 +15,10 @@ public record ChargingTransaction
 
     private ICollection<CostDetail>? _costDetails;
     public virtual ICollection<CostDetail> CostDetails {
-        get { return _costDetails ??= _costDetails = new List<CostDetail>() ; }
+        get { 
+            if (_costDetails == null) _costDetails = new List<CostDetail>() ;
+            return _costDetails;
+        }
         set { _costDetails = value ; }
     }
 

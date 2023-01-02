@@ -84,9 +84,6 @@ namespace P1SmartMeter.Telegram
                         var match = NumericWithUnitParser().Match(rawValue);
                         var numericValue= match.Groups[1].Value;
                         var unit= match.Groups[2].Value;
-                        // var parts = rawValue.Split("*");
-                        // var unit = parts[1];
-                        // var numericValue = parts[0];
                         if (numericValue.Contains('.'))
                         {
                             var number = double.Parse(numericValue, CultureInfo.InvariantCulture);
@@ -99,10 +96,9 @@ namespace P1SmartMeter.Telegram
                             if (type == TelegramFieldType.NumericWithUnitAsDouble ) {
                                 o = new ValueTuple<double, string>((double)number, unit);
                             }else{
-                                o = new ValueTuple<int, string>((int)number, unit);
+                                o = new ValueTuple<int, string>(number, unit);
                             }
                             return o;
-                            //return ((type == TelegramFieldType.NumericWithUnitAsDouble ? (double)number : (int)number), unit);
                         }                        
 
                     case TelegramFieldType.String:
