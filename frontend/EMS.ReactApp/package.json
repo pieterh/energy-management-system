@@ -42,7 +42,7 @@
     "pretty-ms": "^8.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.41.2",
+    "react-hook-form": "^7.41.3",
     "react-hot-loader": "^4.13.1",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.6.1",
