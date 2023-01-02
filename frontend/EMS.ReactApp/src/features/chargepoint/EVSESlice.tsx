@@ -170,7 +170,8 @@ export const getSessionInfoAsync = createAsyncThunk<SocketInfoResponse, { id: nu
   async ({ id }: { id: number }, { rejectWithValue }) => {
     try {
       var cfg = undefined;
-      var response = await axios.get<SocketInfoResponse>(`http://127.0.0.1:5005/api/evse/socket/${id}`, cfg);
+      const apiBaseURL = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/api";
+      var response = await axios.get<SocketInfoResponse>(apiBaseURL + `/evse/socket/${id}`, cfg);
       return response.data;
     } catch (err) {
       return rejectWithValue({

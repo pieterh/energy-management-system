@@ -72,13 +72,13 @@ namespace EMS
                 var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
                 foreach (var item in items)
                 {
-                    Logger.LogInformation(item.ToString());
+                    Logger.LogInformation($"Transaction: {item.ToString()}");
                     db.Entry(item)
                         .Collection(b => b.CostDetails)
                         .Load();
                     foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp ))
                     {
-                        Logger.LogInformation(detail.ToString());
+                        Logger.LogInformation($"Transaction detail: {detail.ToString()}");
                     }
                 }
             }

@@ -3,6 +3,7 @@ import  browserStorage  from 'store2';
 import axios from 'axios';
 import { RootState } from '../../common/hooks';
 import { login, logout } from './authenticationAPI';
+import { WindowSharp } from '@mui/icons-material';
 
 enum LoginStateEnum {
   'logged_out', 'log_in' , 'logged_in' , 'log_out'
@@ -113,7 +114,8 @@ export const loginAsync = createAsyncThunk<
         }
         var data = {username: username, password: secret};
         var cfg = undefined;
-        var response = await axios.post<LoginResponse>('http://127.0.0.1:5005/api/users/authenticate', data, cfg);
+        const apiBaseURL = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/api";
+        var response = await axios.post<LoginResponse>(apiBaseURL + '/users/authenticate', data, cfg);
         return response.data;
       }catch(err){        
         return rejectWithValue(
@@ -143,7 +145,8 @@ export const pingAsync = createAsyncThunk<
     async (undefined, /* thunkApi */ { rejectWithValue }) => {
       try{
         var cfg = undefined;
-        var response = await axios.get<LoginResponse>('http://127.0.0.1:5005/api/users/ping', cfg);
+        const apiBaseURL = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/api";
+        var response = await axios.get<LoginResponse>(apiBaseURL + '/users/ping', cfg);
         return response.data;
       }catch(err){        
         return rejectWithValue(
