@@ -138,7 +138,7 @@ export function Login() {
                 name="username"            
                 render={({ field: { value, onChange } }) => (
                   <TextField id="username" disabled={isBusy} variant="outlined" margin="normal" required fullWidth  
-                    label="Username" autoComplete="username" autoFocus value={value} onChange={onChange}                 
+                    label="Username" autoComplete="username" focused autoFocus value={value} onChange={onChange}                 
                   />
                 )}
               />            
@@ -148,7 +148,7 @@ export function Login() {
                 name="password"            
                 render={({ field: { value, onChange } }) => (
                   <TextField id="password" type="password" disabled={isBusy} variant="outlined" margin="normal" required fullWidth  
-                    label="Password" autoComplete="current-password" autoFocus value={value} onChange={onChange}                 
+                    label="Password" autoComplete="current-password" value={value} onChange={onChange}                 
                   />
                 )}
               />  

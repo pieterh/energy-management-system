@@ -15,8 +15,7 @@ namespace AlfenNG9xx
         private DateTime _chargingStart;
         private bool _isCharging = false;
 
-        private Decimal _cost = 0.0m;
-        private Tariff _currentTariff = null;
+           private Tariff _currentTariff = null;
         private double _meterReadingStartTariff = 0;      
         
 
@@ -45,8 +44,6 @@ namespace AlfenNG9xx
                 ChargeSessionInfo = DefaultSessionInfo();
                 ChargeSessionInfo.Start = DateTimeProvider.Now;
 
-                // reset cost calculation
-                _cost = 0.0m;
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
             }
@@ -77,14 +74,11 @@ namespace AlfenNG9xx
             if (!newMeasurement.VehicleIsCharging && _isCharging)
             {
                 ChargeSessionInfo.ChargingTime += (uint)(DateTimeProvider.Now - _chargingStart).TotalSeconds;
-                //if (_currentTariff != null)
-                    //_cost += (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff) * _currentTariff.TariffUsage;
 
                 // TODO: gebruik moment van gebruik van dit tarief ipv now
                 ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                 ChargeSessionInfo.RunningCost = 0m;
             }
-
 
             _isCharging = newMeasurement.VehicleIsCharging;
 
@@ -94,13 +88,10 @@ namespace AlfenNG9xx
             {
                 if (_currentTariff.TariffUsage != newTariff.TariffUsage)
                 {
-                    //_cost += (Decimal)(((newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff))) * _currentTariff.TariffUsage;
-
                     // TODO: gebruik moment van gebruik van dit tarief ipv now
                     ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                     ChargeSessionInfo.RunningCost = 0m;
 
-                    //ChargeSessionInfo.Cost = _cost;
                     _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
                     _currentTariff = newTariff;
                 }
@@ -112,7 +103,6 @@ namespace AlfenNG9xx
                     ChargeSessionInfo.RunningCost = energy * costPerWatt;
                 }
             }
-
         }
 
         private static ChargeSessionInfoBase DefaultSessionInfo()

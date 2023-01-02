@@ -120,8 +120,6 @@ namespace EPEXSPOT
             var startUtc = start.ToUniversalTime();
             var endUtc = end.ToUniversalTime();
 
-            var t = await GetTariffLastTimestamp();
-
             using var client = _httpClientFactory.CreateClient();
 
             var getapxtariffsUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffs");
@@ -143,14 +141,6 @@ namespace EPEXSPOT
             validatingReader.ValidationEventHandler += (o, a) => messages.Add(a.Message);
 
             JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
-            // var jss = new JsonSerializerSettings
-            // {
-            //     DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            //     DateTimeZoneHandling = DateTimeZoneHandling.Utc, 
-            //     DateParseHandling = DateParseHandling.DateTimeOffset
-            // };
-
-           //  var result = JsonConvert.DeserializeObject<SpotTariff[]>(validatingReader, jss);
 
             var result = serializer.Deserialize<SpotTariff[]>(validatingReader);
 

@@ -6,9 +6,12 @@ using System.Text.RegularExpressions;
 
 namespace P1SmartMeter.Telegram
 {
-    public class TelegramFieldDefinition
-    {
-        private static readonly Regex NumericWithUnitParser = new(@"^([\d\.]*)\*?(.*)$");
+    public partial class TelegramFieldDefinition
+    {      
+        [GeneratedRegex(@"^([\d\.]*)\*?(.*)$", RegexOptions.None, 100)]
+        private static partial Regex NumericWithUnitParser();
+
+
         public string Code { get; set; }
         public string Name { get; set; }
         public IList<TelegramFieldType> Types { get; set; } = new List<TelegramFieldType>();
@@ -62,7 +65,7 @@ namespace P1SmartMeter.Telegram
                 switch (type)
                 {
                     case TelegramFieldType.Numeric:
-                        if (rawValue.Contains("."))
+                        if (rawValue.Contains('.'))
                         {
                             return double.Parse(rawValue, CultureInfo.InvariantCulture);
                         }
@@ -78,13 +81,13 @@ namespace P1SmartMeter.Telegram
                         // 4) the reading was all zero's and there was no decimal point
                         // We make it a bit more robust by only taking the digits and dots
 
-                        var match = NumericWithUnitParser.Match(rawValue);
+                        var match = NumericWithUnitParser().Match(rawValue);
                         var numericValue= match.Groups[1].Value;
                         var unit= match.Groups[2].Value;
                         // var parts = rawValue.Split("*");
                         // var unit = parts[1];
                         // var numericValue = parts[0];
-                        if (numericValue.Contains("."))
+                        if (numericValue.Contains('.'))
                         {
                             var number = double.Parse(numericValue, CultureInfo.InvariantCulture);
                             return (number, unit);
