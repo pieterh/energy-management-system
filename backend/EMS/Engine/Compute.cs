@@ -11,7 +11,6 @@ namespace EMS
 {
     public class Compute
     {
-        private readonly ILogger Logger;
         private readonly Measurements _measurements = new(60);
         private readonly ChargingStateMachine _state = new();
 
@@ -105,7 +104,6 @@ namespace EMS
             _maxSolar = new(logger, _measurements, _state);
             _slowCharge = new(logger, _measurements, _state);
 
-            Logger = logger;
             Mode = mode;
             Info = new();
         }
