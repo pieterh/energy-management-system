@@ -19,7 +19,7 @@ namespace EMS.WebHost.Middleware
 
         public Task Invoke(HttpContext context)
         {
-            Logger.LogInformation($"SpaMiddleware Invoke -> {context.Request.Path}");
+            Logger.LogInformation("SpaMiddleware Invoke -> {requestPath}", context.Request.Path);
             var path = context.Request.Path;
 
             // for api request, we don't do anything here and juts go to the next middleware

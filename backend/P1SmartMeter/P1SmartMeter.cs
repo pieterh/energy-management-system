@@ -60,7 +60,7 @@ namespace P1SmartMeter
             Logger = logger;
             _relayServer = relayServer;
 
-            Logger.LogInformation($"P1SmartMeter({config.ToString().Replace(Environment.NewLine, " ")})");
+            Logger.LogInformation("P1SmartMeter({cfg})", config.ToString().Replace(Environment.NewLine, " "));
 
             if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)
             {
@@ -84,7 +84,7 @@ namespace P1SmartMeter
 
         protected void Grind(bool disposing)
         {
-            Logger.LogTrace($"Dispose({disposing}) _disposed {_disposed}");
+            Logger.LogTrace("Dispose({disposing}) _disposed {disposed}", disposing, _disposed);
 
             if (_disposed) return;
 
@@ -94,7 +94,7 @@ namespace P1SmartMeter
             }
 
             _disposed = true;
-            Logger.LogTrace($"Dispose({disposing}) done => _disposed {_disposed}");
+            Logger.LogTrace("Dispose({disposing}) done => _disposed {disposed}", disposing, _disposed);
         }
 
         private void DisposeReader()
@@ -120,7 +120,7 @@ namespace P1SmartMeter
                 var l = new List<string>();
                 while (_buffer.TryTake(out string msg))
                 {
-                    Logger.LogDebug($"first received complete message. passing it to transform... {msg.Length}");
+                    Logger.LogDebug("first received complete message. passing it to transform... {len}", msg.Length);
                     l.Add(msg);
                 }
 
@@ -139,10 +139,10 @@ namespace P1SmartMeter
 
             _lastBlock = new ActionBlock<DSMRTelegram>(x =>
             {
-                Logger.LogDebug($"read transformed message{Environment.NewLine}{x}");
+                Logger.LogDebug("read transformed message{nl}{telegram}", Environment.NewLine, x);
                 var m = new Reading.Measurement(x) { Received = DateTimeProvider.Now };
 
-                Logger.LogDebug($"Message {m}");
+                Logger.LogDebug("Message {measurement}", m);
                 Measurement = m;
             });
 

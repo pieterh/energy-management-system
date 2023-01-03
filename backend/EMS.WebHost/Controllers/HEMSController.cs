@@ -69,12 +69,12 @@ namespace EMS.WebHosts
             using (var db = new HEMSContext())
             {
 
-                Logger.LogInformation($"Database path: {db.DbPath}.");
+                Logger.LogInformation("Database path: {path}.", db.DbPath);
 
                 var items = db.ChargingTransactions.OrderByDescending((x) => x.Timestamp);
                 foreach (var item in items)
                 {
-                    Logger.LogInformation(item.ToString());
+                    Logger.LogInformation("{item}", item.ToString());
                     var session = new Session()
                     {
                         Timestamp = item.Timestamp,
