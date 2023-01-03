@@ -158,7 +158,7 @@ namespace EMS.WebHost
             });
 
             app.Use((context, next) => {
-                Logger.LogInformation($"{context.Request.Path}");
+                Logger.LogInformation("{path}", context.Request.Path);
                 return next.Invoke();
             });
         } 

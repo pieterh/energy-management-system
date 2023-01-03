@@ -67,18 +67,18 @@ namespace EMS
             using (var db = new HEMSContext())
             {
 
-                Logger.LogInformation($"Database path: {db.DbPath}.");
+                Logger.LogInformation("Database path: {path}.", db.DbPath);
 
                 var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
                 foreach (var item in items)
                 {
-                    Logger.LogInformation($"Transaction: {item.ToString()}");
+                    Logger.LogInformation("Transaction: {trans}", item.ToString());
                     db.Entry(item)
                         .Collection(b => b.CostDetails)
                         .Load();
                     foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp ))
                     {
-                        Logger.LogInformation($"Transaction detail: {detail.ToString()}");
+                        Logger.LogInformation("Transaction detail: {detail}", detail.ToString());
                     }
                 }
             }
@@ -129,17 +129,19 @@ namespace EMS
 
         private void SmartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
         {
-            Logger.LogInformation($"- {e.Measurement}");
+            Logger.LogInformation("- {measurement}", e.Measurement);
 
             _compute.AddMeasurement(e.Measurement, _chargePoint.LastSocketMeasurement);
         }
 
         private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
         {
-            Logger.LogInformation($"- {e.Status?.Measurement?.Mode3StateMessage}, {e.SessionEnded}, {e.EnergyDelivered}, €{e.Cost} ");
+            Logger.LogInformation("- {stateMessage}, {ended}, {delivered}, €{cost} ",
+                e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered, e.Cost);
 
 
-            LoggerChargingState.Info($"Mode 3 state {e.Status?.Measurement?.Mode3State}, {e.Status?.Measurement?.Mode3StateMessage}, session ended {e.SessionEnded}, energy delivered {e.EnergyDelivered}");
+            LoggerChargingState.Info("Mode 3 state {state}, {stateMessage}, session ended {ended}, energy delivered {delivered}",
+            e.Status?.Measurement?.Mode3State, e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered);
 
             if (e.SessionEnded)
             {
