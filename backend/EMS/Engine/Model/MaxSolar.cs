@@ -28,7 +28,7 @@ namespace EMS.Engine.Model
             var avg = _measurements.CalculateAggregatedAverageUsage();
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
-            Logger?.LogInformation($"avg current {avg.averageUsage} and charging at {avg.averageCharge}");
+            Logger?.LogInformation("avg current {averageUsage} and charging at {averageCharge}", avg.averageUsage, avg.averageCharge);
 
             var chargeCurrent = Math.Round(LimitCurrentSolar(avg.averageCharge, avg.averageUsage), 2);
 
@@ -41,7 +41,7 @@ namespace EMS.Engine.Model
             {
                 var t = AllowToCharge();
                 if (t.changed)
-                    LoggerCurrent?.Info($"charging {chargeCurrent}");
+                    LoggerCurrent?.Info("charging {chargeCurrent}", chargeCurrent);
 
                 if (!t.allow)
                 {
@@ -77,7 +77,7 @@ namespace EMS.Engine.Model
                 if (_state.Current == ChargingState.ChargingPaused)
                 {
                     retval = 0.0;
-                    Logger?.LogInformation($"Not enough solar power... We have stopped charging...");
+                    Logger?.LogInformation("Not enough solar power... We have stopped charging...");
                 }
                 else
                 {
@@ -85,12 +85,12 @@ namespace EMS.Engine.Model
                     if (stateHasChanged)
                     {
                         retval = 0.0;
-                        Logger?.LogInformation($"Not enough solar power... Stop charging......");
+                        Logger?.LogInformation("Not enough solar power... Stop charging......");
                     }
                     else
                     {
                         retval = MinimumChargeCurrent;
-                        Logger?.LogInformation($"Not enough solar power... Keep charging...");
+                        Logger?.LogInformation("Not enough solar power... Keep charging...");
                     }
                 }
             }

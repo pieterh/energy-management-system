@@ -55,15 +55,15 @@ namespace EMS.Engine.Model
                     var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
                     var chargeCurrentShort1 = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
 
-                    Logger?.LogInformation($"charging {chargeCurrent} -> {chargeCurrentShort1}");
+                    Logger?.LogInformation("charging {chargeCurrent} -> {chargeCurrentShort}", chargeCurrent, chargeCurrentShort1);
                     if (t.changed)
-                        LoggerState?.Info($"charging {chargeCurrent} -> {chargeCurrentShort1}");
+                        LoggerState?.Info("charging {chargeCurrent} -> {chargeCurrentShort}", chargeCurrent, chargeCurrentShort1);
 
                     return ((float)Math.Round(chargeCurrentShort1, 2), 0, 0);
                 }
                 else
                 {
-                    Logger?.LogInformation($"charging {chargeCurrent} -> not yet allowed");
+                    Logger?.LogInformation("charging {chargeCurrent} -> not yet allowed", chargeCurrent);
                     return (0, 0, 0);
                 }
             }

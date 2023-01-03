@@ -58,7 +58,7 @@ namespace P1SmartMeter.Telegram.DSMR
                 case 2: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 3: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 4: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
-                default: throw new ArgumentException(nameof(index));
+                default: throw new ArgumentException("Value must between 1 and 4",  nameof(index));
             }
         }
 
