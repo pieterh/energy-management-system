@@ -52,13 +52,13 @@ namespace P1SmartMeter.Telegram.DSMR
         public const string MBUSClient4Ident = "0-4:96.1.0";
         public const string MBUSClient4Measurement = "0-4:24.2.1";
 
-        public static MBusClientFields GetMBusClientFields(int i){
-            switch (i){
+        public static MBusClientFields GetMBusClientFields(int index){
+            switch (index){
                 case 1: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 2: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 3: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 4: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
-                default: throw new ArgumentException(nameof(i));
+                default: throw new ArgumentException(nameof(index));
             }
         }
 

@@ -32,7 +32,8 @@ namespace EMS.Engine.Model
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
 
             var chargeCurrent = Math.Round(LimitEco(avg.averageCharge, avg.averageUsage), 2);
-            Logger?.LogInformation($"avg current {avg.averageUsage} and avg charging at {avg.averageCharge}; limitted chargecurrent = {chargeCurrent} ({avg.nrOfDataPoints} datapoints (buffer size {MaxBufferSeconds} seconds)");
+            Logger?.LogInformation("avg current {averageUsage} and avg charging at {averageCharge}; limitted chargecurrent = {chargeCurrent} ({nrPoints} datapoints (buffer size {bufferSeconds} seconds)",
+            avg.averageUsage, avg.averageCharge, chargeCurrent, avg.nrOfDataPoints, MaxBufferSeconds);
 
             if ((_state.Current == ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStop) ||
                 (_state.Current != ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStart))
