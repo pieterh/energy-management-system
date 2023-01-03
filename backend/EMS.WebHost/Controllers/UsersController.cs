@@ -85,7 +85,7 @@ namespace EMS.WebHost.Controllers
             var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;            
             foreach(var c in User.Claims)
             {
-                Logger.LogDebug($"{c.Type} - {c.Value}");
+                Logger.LogDebug("{type} - {value}", c.Type, c.Value);
             }
             var user = new UserModel
             {
