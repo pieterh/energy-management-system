@@ -29,7 +29,7 @@ namespace EMS.WebHosts
         public ActionResult<string> Get([FromQuery][BindRequired] int id)
         {
             //http://127.0.0.1:5000/api/MyDemo?id=12
-            Logger.LogInformation("got request with {0} - {1}", id, ChargePoint.LastSocketMeasurement.Mode3StateMessage);
+            Logger.LogInformation("got request with {id} - {stateMessage}", id, ChargePoint.LastSocketMeasurement.Mode3StateMessage);
             return $"id ...{id}{Environment.NewLine}{ChargePoint.LastSocketMeasurement.Mode3StateMessage}";
         }
     }
