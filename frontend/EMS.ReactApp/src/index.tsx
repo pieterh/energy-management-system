@@ -1,10 +1,9 @@
 import { createRoot } from 'react-dom/client';
 import React from 'react';
 import { Provider } from "react-redux";
-import { BrowserRouter } from "react-router-dom";
-import { ConnectedRouter } from 'connected-react-router'
+import { HistoryRouter as Router } from "redux-first-history/rr6";
 
-import { store } from './app/store';
+import { store, history } from './app/store';
 import App from './app/App';
 
 import { AddInterceptors } from './features/authentication/AxiosInterceptors';
@@ -19,9 +18,9 @@ AddInterceptors();
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      <Router history={history}>
         <App />
-      </BrowserRouter>
+      </Router>
     </Provider>
   </React.StrictMode>
 );

@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
-import { connectRouter, routerMiddleware } from 'connected-react-router'
-import { createBrowserHistory, History } from 'history'
+import { createReduxHistoryContext, reachify } from "redux-first-history";
+import { createBrowserHistory } from 'history'
 
 import drawerReducer from '../features/appdrawer/drawerSlice';
 import authenticationReducer from '../features/authentication/authenticationSlice';
@@ -10,10 +10,13 @@ import evseReducer from '../features/chargepoint/EVSESlice';
 import smartmeterReducer from '../features/smartmeter/smartmeterSlice';
 import customThemeProviderReducer from '../features/themeprovider/CustomThemeProviderSlice';
 
-export const history = createBrowserHistory();
+const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({ 
+  history: createBrowserHistory(),
+  //other options if needed 
+});
 
-const createRootReducer = (history: History) => combineReducers({
-  router: connectRouter(history),
+const createRootReducer = () => combineReducers({
+  router: routerReducer,
   drawer: drawerReducer,
   authentication: authenticationReducer,
   hems: hemsReducer,
@@ -23,9 +26,11 @@ const createRootReducer = (history: History) => combineReducers({
 });
 
 export const store = configureStore({
-  reducer: createRootReducer(history),        
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(routerMiddleware(history)),
+  reducer: createRootReducer(),        
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(routerMiddleware),
 })
+
+export const history = createReduxHistory(store);
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>
