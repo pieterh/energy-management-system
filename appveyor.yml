@@ -13,7 +13,8 @@ build_script:
  - echo %PATH%
  - cd C:\projects\energy-management-system\backend
  - choco install "sonarscanner-msbuild-net46" -y
- - SonarScanner.MSBuild.exe begin /k:"energy-management-system" /d:"sonar.host.url=https://sonarcloud.io" /o:"pieterh" /d:"sonar.login=%SONARCLOUD_TOKEN%" /d:"sonar.cs.vstest.reportsPaths=**\TestResults\*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.cobertura.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"
+ - SonarScanner.MSBuild.exe begin /k:"energy-management-system" /d:"sonar.host.url=https://sonarcloud.io" /o:"pieterh" /d:"sonar.login=%SONARCLOUD_TOKEN%" /d:"sonar.cs.vstest.reportsPaths=**\TestResults\*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"
  - msbuild /verbosity:quiet "ems.sln"
- - dotnet test --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover,cobertura
+# - dotnet test --logger "trx;LogFileName=TestResults.trx" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=coverage
+ - dotnet test --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" --DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
  - SonarScanner.MSBuild.exe end /d:"sonar.login=%SONARCLOUD_TOKEN%"
