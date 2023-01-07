@@ -45,7 +45,6 @@
     "react-redux": "^8.0.5",
     "react-refresh": "^0.14.0",
     "react-router-dom": "^6.6.1",
-    "react-thunk": "^1.0.0",
     "redux": "^4.2.0",
     "redux-first-history": "^5.1.1",
     "redux-thunk": "^2.4.2",
