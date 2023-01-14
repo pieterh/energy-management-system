@@ -60,4 +60,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
       with:
-          projectBaseDir: backend/AlfenNG9xx  
+          projectBaseDir: .  
