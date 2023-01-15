@@ -9,32 +9,29 @@ jobs:
       matrix:
         dotnet-version: [ '7.0.x' ]
 
-    steps:
-    - uses: actions/checkout@v3     
-    - uses: actions/setup-node@v3
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v3     
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v3
       with:
         node-version: '16.x'
         registry-url: 'https://registry.npmjs.org'
-    - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
+    - name: Setup .NET ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
-#    - name: Set up JDK 11 # needed for sonar
-#      uses: actions/setup-java@v3
-#      with:
-#        distribution: 'microsoft'
-#        java-version: 11        
+        dotnet-version: ${{ matrix.dotnet-version }}     
     - name: Cache SonarQube packages
       uses: actions/cache@v3
       with:
-        path: ~\sonar\cache
+        path: ./sonar/cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
     - name: Cache SonarQube scanner
       id: cache-sonar-scanner
       uses: actions/cache@v3
       with:
-        path: .\.sonar\scanner
+        path: ./.sonar/scanner
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
     - name: Install SonarQube scanner
