@@ -19,25 +19,25 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
-    - name: Set up JDK 11 # needed for sonar
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'microsoft'
-        java-version: 11        
-    - name: Cache SonarCloud packages
+#    - name: Set up JDK 11 # needed for sonar
+#      uses: actions/setup-java@v3
+#      with:
+#        distribution: 'microsoft'
+#        java-version: 11        
+    - name: Cache SonarQube packages
       uses: actions/cache@v3
       with:
         path: ~\sonar\cache
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
-    - name: Cache SonarCloud scanner
+    - name: Cache SonarQube scanner
       id: cache-sonar-scanner
       uses: actions/cache@v3
       with:
         path: .\.sonar\scanner
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
-    - name: Install SonarCloud scanner
+    - name: Install SonarQube scanner
       if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
       shell: bash
       run: |
@@ -51,8 +51,8 @@ jobs:
     - name: SonarQube - Begin
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.login="${{ secrets.SONARCLOUD_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"          
+        SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+      run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"          
       working-directory: backend      
     - name: Build - backend
       run: dotnet build --configuration Release --no-restore
@@ -63,8 +63,8 @@ jobs:
     - name: SonarQube - End
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONARCLOUD_TOKEN }}"      
+        SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+      run: ../.sonar/scanner/dotnet-sonarscanner end    
       working-directory: backend      
     - name: Install yarn
       run: npm install --global yarn
