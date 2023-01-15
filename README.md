@@ -53,5 +53,5 @@ Distributed under the BSD 3-Clause license. See `LICENSE` for more information.
 [issues-shield]: https://img.shields.io/github/issues/pieterh/energy-management-system.svg?style=flat-square
 [issues-url]: https://github.com/pieterh/energy-management-system/issues
 [license-shield]: https://img.shields.io/github/license/pieterh/energy-management-system.svg?style=flat-square
-[license-url]: https://github.com/pieterh/energy-management-system/master/LICENSE.md
+[license-url]: https://github.com/pieterh/energy-management-system/blob/main/LICENSE.md
 
