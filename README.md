@@ -6,7 +6,6 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
 [![License][license-shield]][license-url]
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system)
@@ -54,5 +53,5 @@ Distributed under the BSD 3-Clause license. See `LICENSE` for more information.
 [issues-shield]: https://img.shields.io/github/issues/pieterh/energy-management-system.svg?style=flat-square
 [issues-url]: https://github.com/pieterh/energy-management-system/issues
 [license-shield]: https://img.shields.io/github/license/pieterh/energy-management-system.svg?style=flat-square
-[license-url]: https://github.com/pieterh/energy-management-system/blob/master/LICENSE.txt
+[license-url]: https://github.com/pieterh/energy-management-system/master/LICENSE.md
 
