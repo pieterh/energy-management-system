@@ -16,7 +16,7 @@ COPY frontend/EMS.ReactApp/dist/ /app/ems/dist/
 RUN ls -la /app/ems/dist
 RUN ls -la /app/ems/dist/app
 
-COPY github_actions/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh
 RUN chmod ugo+r /usr/local/bin/entrypoint.sh
 
