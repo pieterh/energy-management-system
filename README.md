@@ -7,6 +7,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
+[![License][license-shield]][license-url]
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system)
 [![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud/branch/main?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system/branch/main)
