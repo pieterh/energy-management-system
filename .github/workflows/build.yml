@@ -40,9 +40,10 @@ jobs:
       if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        mkdir -p .\.sonar\scanner 
-        dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner        
-        dir .\.sonar\scanner
+        pwd
+        mkdir -p ./.sonar/scanner 
+        dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner        
+        ls -la ./.sonar/scanner
     - name: Install dependencies
       run: dotnet restore
       working-directory: backend      
@@ -51,10 +52,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
-        ..\.sonar\scanner\dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.login="${{ secrets.SONARCLOUD_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**\TestResults\*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"      
+        ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.login="${{ secrets.SONARCLOUD_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"      
         dotnet build --configuration Release --no-restore
         dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover       
-        ..\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONARCLOUD_TOKEN }}"      
+        ../.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONARCLOUD_TOKEN }}"      
       working-directory: backend
     - name: Test
       run: dotnet test --no-restore --verbosity normal
