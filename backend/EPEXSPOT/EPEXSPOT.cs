@@ -1,16 +1,10 @@
 ﻿using System.Linq;
-using System.Collections.Generic;
-using System.Web;
-using System.Reflection;
-
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using EMS.Library.Adapter.EVSE;
+using Json.Schema;
 using EMS.Library.Adapter.PriceProvider;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Schema;
+using EMS.Library.JSon;
 using EMS.Library.TestableDateTime;
 
 namespace EPEXSPOT
@@ -132,25 +126,27 @@ namespace EPEXSPOT
             var uri = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString);
 
             using var resultStream = await client.GetStreamAsync(uri);
+            var schema = JSon.GetSchema("EPEXSPOT.schemas.getapxtariffs.schema.json");
 
             // read the objects directly from the stream, including schema validation
-            using JsonTextReader reader = new(new StreamReader(resultStream));
+            /*using JsonTextReader reader = new(new StreamReader(resultStream));
             JSchemaValidatingReader validatingReader = new(reader);
             validatingReader.Schema = GetSchema();
             IList<string> messages = new List<string>();
             validatingReader.ValidationEventHandler += (o, a) => messages.Add(a.Message);
 
             JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
-
-            var result = serializer.Deserialize<SpotTariff[]>(validatingReader);
-
+            */
+            using var streamReader = new StreamReader(resultStream);
+            var result = JsonSerializer.Deserialize<SpotTariff[]>(streamReader.BaseStream, new JsonSerializerOptions());            
+/*
             if (messages.Count > 0)
             {
                 Logger.Error("There was a problem with the getapxtariffs response.");
                 foreach (var m in messages)
                     Logger.Debug(m);
                 return Array.Empty<Tariff>();
-            }
+            }*/
 
             // calculate consumer price by adding the 'opslag duurzame energie', 'energie belasting' and 'inkoopkosten'
             var r = from x in result
@@ -168,10 +164,11 @@ namespace EPEXSPOT
 
             var getapxtariffslasttimestampUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffslasttimestamp");
             using var resultStream = await client.GetStreamAsync(getapxtariffslasttimestampUri);
-            using JsonTextReader reader = new(new StreamReader(resultStream));
+            using var streamReader = new StreamReader(resultStream);
+            var result = JsonSerializer.Deserialize<DateTime>(streamReader.BaseStream, new JsonSerializerOptions());    
 
-            JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
-            var result = serializer.Deserialize<DateTime>(reader);
+            //JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
+            //var result = serializer.Deserialize<DateTime>(reader);
             Logger.Info($"taris lasttime -> {result}");
             return result;
         }
@@ -203,24 +200,21 @@ namespace EPEXSPOT
             return t2;
         }
 
-        private static JSchema GetSchema()
+        private static JsonSchema GetSchema()
         {
             var schemaFile = "EPEXSPOT.schemas.getapxtariffs.schema.json";
-            Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+           var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             Logger.Trace($"looking for resources in {assembly.Location}");
             foreach (var s in assembly.GetManifestResourceNames())
             {
                 Logger.Trace($"resource file {s}");
             }
-
             using Stream? resource = assembly.GetManifestResourceStream(schemaFile);
             if (resource == null) throw new FileNotFoundException($"Unable to load embedded resource {schemaFile}");
 
             using var r = new StreamReader(resource);
-            using JsonTextReader reader = new(r);
-
-            JSchema schema = JSchema.Load(reader);
-            return schema;
+            var mySchema = JsonSchema.FromText(r.ReadToEnd());
+            return mySchema;
         }
     }
 }
