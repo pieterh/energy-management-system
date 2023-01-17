@@ -10,8 +10,7 @@
 [![License][license-shield]][license-url]
 [![FOSSA Status][fossa-shield]][fossa-url]
 
-[![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system)
-[![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud/branch/main?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system/branch/main)
+![Build status][build-shield]
 
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=ncloc)](https://sonarcloud.io/dashboard?id=energy-management-system)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=bugs)](https://sonarcloud.io/dashboard?id=energy-management-system)
@@ -58,3 +57,4 @@ Distributed under the BSD 3-Clause license. See `LICENSE` for more information.
 [license-url]: https://github.com/pieterh/energy-management-system/blob/main/LICENSE.md
 [fossa-shield]: https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpieterh%2Fenergy-management-system.svg?type=shield
 [fossa-url]: https://app.fossa.com/projects/git%2Bgithub.com%2Fpieterh%2Fenergy-management-system?ref=badge_shield
+[build-shield]: https://github.com/pieterh/energy-management-system/actions/workflows/build.yml/badge.svg
