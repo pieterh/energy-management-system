@@ -6,7 +6,9 @@
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
+
 [![License][license-shield]][license-url]
+[![FOSSA Status][fossa-shield]][fossa-url]
 
 [![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system)
 [![Build status](https://ci.appveyor.com/api/projects/status/mmdahtn5nb9mlfud/branch/main?svg=true)](https://ci.appveyor.com/project/pieterh/energy-management-system/branch/main)
@@ -54,4 +56,5 @@ Distributed under the BSD 3-Clause license. See `LICENSE` for more information.
 [issues-url]: https://github.com/pieterh/energy-management-system/issues
 [license-shield]: https://img.shields.io/github/license/pieterh/energy-management-system.svg?style=flat-square
 [license-url]: https://github.com/pieterh/energy-management-system/blob/main/LICENSE.md
-
+[fossa-shield]: https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpieterh%2Fenergy-management-system.svg?type=shield
+[fossa-url]: https://app.fossa.com/projects/git%2Bgithub.com%2Fpieterh%2Fenergy-management-system?ref=badge_shield

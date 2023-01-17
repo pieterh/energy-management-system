@@ -1,9 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import  browserStorage  from 'store2';
 import axios from 'axios';
+
+import { browserStorage } from '../../common/BrowserStorage'
 import { RootState } from '../../common/hooks';
 import { login, logout } from './authenticationAPI';
-import { WindowSharp } from '@mui/icons-material';
 
 enum LoginStateEnum {
   'logged_out', 'log_in' , 'logged_in' , 'log_out'
@@ -45,8 +45,8 @@ function  CreateState() : LoginState {
     newState.message = message;
   }
 
-  browserStorage.session.remove("hasAuthenticationError");
-  browserStorage.session.remove("message");
+  browserStorage.session.removeItem("hasAuthenticationError");
+  browserStorage.session.removeItem("message");
   return newState;  
 }
 
@@ -65,7 +65,7 @@ function UpdateState(state: LoginState, s : LoginStateEnum, user?:User | undefin
     if (token !== null && token !== undefined)
       browserStorage.session.set('token', token);
   } else 
-    browserStorage.session.remove('token');
+    browserStorage.session.removeItem('token');
 }
 
 function UpdateStateAuthenticationError(state: LoginState, message: string){
@@ -75,8 +75,8 @@ function UpdateStateAuthenticationError(state: LoginState, message: string){
    * At lead time this is retrieved again from sessions storage
    * and placed in redux
    */
-  browserStorage.session.set("hasAuthenticationError", true, true);
-  browserStorage.session.set("message", message, true);
+  browserStorage.session.set("hasAuthenticationError", true);
+  browserStorage.session.set("message", message);
   window.location.reload();
 }
 
@@ -106,11 +106,11 @@ export const loginAsync = createAsyncThunk<
     async ({username, secret, doRemember}: {username: string, secret: string, doRemember: boolean}, /* thunkApi */ { rejectWithValue }) => {
       try{
         if (doRemember) {
-          browserStorage.local.set("rememberme", true, true);
-          browserStorage.local.set("username", username, true);
+          browserStorage.local.set("rememberme", true);
+          browserStorage.local.set("username", username);
         } else {
-          browserStorage.local.remove("rememberme");
-          browserStorage.local.remove("username");
+          browserStorage.local.removeItem("rememberme");
+          browserStorage.local.removeItem("username");
         }
         var data = {username: username, password: secret};
         var cfg = undefined;
