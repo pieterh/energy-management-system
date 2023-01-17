@@ -1,8 +1,8 @@
-import axios, {AxiosRequestConfig, AxiosHeaders } from 'axios';
-import browserStorage  from 'store2';
+import axios, { AxiosRequestConfig, AxiosHeaders } from 'axios';
 import URLParse from 'url-parse';
 
-import { store}  from '../../app/store';
+import { browserStorage } from '../../common/BrowserStorage'
+import { store }  from '../../app/store';
 import { relogin } from './authenticationSlice';
 
 // make sure that this module is

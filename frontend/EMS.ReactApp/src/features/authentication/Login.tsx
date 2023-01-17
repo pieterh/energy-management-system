@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { styled } from '@mui/material/styles';
 
 import { Navigate } from 'react-router-dom';
-import  browserStorage  from 'store2';
+
 
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { DevTool } from "@hookform/devtools";
@@ -19,7 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Alert from '@mui/material/Alert';
 
-
+import { browserStorage } from '../../common/BrowserStorage'
 import { useAppSelector, useAppDispatch } from  '../../common/hooks';
 import { loginAsync, selectIsLoggedIn } from './authenticationSlice';
 import  Credits from '../credits/Credits';

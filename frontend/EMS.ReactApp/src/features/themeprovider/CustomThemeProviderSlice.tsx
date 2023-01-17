@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice,  createAction, PayloadAction } from '@reduxjs/toolkit';
-import  browserStorage  from 'store2';
+import { browserStorage } from '../../common/BrowserStorage'
 
 export enum ThemeTypes { light = 0, dark = 1, device= 2 };
 
@@ -41,7 +41,7 @@ export const CustomThemeProviderSlice = createSlice({
             state.themeType = action.payload;
             state.themeName = GetThemeName(state.themeType);
             if (browserStorage.local.has("rememberme")){
-              browserStorage.local.set("theme", state.themeType, true);
+              browserStorage.local.set("theme", state.themeType);
             }
           })
     }
