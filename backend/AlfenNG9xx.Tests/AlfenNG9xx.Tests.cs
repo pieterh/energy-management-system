@@ -4,8 +4,6 @@ using System.Linq;
 using Xunit;
 using Moq;
 using Moq.Protected;
-using Newtonsoft.Json.Linq;
-using AlfenNG9xx;
 using AlfenNG9xx.Model;
 using EMS.Library.Configuration;
 using EMS.Library.Adapter.EVSE;
