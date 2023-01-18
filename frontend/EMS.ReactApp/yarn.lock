@@ -1167,10 +1167,24 @@
   resolved "https://registry.yarnpkg.com/@leichtgewicht/ip-codec/-/ip-codec-2.0.4.tgz#b2ac626d6cb9c8718ab459166d4bb405b8ffa78b"
   integrity sha512-Hcv+nVC0kZnQ3tD9GVu5xSMR4VVYOteQIr/hwFPVEvPdlXqgGEuRjiheChHgdM+JyqdgNcmzZOX/tnl0JOiI7A==
 
-"@mui/base@5.0.0-alpha.113", "@mui/base@^5.0.0-alpha.113":
+"@mui/base@5.0.0-alpha.113":
   version "5.0.0-alpha.113"
   resolved "https://registry.yarnpkg.com/@mui/base/-/base-5.0.0-alpha.113.tgz#51ab20c3a4cf31db4a5540ecf17d7ea6f73b3001"
   integrity sha512-XSjvyQWATM8uk+EJZvYna8D21kOXC42lwb3q4K70btuGieKlCIQLaHTTDV2OfD4+JfT4o3NJy3I4Td2co31RZA==
+  dependencies:
+    "@babel/runtime" "^7.20.7"
+    "@emotion/is-prop-valid" "^1.2.0"
+    "@mui/types" "^7.2.3"
+    "@mui/utils" "^5.11.2"
+    "@popperjs/core" "^2.11.6"
+    clsx "^1.2.1"
+    prop-types "^15.8.1"
+    react-is "^18.2.0"
+
+"@mui/base@^5.0.0-alpha.114":
+  version "5.0.0-alpha.114"
+  resolved "https://registry.yarnpkg.com/@mui/base/-/base-5.0.0-alpha.114.tgz#19125f28b7d09d1cc60550872440ecba699d8374"
+  integrity sha512-ZpsG2I+zTOAnVTj3Un7TxD2zKRA2OhEPGMcWs/9ylPlS6VuGQSXowPooZiqarjT7TZ0+1bOe8titk/t8dLFiGw==
   dependencies:
     "@babel/runtime" "^7.20.7"
     "@emotion/is-prop-valid" "^1.2.0"
