@@ -31,7 +31,7 @@
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.2.2",
     "clsx": "^1.2.1",
-    "d3": "^7.8.1",
+    "d3": "^7.8.2",
     "d3-interpolate": "^3.0.1",
     "d3-time": "^3.1.0",
     "d3-time-format": "^4.1.0",
