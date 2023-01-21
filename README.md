@@ -20,10 +20,26 @@
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=sqale_index)](https://sonarcloud.io/dashboard?id=energy-management-system)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=coverage)](https://sonarcloud.io/dashboard?id=energy-management-system)
 
-## Startup
+## Development Startup
 backend: dotnet ems.dll --config config.json --nlogcfg NLog.config (listening on 5005)
 frontend: npm start (listening on 5010)
 browser: http://127.0.0.1:5005 (connecting to the backend that also services the static content)
+
+## Installation
+...
+
+## Developing and Contributing
+We'd love to get contributions from you! Once you are up and running, take a look at the
+[Contribution Documents](https://github.com/pieterh/energy-management-system/blob/main/CONTRIBUTING.md) to see how to get your changes merged
+in.
+
+## TODO 
+- [x] Integrate test results with SonarCloud
+- [ ] Fix warnings with dependencies that might not be .NET 6/7 compatible
+- [ ] Introduce charge mode that includes EPEX SPOT tarif for cheap charging
+- [ ] Investigate blazor for frontend
+- [ ] Investigate blazor backend
+
 
 <!-- LICENSE -->
 ## License
