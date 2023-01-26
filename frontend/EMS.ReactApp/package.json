@@ -21,7 +21,7 @@
     "@testing-library/user-event": "^14.4.3",
     "@types/d3-time": "^3.0.0",
     "@types/d3-time-format": "^4.0.0",
-    "@types/jest": "^29.2.6",
+    "@types/jest": "^29.4.0",
     "@types/luxon": "^3.2.0",
     "@types/material-ui": "^0.21.12",
     "@types/node": "^18.11.18",
