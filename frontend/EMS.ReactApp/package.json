@@ -14,7 +14,7 @@
     "@nivo/core": "^0.80.0",
     "@nivo/line": "^0.80.0",
     "@nivo/tooltip": "^0.80.0",
-    "@reduxjs/toolkit": "^1.9.1",
+    "@reduxjs/toolkit": "^1.9.2",
     "@testing-library/dom": "^8.20.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
