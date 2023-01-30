@@ -5,7 +5,7 @@ import Button from '@mui/material/Button';
 
 import { logoutAsync } from './authenticationSlice';
 
-import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { useAppSelector, useAppDispatch } from  '../../app/hooks';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 
 export function Logout() {

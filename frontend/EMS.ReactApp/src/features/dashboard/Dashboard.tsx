@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 
 
-import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { useAppSelector, useAppDispatch } from  '../../app/hooks';
 import { pingAsync, selectIsLoggedIn } from '../authentication/authenticationSlice';
 import { DashboardCard } from '../../components/dashboardcard/DashboardCard';
 

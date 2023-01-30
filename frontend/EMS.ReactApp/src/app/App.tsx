@@ -21,7 +21,7 @@ import Logout from '../features/authentication/Logout';
 
 import { DrawerDefinition } from '../features/appdrawer/drawer';
 
-import { useAppSelector, useAppDispatch } from '../common/hooks';
+import { useAppSelector, useAppDispatch } from './hooks';
 import { pingAsync, selectIsLoggedIn } from '../features/authentication/authenticationSlice';
 import CheckAuthentication from '../features/authentication/CheckAuthentication';
 

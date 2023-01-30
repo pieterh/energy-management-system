@@ -20,7 +20,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Alert from '@mui/material/Alert';
 
 import { browserStorage } from '../../common/BrowserStorage'
-import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { useAppSelector, useAppDispatch } from  '../../app/hooks';
 import { loginAsync, selectIsLoggedIn } from './authenticationSlice';
 import  Credits from '../credits/Credits';
  
