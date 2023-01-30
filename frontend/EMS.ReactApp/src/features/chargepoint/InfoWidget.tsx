@@ -6,7 +6,7 @@ import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import EvStationIcon from '@mui/icons-material/EvStation';
 
-import { useAppSelector, useAppDispatch } from '../../common/hooks';
+import { useAppSelector, useAppDispatch } from '../../app/hooks';
 import { getSessionInfoAsync, selectSessionInfo, selectSocketInfo } from './EVSESlice';
 
 import { DashboardCard } from '../../components/dashboardcard/DashboardCard';

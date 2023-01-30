@@ -21,7 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
 
-import { useAppSelector, useAppDispatch } from  '../../common/hooks';
+import { useAppSelector, useAppDispatch } from  '../../app/hooks';
 import { selectIsLoggedIn } from '../authentication/authenticationSlice';
 
 import { ChangeTheme, ThemeTypes } from '../themeprovider/CustomThemeProviderSlice';

@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import deepEqual from "deep-equal";
 
-import { RootState } from "../../common/hooks";
+import { RootState } from "../../app/hooks";
 
 import { FormatFromISODiffNow, FormatDurationFromSeconds, FormatFromISO } from "../../common/DateTimeUtils";
 

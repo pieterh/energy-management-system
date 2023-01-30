@@ -8,7 +8,7 @@ import Avatar from '@mui/material/Avatar';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
-import { useAppSelector, useAppDispatch } from "../../common/hooks";
+import { useAppSelector, useAppDispatch } from "../../app/hooks";
 import { getHemsInfoAsync, selectMeasurements } from "./hemsSlice";
 import { vehicleIsConnected } from "../chargepoint/EVSESlice";
 import { DashboardCard } from "../../components/dashboardcard/DashboardCard";

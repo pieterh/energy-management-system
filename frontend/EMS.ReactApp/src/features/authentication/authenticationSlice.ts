@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 import { browserStorage } from '../../common/BrowserStorage'
-import { RootState } from '../../common/hooks';
+import { RootState } from '../../app/hooks';
 import { login, logout } from './authenticationAPI';
 
 enum LoginStateEnum {

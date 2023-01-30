@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { RootState } from '../../common/hooks';
+import { RootState } from '../../app/hooks';
 
 export interface IDrawerState {
     isOpen : boolean

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import Container from '@mui/material/Container';
 import { getHemsInfoAsync, selectHemsInfo } from "./hemsSlice";
-import { useAppDispatch, useAppSelector } from "../../common/hooks";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { ChargingInfoWidget } from "./ChargeInfoWidget";
 import { GraphWidget } from "./GraphWidget";
 
