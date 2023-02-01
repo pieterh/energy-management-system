@@ -10,7 +10,7 @@
     "@mui/lab": "^5.0.0-alpha.117",
     "@mui/material": "^5.11.6",
     "@mui/types": "^7.2.3",
-    "@mui/utils": "^5.11.2",
+    "@mui/utils": "^5.11.7",
     "@nivo/core": "^0.80.0",
     "@nivo/line": "^0.80.0",
     "@nivo/tooltip": "^0.80.0",
