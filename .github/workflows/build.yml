@@ -20,7 +20,9 @@ jobs:
     - name: Setup .NET ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}     
+        dotnet-version: ${{ matrix.dotnet-version }}
+    - name: dotnet info
+      run: dotnet --info     
     - name: Cache SonarQube packages
       uses: actions/cache@v3
       with:
@@ -38,30 +40,61 @@ jobs:
       if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        pwd
         mkdir -p ./.sonar/scanner 
-        dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner        
-        ls -la ./.sonar/scanner
+        dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
     - name: Install dependencies
       run: dotnet restore
-      working-directory: backend      
+      working-directory: backend
+    - name: Scan for projects
+      id: find-projects
+      shell: bash
+      run: |
+        projs=$(find . -name '*.csproj' -type f -not -name '*Tests*' | paste -s -d ',' -)
+        testprojs=$(find . -name '*.csproj' -type f -name '*Tests*' | paste -s -d ',' -)
+        echo "projects=${projs}" >> $GITHUB_OUTPUT
+        echo "testprojects=${testprojs}" >> $GITHUB_OUTPUT
+      working-directory: backend       
+    - name: Dependencies vulnerability scan
+      shell: bash
+      run: |        
+        IFS="," read -a myarray <<< ${{ steps.find-projects.outputs.PROJECTS }}
+        for i in "${myarray[@]}"; do            
+          dotnet list ${i} package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
+        done 
+        vulnerabilities=true
+        grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
+        [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
+        exit 0
+      working-directory: backend
+    - name: Dependencies deprecation scan
+      shell: bash
+      run: |
+        IFS="," read -a myarray <<< ${{ steps.find-projects.outputs.PROJECTS }}
+        for i in "${myarray[@]}"; do
+          dotnet list ${i} package --deprecated 2>&1 | tee -a deprecation_scan.log
+        done
+        deprecations=true
+        grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
+        [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
+        exit 0
+      working-directory: backend
     - name: SonarQube - Begin
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
       run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"          
-      working-directory: backend      
+      working-directory: backend
     - name: Build - backend
       run: dotnet build --configuration Release --no-restore
       working-directory: backend
     - name: Test - backend
       run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover       
-      working-directory: backend      
+      working-directory: backend
     - name: SonarQube - End
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner end    
+      run: ../.sonar/scanner/dotnet-sonarscanner end
       working-directory: backend      
     - name: Install yarn
       run: npm install --global yarn
@@ -80,6 +113,5 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: |
         echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
-        docker build . --file docker/dockerfile --tag docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest        
+        docker build . --file docker/dockerfile --tag docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
         docker push docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
-     
