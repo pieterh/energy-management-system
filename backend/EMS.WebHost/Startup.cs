@@ -133,7 +133,7 @@ namespace EMS.WebHost
 
             app.UseCors(builder =>
             {
-                builder.WithOrigins("http://127.0.0.1:5010")
+                builder.WithOrigins("http://127.0.0.1:5005")
                 .AllowCredentials()
                 .AllowAnyHeader()
                 .AllowAnyMethod();
@@ -153,7 +153,8 @@ namespace EMS.WebHost
                 if (Env.IsDevelopment())
                 {
                     // Make sure you have started the frontend with npm run dev on port 5010
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");                //NOSONAR
+                    //spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5281");                //NOSONAR
                 }                
             });
 

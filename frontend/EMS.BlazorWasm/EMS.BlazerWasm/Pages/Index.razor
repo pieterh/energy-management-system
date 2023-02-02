@@ -1,0 +1,57 @@
+﻿
+
+@page "/"
+@using EMS.BlazorWasm.Client.Services
+@inject IUserService _userService;
+
+
+<div>
+    <AuthorizeView>
+        <Authorized>
+            <h1>Your Dashboard - Your Claims</h1>
+            <div>
+                @foreach (var claim in userClaim)
+                {
+                    <div>@claim.Type - @claim.Value</div>
+                }
+            </div>
+            <div>
+                <button type="button" @onclick="Logout">Logout</button>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <h1>!Oops you need to be login to view your dashboard</h1>
+            <button type="button" @onclick="Login">Login</button>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+
+@code{
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+    private IList<Claim> userClaim
+    {
+        get
+        {
+            var auth = authenticationState.Result;
+            if (auth.User.Identity.IsAuthenticated)
+            {
+                return auth.User.Claims.ToList();
+            }
+            return new List<Claim>();
+        }
+    }
+
+    private void Login()
+    {
+        _userService.LoginAsync(new LoginModel() { Username="admin", Password="admin"});
+    }
+
+    private void Logout()
+    {
+        _userService.LogoutAsync();
+    }
+}

@@ -8,7 +8,6 @@ jobs:
     strategy:
       matrix:
         dotnet-version: [ '7.0.x' ]
-
     steps:    
     - name: Checkout
       uses: actions/checkout@v3
@@ -24,7 +23,14 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: dotnet info
-      run: dotnet --info     
+      run: dotnet --info | tee -a ${{ runner.temp }}/environment.txt
+    - name: docker info
+      run: docker version | tee -a ${{ runner.temp }}/environment.txt
+    - name: Upload environment info
+      uses: actions/upload-artifact@v3
+      with:
+        name: Environment information
+        path: ${{ runner.temp }}/environment.txt      
     - name: Cache SonarQube packages
       uses: actions/cache@v3
       with:
@@ -44,9 +50,12 @@ jobs:
       run: |
         mkdir -p ./.sonar/scanner 
         dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
-    - name: Install dependencies
+    - name: Install dependencies - backend
       run: dotnet restore
       working-directory: backend
+    - name: Install dependencies - frontend Blazor WASM
+      run: dotnet restore
+      working-directory: frontend/EMS.BlazorWasm      
     - name: Scan for projects
       id: find-projects
       shell: bash
@@ -102,6 +111,9 @@ jobs:
     - name: Test - backend
       run: dotnet test --no-restore --configuration Release --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       working-directory: backend
+    - name: Build - Blazor WASM frontend
+      run: dotnet test --no-restore --configuration Release --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: frontend/EMS.BlazorWasm     
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
@@ -113,20 +125,55 @@ jobs:
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
         ls -la publish/ems
+    - name: Zip Release - backend
+      uses: TheDoctor0/zip-release@0.7.1
+      with:
+        filename: ${{ runner.temp }}/ems.zip
+        path: ems
+        directory: publish
+    - name: Upload Build Artifact - backend
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: EMS
+        path: ${{ runner.temp }}/ems.zip
+    - name: Publish - Blazor WASM frontend
+      run: |
+        dotnet publish EMS.BlazorWasm.sln --configuration Release --output ${{ runner.temp }}/ems.blazorwasm
+        ls -la ${{ runner.temp }}/ems.blazorwasm
+      working-directory: frontend/EMS.BlazorWasm      
+    - name: Zip Release - Blazor WASM frontend
+      uses: TheDoctor0/zip-release@0.7.1
+      with:
+        filename: ${{ runner.temp }}/ems.blazorwasm.zip
+        path: ems.blazorwasm
+        directory: ${{ runner.temp }}
+    - name: Upload Build Artifact - Blazor WASM frontend
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: EMS.BlazorWasm
+        path: ${{ runner.temp }}/ems.blazorwasm.zip
     - name: Install yarn
       run: npm install --global yarn
       working-directory: frontend/EMS.ReactApp
     - name: Install packages using yarn and respect lock file
       run: yarn install --frozen-lockfile
       working-directory: frontend/EMS.ReactApp
-    - name: Build - frontend
+    - name: Build - React frontend
       run: npm run build
       working-directory: frontend/EMS.ReactApp
     - name: Build the docker image
       if: github.ref != 'refs/heads/main'
       run: |
-        docker build . --file docker/dockerfile --build-arg BACKEND=publish/ems --build-arg FEREACT=frontend/EMS.ReactApp/dist/
-    - name: Push the docker image
+        docker build . --file docker/dockerfile --tag hems --build-arg BACKEND=publish/ems --build-arg FEREACT=frontend/EMS.ReactApp/dist/
+        docker images
+        docker save --output ${{ runner.temp }}/dockerimage_hems.tar hems
+    - name: Upload Build Artifact - Docker image HEMS
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: Docker image HEMS
+        path: ${{ runner.temp }}/dockerimage_hems.tar
+        retention-days: 1
+    - name: Build and push the docker image to repository
       if: github.ref == 'refs/heads/main'
       run: |
         echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
