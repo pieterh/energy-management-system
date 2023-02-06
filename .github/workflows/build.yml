@@ -79,6 +79,7 @@ jobs:
         exit 0
       working-directory: backend
     - name: SonarQube - Begin
+      if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
@@ -91,6 +92,7 @@ jobs:
       run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover       
       working-directory: backend
     - name: SonarQube - End
+      if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
