@@ -86,10 +86,10 @@ jobs:
       run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"          
       working-directory: backend
     - name: Build - backend
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --no-restore --configuration Release
       working-directory: backend
     - name: Test - backend
-      run: dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover       
+      run: dotnet test --no-restore --configuration Release --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       working-directory: backend
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
@@ -97,7 +97,11 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
       run: ../.sonar/scanner/dotnet-sonarscanner end
-      working-directory: backend      
+      working-directory: backend
+    - name: Publish - backend
+      run: |
+        dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
+        ls -la publish/ems
     - name: Install yarn
       run: npm install --global yarn
       working-directory: frontend/EMS.ReactApp
@@ -110,7 +114,7 @@ jobs:
     - name: Build the docker image
       if: github.ref != 'refs/heads/main'
       run: |
-        docker build . --file docker/dockerfile
+        docker build . --file docker/dockerfile --build-arg BACKEND=publish/ems --build-arg FEREACT=frontend/EMS.ReactApp/dist/
     - name: Push the docker image
       if: github.ref == 'refs/heads/main'
       run: |
