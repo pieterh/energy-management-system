@@ -31,6 +31,7 @@ namespace EMS.WebHost
 
         public IWebHostEnvironment Env => _env;
         public IConfiguration Configuration => _configuration;
+        static readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
         static Startup()
         {
@@ -75,7 +76,22 @@ namespace EMS.WebHost
                 options.SaveToken = true;
             });
 
-
+#if DEBUG
+            services.AddCors(options => {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                      builder =>
+                      {
+                          builder.WithOrigins("http://127.0.0.1:5005",
+                                              "http://localhost:5005",
+                                              "http://127.0.0.1:5281",
+                                              "http://localhost:5281"
+                                              )
+                          .AllowCredentials()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod(); 
+                      });
+            });
+#endif
 
             //In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -86,6 +102,8 @@ namespace EMS.WebHost
 
         public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJWTService t /*see comment above*/)
         {
+            
+           
             Logger = logger;
             if (Env.IsDevelopment())
             {
@@ -122,7 +140,6 @@ namespace EMS.WebHost
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
 
-
             app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
             app.UseStaticFiles();
@@ -131,13 +148,7 @@ namespace EMS.WebHost
 
             app.UseRouting();
 
-            app.UseCors(builder =>
-            {
-                builder.WithOrigins("http://127.0.0.1:5005")
-                .AllowCredentials()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-            });
+            app.UseCors(MyAllowSpecificOrigins);
 
             // put this between UseRouting and UseEndpoints
             app.UseAuthentication();
@@ -150,12 +161,13 @@ namespace EMS.WebHost
 
             app.UseSpa(spa =>
             {
-                if (Env.IsDevelopment())
-                {
+                //TODO do we still need this?
+                //if (Env.IsDevelopment())
+                //{
                     // Make sure you have started the frontend with npm run dev on port 5010
                     //spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5281");                //NOSONAR
-                }                
+                    //spa.UseProxyToSpaDevelopmentServer("http://localhost:5281");                //NOSONAR
+                //}                
             });
 
             app.Use((context, next) => {
