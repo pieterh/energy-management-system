@@ -66,8 +66,8 @@ jobs:
     - name: Install yarn
       run: npm install --global yarn
       working-directory: frontend/EMS.ReactApp
-    - name: Upgrade packages using yarn
-      run: yarn upgrade
+    - name: Install packages using yarn and respect lock file
+      run: yarn install --frozen-lockfile
       working-directory: frontend/EMS.ReactApp
     - name: Build - frontend
       run: npm run build
