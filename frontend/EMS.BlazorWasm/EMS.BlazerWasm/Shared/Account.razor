@@ -2,26 +2,29 @@
 
 <PageTitle>Account</PageTitle>
 
+<!--
 @if (!string.IsNullOrEmpty(mainLayout.GetUserName()))
 {
-	<h3 class="my-4">Your Account</h3>
+    <h3 class="my-4">Your Account</h3>
 
-	<p>@mainLayout.GetUserName()</p>
+    <p>@mainLayout.GetUserName()</p>
 
-	<button type="button" class="btn btn-danger" @onclick="mainLayout.Logout">Logout</button>
+    <button type="button" class="btn btn-danger" @onclick="mainLayout.Logout">Logout</button>
 }
 else
 {
-	<h3 class="my-4">Please Login</h3>
+    <h3 class="my-4">Please Login</h3>
 
-	<button type="button" class="btn btn-success" @onclick="mainLayout.OpenLogin">Login</button>
+    <button type="button" class="btn btn-success" @onclick="mainLayout.OpenLogin">Login</button>
 }
-@code {
-	[CascadingParameter]
-	public MainLayout mainLayout { get; set; }
+-->
 
-	protected override async Task OnInitializedAsync()
-	{
-		await base.OnInitializedAsync();
-	}
+@code {
+    [CascadingParameter]
+    public MainLayout mainLayout { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
 }

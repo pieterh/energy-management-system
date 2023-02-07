@@ -1,4 +1,15 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+    <MudNavLink Href="/solar" Match="NavLinkMatch.Prefix">Solar Power</MudNavLink>
+    <MudNavLink Href="/chargepoint" Match="NavLinkMatch.Prefix">Charge Point</MudNavLink>
+    <MudNavLink Href="/smartmeter" Match="NavLinkMatch.Prefix">Smart Meter</MudNavLink>
+    <MudNavLink Href="/ev" Match="NavLinkMatch.Prefix">Electric Car</MudNavLink>
+    <MudNavLink Href="/hems" Match="NavLinkMatch.Prefix">HEMS</MudNavLink>
+</MudNavMenu>
+
+<!--
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">EMS.BlazorWasm</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -8,39 +19,41 @@
 </div>
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
-        </div>
-		@* NOTE: BEGIN NEW CODE *@
-		<div class="nav-item px-3">
-			<NavLink class="nav-link" href="account">
-				<span class="oi oi-key" aria-hidden="true"></span> Account
-			</NavLink>
-		</div>
-		@* NOTE: END NEW CODE *@        
-    </nav>
+    <AuthorizeView>
+        <Authorized>
+            <nav class="flex-column">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="counter">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Counter
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="fetchdata">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="account">
+                        <span class="oi oi-key" aria-hidden="true"></span> Account
+                    </NavLink>
+                </div>
+            </nav>
+        </Authorized>
+    </AuthorizeView>
 </div>
-
+    -->
 @code {
-    private bool collapseNavMenu = true;
+    /*private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
-    }
+    }*/
 }

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
+using MudBlazor.Services;
+
 using EMS.BlazorWasm;
 using EMS.BlazorWasm.Client.Services;
 using EMS.BlazorWasm.Client.Services.Auth;
@@ -20,6 +22,7 @@ builder.Services.AddHttpClient<IUserService, UserService>(client =>
 });
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationProvider>();
 builder.Services.AddAuthorizationCore();
+builder.Services.AddMudServices();
 
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
