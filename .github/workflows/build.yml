@@ -49,13 +49,16 @@ jobs:
       id: find-projects
       shell: bash
       run: |
+        allprojs=$(find . -name '*.csproj' -type f | paste -s -d ',' -)
         projs=$(find . -name '*.csproj' -type f -not -name '*Tests*' | paste -s -d ',' -)
         testprojs=$(find . -name '*.csproj' -type f -name '*Tests*' | paste -s -d ',' -)
+        echo "allprojects=${allprojs}" >> $GITHUB_OUTPUT
         echo "projects=${projs}" >> $GITHUB_OUTPUT
         echo "testprojects=${testprojs}" >> $GITHUB_OUTPUT
       working-directory: backend       
-    - name: Dependencies vulnerability scan
+    - name: Dependencies vulnerability scan - excluding test projects
       shell: bash
+      if: ${{ false }}
       run: |        
         IFS="," read -a myarray <<< ${{ steps.find-projects.outputs.PROJECTS }}
         for i in "${myarray[@]}"; do            
@@ -66,13 +69,19 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies vulnerability scan
+      shell: bash
+      run: |        
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
+        vulnerabilities=true
+        grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
+        [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
+        exit 0
+      working-directory: backend
     - name: Dependencies deprecation scan
       shell: bash
       run: |
-        IFS="," read -a myarray <<< ${{ steps.find-projects.outputs.PROJECTS }}
-        for i in "${myarray[@]}"; do
-          dotnet list ${i} package --deprecated 2>&1 | tee -a deprecation_scan.log
-        done
+        dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
         deprecations=true
         grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
