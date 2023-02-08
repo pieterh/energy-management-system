@@ -1,6 +1,72 @@
 ﻿@page "/login"
+@inject NavigationManager Navigation
+
 
 <PageTitle>Login</PageTitle>
 
 <h1>Login</h1>
 
+<MudPaper Class="pa-4">
+    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+        <MudTextField @bind-Value="user" Label="Email" HelperText="name@example.com" Variant="Variant.Outlined"></MudTextField>           
+        <MudTextField @bind-Value="loginPassword" Label="Password" InputType="@PasswordInput" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Show Password" OnAdornmentClick="onShowPasswordClick"></MudTextField>
+        <MudCheckBox @bind-Checked="@isRememberMe"></MudCheckBox>
+        
+        <div class="modal-footer">
+            <MudButton Variant="Variant.Filled" OnClick="onLoginClick">Login</MudButton>
+        </div>
+    </MudForm>
+</MudPaper>
+
+@code {
+    [Inject]
+    public IUserService UserService { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private MudForm form;
+    private bool success;
+    private string[] errors = { };
+
+    private string? user;
+    private string? loginPassword;
+    private bool isShowLoginPassword = false;
+    private bool isRememberMe = false;
+
+    private async Task onLoginClick()
+    {
+        if (!string.IsNullOrEmpty(user))
+        {
+            var model = new LoginModel()
+            {
+                Username = user,
+                Password = loginPassword
+            };
+            var resp = await UserService.LoginAsync(model);
+
+            loginPassword = string.Empty;
+
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    void onShowPasswordClick()
+    {
+        @if (isShowLoginPassword)
+        {
+            isShowLoginPassword = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShowLoginPassword = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}

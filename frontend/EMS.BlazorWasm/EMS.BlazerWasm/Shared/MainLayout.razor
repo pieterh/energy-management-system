@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 @inject EMS.BlazorWasm.Services.ILocalStorage LocalStorage
 
 <CascadingValue Value="this">
@@ -8,15 +9,14 @@
 
     <MudLayout>
         <MudAppBar Elevation="1">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => onDrawerToggle())" Disabled="@(!_isLoggedIn)" />
             <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+            <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit" Edge="Edge.End" />
         </MudAppBar>
         <MudDrawer @bind-Open="@_drawerOpen" Elevation="2">
             <MudDrawerHeader>
                 <MudText Typo="Typo.h5" Class="mt-1">HEMS</MudText>
             </MudDrawerHeader>
-            @*NavMenu*@
             <NavMenu />
         </MudDrawer>
         <MudMainContent>
@@ -25,144 +25,67 @@
             </MudContainer>
         </MudMainContent>
     </MudLayout>
-    <!--
-    <div class="page">
-        <div class="sidebar">
-            <NavMenu />
-        </div>
-
-        <main>
-            <div class="top-row px-4">
-                <div style="width:70px;text-align:right;">
-                    @if (loggedIn)
-                    {
-                        <a class="btn btn-sm btn-primary text-white" title="Account" href="account"><span class="oi oi-key"></span></a>
-                        <button class="btn btn-sm btn-danger" title="Logout" @onclick="Logout"><span class="oi oi-account-logout"></span></button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-sm btn-success" title="Login" @onclick="OpenLogin"><span class="oi oi-account-login"></span></button>
-                    }
-                </div>
-            </div>
-
-            <article class="content px-4">
-                @Body
-            </article>
-        </main>
-    </div>-->
-
 </CascadingValue>
-<!--
-<div class="modal-backdrop fade @(show ? "show" : "") @(display ? "d-block" : "d-none")"></div>
 
-<div class="modal fade @(show ? "show" : "")  @(display ? "d-block" : "d-none")" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Login Form</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="loginEmail" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="loginEmail" placeholder="name@example.com" autocomplete="off" required @bind-value="user" />
-                </div>
-                <div class="mb-3">
-                    <label for="loginPassword" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="loginPassword" autocomplete="off" required @bind-value="loginPassword"/>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" @onclick="Login">Login</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="Close">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-    -->
 
 @code {
 
-    @using EMS.BlazorWasm.Client.Services
-
     [Inject]
-    public IUserService UserService { get; set; }
+    public AuthenticationStateProvider authenticationStateProvider { get; set; }
+
+
     [CascadingParameter]
-    private Task<AuthenticationState> authenticationState { get; set; }
+    private  Task<AuthenticationState>? authenticationState { get; set; }
 
-    private bool show, display, loggedIn;
-    private string? user;
-    private string? loginPassword;
+    //private bool show, display;
+    private bool _isLoggedIn;
+    bool _drawerOpen = true;
 
-    public bool isLoggedIn()
-    {
-        var auth = authenticationState.Result;
-        return auth.User.Identity.IsAuthenticated;
-    }
-
-    //public string? GetUserName()
-    //{
-    //    return loggedIn ? user : null;
-    //}
-
-    //public async Task OpenLogin()
-    //{
-    //    display = true;
-    //    await Task.Delay(100);
-    //    show = true;
-    //}
-
-    //public async Task Logout()
-    //{
-    //    user = null;
-    //    loginPassword = null;
-    //    loggedIn = false;
-    //}
-
-    //private async Task Close()
-    //{
-    //    show = false;
-    //    await Task.Delay(500);
-    //    display = false;
-    //}
-
-    //private async Task Login()
-    //{
-    //    if (!string.IsNullOrEmpty(user))
-    //    {
-    //        await Close();
-    //        var model = new LoginModel() {
-    //            Username = user,
-    //            Password = loginPassword
-    //        };
-    //        var resp = await UserService.LoginAsync(model);
-    //        loggedIn = true;
-
-    //        loginPassword = string.Empty;
-    //    }
-    //}
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
-        //user = await LocalStorage.GetStringAsync("user");
-        //loginPassword = string.Empty;
-        //loggedIn = !string.IsNullOrEmpty(user);
-        _drawerOpen = isLoggedIn();
+        base.OnInitialized();
+
+        _isLoggedIn = await isLoggedInAsync();
+        _drawerOpen = _isLoggedIn;
+        authenticationStateProvider.AuthenticationStateChanged += this.OnAuthenticationStateChanged;
+
+        if (!_isLoggedIn)
+            Navigation.NavigateTo("login");
     }
 
-    bool _drawerOpen = true;
-
-    void DrawerToggle()
+    private async Task<bool> isLoggedInAsync()
     {
-        if (isLoggedIn())
+        if (authenticationState == null) return false;
+        var t = await authenticationState;
+
+        if (t.User.Identity == null) return false;
+        return t.User.Identity.IsAuthenticated;
+    }
+
+    protected void OnAuthenticationStateChanged(object sender)
+    {
+        _isLoggedIn = isLoggedInAsync().GetAwaiter().GetResult();
+        _drawerOpen = _isLoggedIn;
+        Console.WriteLine("IsAuthenticated {0}", _isLoggedIn);
+
+        // We need to indicate that the state has changed, otherwise the UI is not updated with
+        // the values we set in this event handler
+        // https://learn.microsoft.com/en-us/aspnet/core/blazor/components/rendering?
+        StateHasChanged();
+        if (!_isLoggedIn && !string.Equals(Navigation.Uri, "login"))
+            Navigation.NavigateTo("login");
+    }
+
+    private void onDrawerToggle()
+    {
+        if (_isLoggedIn)
         {
             _drawerOpen = !_drawerOpen;
         }
         else
             _drawerOpen = false;
     }
+
+    public void Dispose() => authenticationStateProvider.AuthenticationStateChanged -= this.OnAuthenticationStateChanged;
 }
