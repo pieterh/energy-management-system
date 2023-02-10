@@ -1,72 +1,49 @@
 ﻿@page "/login"
-@inject NavigationManager Navigation
-
-
-<PageTitle>Login</PageTitle>
-
-<h1>Login</h1>
-
-<MudPaper Class="pa-4">
-    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-        <MudTextField @bind-Value="user" Label="Email" HelperText="name@example.com" Variant="Variant.Outlined"></MudTextField>           
-        <MudTextField @bind-Value="loginPassword" Label="Password" InputType="@PasswordInput" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" AdornmentAriaLabel="Show Password" OnAdornmentClick="onShowPasswordClick"></MudTextField>
-        <MudCheckBox @bind-Checked="@isRememberMe"></MudCheckBox>
-        
-        <div class="modal-footer">
-            <MudButton Variant="Variant.Filled" OnClick="onLoginClick">Login</MudButton>
-        </div>
-    </MudForm>
-</MudPaper>
+@inject IDialogService DialogService
+@using System.Timers;
 
 @code {
-    [Inject]
-    public IUserService UserService { get; set; }
+    // We need to use a timer to open the dialog and let it stay open when this page is loaded after a route change
+    private System.Timers.Timer? _timer = null;
 
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-
-    InputType PasswordInput = InputType.Password;
-    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-
-    private MudForm form;
-    private bool success;
-    private string[] errors = { };
-
-    private string? user;
-    private string? loginPassword;
-    private bool isShowLoginPassword = false;
-    private bool isRememberMe = false;
-
-    private async Task onLoginClick()
+    protected override void OnAfterRender(bool firstRender)
     {
-        if (!string.IsNullOrEmpty(user))
+        if (firstRender)
         {
-            var model = new LoginModel()
-            {
-                Username = user,
-                Password = loginPassword
-            };
-            var resp = await UserService.LoginAsync(model);
+            if (_timer != null)
+                DisposeTimer();
 
-            loginPassword = string.Empty;
-
-            Navigation.NavigateTo("/");
+            _timer = new System.Timers.Timer(1);
+            _timer.Elapsed += this.OnTimedEvent;
+            _timer.AutoReset = false;
+            _timer.Enabled = true;
         }
     }
 
-    void onShowPasswordClick()
+    private async void OnTimedEvent(Object? source, ElapsedEventArgs e)
     {
-        @if (isShowLoginPassword)
+        DisposeTimer();
+        DialogOptions opt = new DialogOptions() {
+            Position = DialogPosition.Center,
+            DisableBackdropClick = true,
+            CloseOnEscapeKey = false
+        };
+        await DialogService.ShowAsync<LoginDialog>("Login", opt);
+    }
+
+    protected void DisposeTimer()
+    {
+        if (_timer != null)
         {
-            isShowLoginPassword = false;
-            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-            PasswordInput = InputType.Password;
+            _timer.Elapsed -= this.OnTimedEvent;
+            _timer.Stop();
+            _timer.Dispose();
+            _timer = null;
         }
-        else
-        {
-            isShowLoginPassword = true;
-            PasswordInputIcon = Icons.Material.Filled.Visibility;
-            PasswordInput = InputType.Text;
-        }
+    }
+
+    public void Dispose()
+    {
+        DisposeTimer();
     }
 }

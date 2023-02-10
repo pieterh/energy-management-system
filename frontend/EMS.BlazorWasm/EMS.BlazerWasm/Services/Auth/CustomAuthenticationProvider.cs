@@ -66,7 +66,11 @@ namespace EMS.BlazorWasm.Client.Services.Auth
 
             var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
 
-            claims.AddRange(keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString())));
+            if (keyValuePairs != null)
+                claims.AddRange(keyValuePairs
+                    .Where(kvp => kvp.Value != null)
+                    .Select((kvp) => new Claim(kvp.Key, kvp.Value.ToString()!) // keep compiler happy, since null values are already filtered out in previous step
+                ));
 
             return claims;
         }

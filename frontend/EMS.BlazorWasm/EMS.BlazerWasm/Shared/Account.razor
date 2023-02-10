@@ -21,7 +21,7 @@ else
 
 @code {
     [CascadingParameter]
-    public MainLayout mainLayout { get; set; }
+    public MainLayout mainLayout { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {

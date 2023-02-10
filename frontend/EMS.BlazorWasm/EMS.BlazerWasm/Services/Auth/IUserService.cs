@@ -37,7 +37,7 @@ namespace EMS.BlazorWasm.Client.Services.Auth
 
     public record PingResponse : Response
     {
-        public UserModel User { get; set; }
+        public UserModel? User { get; set; }
     }
 
     public interface IUserService

@@ -31,15 +31,14 @@
 @code {
 
     [Inject]
-    public AuthenticationStateProvider authenticationStateProvider { get; set; }
+    public AuthenticationStateProvider authenticationStateProvider { get; set; } = default!;
 
 
     [CascadingParameter]
     private  Task<AuthenticationState>? authenticationState { get; set; }
 
-    //private bool show, display;
-    private bool _isLoggedIn;
-    bool _drawerOpen = true;
+    private bool _isLoggedIn = false;
+    private bool _drawerOpen = false;
 
 
     protected override async Task OnInitializedAsync()
@@ -49,9 +48,6 @@
         _isLoggedIn = await isLoggedInAsync();
         _drawerOpen = _isLoggedIn;
         authenticationStateProvider.AuthenticationStateChanged += this.OnAuthenticationStateChanged;
-
-        if (!_isLoggedIn)
-            Navigation.NavigateTo("login");
     }
 
     private async Task<bool> isLoggedInAsync()

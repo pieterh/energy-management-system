@@ -18,34 +18,27 @@
             </div>
         </Authorized>
         <NotAuthorized>
-            <h1>!Oops you need to be login to view your dashboard</h1>
-            <button type="button" @onclick="Login">Login</button>
+            <LoginRedirect />
         </NotAuthorized>
     </AuthorizeView>
 </div>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
-
 
 @code{
     [CascadingParameter]
-    private Task<AuthenticationState> authenticationState { get; set; }
+    private Task<AuthenticationState> authenticationState { get; set; } = default!;
+
     private IList<Claim> userClaim
     {
         get
         {
             var auth = authenticationState.Result;
-            if (auth.User.Identity.IsAuthenticated)
+            if (auth?.User.Identity?.IsAuthenticated ?? false)
             {
                 return auth.User.Claims.ToList();
             }
             return new List<Claim>();
         }
-    }
-
-    private void Login()
-    {
-        _userService.LoginAsync(new LoginModel() { Username="admin", Password="admin"});
     }
 
     private void Logout()
