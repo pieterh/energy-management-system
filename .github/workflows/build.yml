@@ -3,7 +3,7 @@ name: build
 on: [push]
 
 jobs:
-  build:
+  build_ems_app:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,9 +23,12 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: dotnet info
-      run: dotnet --info | tee -a ${{ runner.temp }}/environment.txt
-    - name: docker info
-      run: docker version | tee -a ${{ runner.temp }}/environment.txt
+      run: |
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt
+        echo "--                        dotnet                          --" >> ${{ runner.temp }}/environment.txt
+        dotnet --info | tee -a ${{ runner.temp }}/environment.txt
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt
+        echo ""
     - name: Upload environment info
       uses: actions/upload-artifact@v3
       with:
@@ -132,7 +135,7 @@ jobs:
         path: ems
         directory: publish
     - name: Upload Build Artifact - backend
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v3
       with:
         name: EMS
         path: ${{ runner.temp }}/ems.zip
@@ -148,7 +151,7 @@ jobs:
         path: ems.blazorwasm
         directory: ${{ runner.temp }}
     - name: Upload Build Artifact - Blazor WASM frontend
-      uses: actions/upload-artifact@v3.1.2
+      uses: actions/upload-artifact@v3
       with:
         name: EMS.BlazorWasm
         path: ${{ runner.temp }}/ems.blazorwasm.zip
@@ -161,21 +164,122 @@ jobs:
     - name: Build - React frontend
       run: npm run build
       working-directory: frontend/EMS.ReactApp
-    - name: Build the docker image
-      if: github.ref != 'refs/heads/main'
-      run: |
-        docker build . --file docker/dockerfile --tag hems --build-arg BACKEND=publish/ems --build-arg FEREACT=frontend/EMS.ReactApp/dist/
-        docker images
-        docker save --output ${{ runner.temp }}/dockerimage_hems.tar hems
-    - name: Upload Build Artifact - Docker image HEMS
-      uses: actions/upload-artifact@v3.1.2
+    - name: Zip Release - Blazor React frontend
+      uses: TheDoctor0/zip-release@0.7.1
       with:
-        name: Docker image HEMS
-        path: ${{ runner.temp }}/dockerimage_hems.tar
-        retention-days: 1
-    - name: Build and push the docker image to repository
-      if: github.ref == 'refs/heads/main'
+        filename: ${{ runner.temp }}/ems.reactapp.zip
+        path: app
+        directory: frontend/EMS.ReactApp/dist
+    - name: Upload Build Artifact - React frontend
+      uses: actions/upload-artifact@v3
+      with:
+        name: EMS.ReactApp
+        path: ${{ runner.temp }}/ems.reactapp.zip
+  build_docker_images:
+    needs: build_ems_app
+    runs-on: ubuntu-latest
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Docker Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Docker Setup Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Docker Login
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+        logout: true     
+    - name: Download environment info
+      uses:  actions/download-artifact@v3
+      with:
+        name: Environment information
+        path: ${{ runner.temp }}/
+    - name: docker info
       run: |
-        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
-        docker build . --file docker/dockerfile --tag docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
-        docker push docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
+        ls -la ${{ runner.temp }}
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt
+        echo "--                         docker                         --" >> ${{ runner.temp }}/environment.txt
+        echo "-- docker version                                         --" >> ${{ runner.temp }}/environment.txt
+        docker version | tee -a ${{ runner.temp }}/environment.txt
+        echo "------------------------------------------------------------" >> ${{ runner.temp }}/environment.txt
+        echo "-- buildx version                                         --" >> ${{ runner.temp }}/environment.txt
+        docker buildx version | tee -a ${{ runner.temp }}/environment.txt
+        echo "------------------------------------------------------------" >> ${{ runner.temp }}/environment.txt
+        echo "-- buildx builder instances and nodes                     --" >> ${{ runner.temp }}/environment.txt
+        docker buildx ls | tee -a ${{ runner.temp }}/environment.txt
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt        
+        echo ""
+    - name: Upload environment info
+      uses: actions/upload-artifact@v3
+      with:
+        name: Environment information
+        path: ${{ runner.temp }}/environment.txt          
+    - name: Download EMS Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: EMS
+        path: ${{ runner.temp }}/
+    - name: Unzip - EMS
+      run: |
+        mkdir -p dist/ems
+        unzip ${{ runner.temp }}/ems.zip -d dist
+      working-directory: docker
+    - name: Download EMS.ReactApp Build Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: EMS.ReactApp
+        path: ${{ runner.temp }}/
+    - name: Unzip - EMS.ReactApp
+      run: |
+        mkdir -p dist/ems.reactapp
+        unzip ${{ runner.temp }}/ems.reactapp.zip -d dist/ems.reactapp
+      working-directory: docker     
+    - name: Download EMS.BlazorWasm Build Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: EMS.BlazorWasm
+        path: ${{ runner.temp }}/
+    - name: Unzip - EMS.BlazorWasm
+      run: |
+        mkdir -p dist/ems.blazorwasm
+        unzip ${{ runner.temp }}/ems.blazorwasm.zip -d dist/ems.blazorwasm
+      working-directory: docker
+    - name: ls
+      run: |
+        ls -la docker
+        ls -la docker/dist
+        ls -la docker/dist/ems
+        ls -la docker/dist/ems.reactapp
+        ls -la docker/dist/ems.blazorwasm
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}
+    - name: Docker build and push
+      uses: docker/build-push-action@v4
+      if: github.ref != 'refs/heads/main'
+      with:
+        context: .
+        file: docker/dockerfile
+        platforms: linux/amd64,linux/arm64,linux/arm
+        tags: ${{ steps.meta.outputs.tags }}
+        build-args: |
+          BACKEND=docker/dist/ems 
+          FEREACT=docker/dist/ems.reactapp 
+          FEWASM=docker/dist/ems.blazorwasm
+        push: true        
+    - name: Upload docker OCI image    
+      uses: actions/upload-artifact@v3
+      if: ${{ false }}
+      with:
+        name: Docker OCI Image
+        path: ${{ runner.temp }}/docker-hems-oci.tar
+    - name: Upload docker metadata
+      uses: actions/upload-artifact@v3
+      if: ${{ false }}
+      with:
+        name: Docker metadata
+        path: ${{ runner.temp }}docker-hems-metadata.json
