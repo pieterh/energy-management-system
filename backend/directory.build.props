@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <SatelliteResourceLanguages>en-US;en</SatelliteResourceLanguages>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Product>Home Energy Management System</Product>
+    <Company>HEMS</Company>
+    <Authors>Pieter Hilkemeijer</Authors>
+    <RepositoryUrl>https://github.com/pieterh/energy-management-system</RepositoryUrl>
+  </PropertyGroup>
+</Project>
