@@ -16,10 +16,13 @@ namespace EMS.Library
                 var s = ActivatorUtilities.CreateInstance(x, typeof(T), constructorArgs);
                 return s;
             });
+
             services.AddSingleton<IHostedService>(x =>
             {
                 // here we trigger, the createinstance defined in the previous step
                 var s = x.GetService(typeof(I)) as IHostedService;
+                if (s == null)
+                    throw new System.Exception(string.Format($"Unable to find service with name {typeof(I).FullName} and implementing IHostedService"));
                 return s;
             });
         }

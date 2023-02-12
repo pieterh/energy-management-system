@@ -6,8 +6,8 @@ namespace EMS.Library
 {
     public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
-        private Task _backgroundTask = null;
-        public Task BackgroundTask { get { return _backgroundTask; } }
+        private Task? _backgroundTask = null;
+        public Task? BackgroundTask { get { return _backgroundTask; } }
 
         protected abstract void DoBackgroundWork();
         protected override void Dispose(bool disposing)
@@ -65,9 +65,13 @@ namespace EMS.Library
 
         private void WaitForBackgroundTaskToFinish()
         {
+            if (_backgroundTask == null)
+                return;
+
             var timeOut = 5000;
             var waitingTime = 0;
             var delayTime = 150;
+
             while (Task.WhenAny(Task.Delay(delayTime), _backgroundTask).GetAwaiter().GetResult() != _backgroundTask && waitingTime < timeOut)
             {
                 waitingTime += delayTime;
@@ -101,7 +105,7 @@ namespace EMS.Library
                 DoBackgroundWork();
             }
 
-            if (TokenSource.Token.IsCancellationRequested)
+            if (TokenSource?.Token.IsCancellationRequested ?? false)
             {
                 throw new OperationCanceledException();
             }

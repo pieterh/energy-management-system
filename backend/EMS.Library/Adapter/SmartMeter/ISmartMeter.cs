@@ -8,7 +8,7 @@ namespace EMS.Library.Adapter.SmartMeter
         public SmartMeterMeasurementBase LastMeasurement { get; }
         public class MeasurementAvailableEventArgs : EventArgs
         {
-            public SmartMeterMeasurement Measurement { get; set; }
+            public required SmartMeterMeasurement Measurement { get; init; }
         }
 
         public event EventHandler<MeasurementAvailableEventArgs> MeasurementAvailable;

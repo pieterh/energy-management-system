@@ -15,17 +15,20 @@ namespace EMS.Library.TestableDateTime
         public DateTimeProviderContext(DateTime contextDateTimeNow)
         {
             ContextDateTimeNow = contextDateTimeNow;
-            ThreadScopeStack.Value.Push(this);
+            if (!ThreadScopeStack.IsValueCreated)
+                ThreadScopeStack.Value = new Stack();
+
+            ThreadScopeStack.Value?.Push(this);
         }
 
-        public static DateTimeProviderContext Current
+        public static DateTimeProviderContext? Current
         {
             get
             {
-                if (ThreadScopeStack.Value.Count == 0)
+                if (ThreadScopeStack.Value?.Count == 0)
                     return null;
                 else
-                    return ThreadScopeStack.Value.Peek() as DateTimeProviderContext;
+                    return ThreadScopeStack.Value?.Peek() as DateTimeProviderContext;
             }
         }
 
@@ -43,7 +46,7 @@ namespace EMS.Library.TestableDateTime
             }
             if (disposing)
             {
-                ThreadScopeStack.Value.Pop();
+                ThreadScopeStack.Value?.Pop();
             }
 
             _disposed = true;
