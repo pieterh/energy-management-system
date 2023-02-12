@@ -7,7 +7,17 @@
   </PropertyGroup>
   <PropertyGroup>      
       <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+      <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
+  <PropertyGroup>
+      <Product>Home Energy Management System</Product>
+      <Company>HEMS</Company>
+      <Authors>Pieter Hilkemeijer</Authors>
+      <RepositoryUrl>https://github.com/pieterh/energy-management-system</RepositoryUrl>
+   </PropertyGroup>
+   <Target Name="MyPreCompileTarget" BeforeTargets="Build">
+        <Exec Command="git rev-parse HEAD > git.commit.hash.txt" />
+    </Target>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -36,6 +46,7 @@
   <ItemGroup>
     <None Remove="config.json" />
     <None Remove="NLog.config" />
+    <None Remove="git.commit.hash.txt" />
     <None Remove="Engine\Model\" />
   </ItemGroup>
   <ItemGroup>
@@ -45,11 +56,17 @@
     <EmbeddedResource Include="config.schema.json" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="git.commit.hash.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="NLog.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="git.commit.hash.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

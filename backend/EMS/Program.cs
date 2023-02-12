@@ -33,6 +33,8 @@ namespace EMS
         static async Task Main(string[] args)
         {
             AssemblyInfo.Init();
+            ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
+            Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "EMS.git.commit.hash.txt")}");
 
             Options options = new();
 

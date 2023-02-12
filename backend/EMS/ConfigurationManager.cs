@@ -21,7 +21,7 @@ namespace EMS
             var validationResult = schema.Evaluate(result, new EvaluationOptions() { OutputFormat = OutputFormat.Hierarchical });
             
             if (!validationResult.IsValid){
-                JSon.ShowEvaludationDetails(validationResult.Details);
+                JSon.ShowEvaluationDetails(validationResult.Details);
                 throw new ArgumentException("The configuration file has not a valid format.", nameof(filename));
             }
             return result;

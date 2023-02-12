@@ -17,9 +17,11 @@
     <Folder Include="Adapter\SmartMeter\" />
     <Folder Include="Adapter\PriceProvider\" />
     <Folder Include="Assembly\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Adapter\PriceProvider\" />
     <None Remove="Assembly\" />
+    <None Remove="Exceptions\" />
   </ItemGroup>
 </Project>

@@ -9,4 +9,4 @@ ems.suo
 coverage.opencover.xml
 EMS/ems.csproj.user
 **/mono_crash.*json
-
+git.commit.hash.txt
