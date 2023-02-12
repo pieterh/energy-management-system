@@ -9,15 +9,17 @@
     <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2"/>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Adapter\"/>
-    <Folder Include="Configuration\"/>
-    <Folder Include="Adapter\EVSE\"/>
-    <Folder Include="DateTime\"/>
-    <Folder Include="Core\"/>
-    <Folder Include="Adapter\SmartMeter\"/>
-    <Folder Include="Adapter\PriceProvider\"/>
+    <Folder Include="Adapter\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="Adapter\EVSE\" />
+    <Folder Include="DateTime\" />
+    <Folder Include="Core\" />
+    <Folder Include="Adapter\SmartMeter\" />
+    <Folder Include="Adapter\PriceProvider\" />
+    <Folder Include="Assembly\" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Adapter\PriceProvider\"/>
+    <None Remove="Adapter\PriceProvider\" />
+    <None Remove="Assembly\" />
   </ItemGroup>
 </Project>

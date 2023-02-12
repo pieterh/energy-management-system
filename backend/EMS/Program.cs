@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
@@ -13,12 +14,13 @@ using EMS.Library.Configuration;
 using EMS.WebHost;
 using EMS.Library;
 using EMS.Library.Core;
+using EMS.Library.Assembly;
 
 namespace EMS
 {
     static class Program
     {
-        public class Options
+        public record Options
         {
             [Option('c', "config", Required = true, HelpText = "filename of config")]
             public string ConfigFile { get; set; }
@@ -30,6 +32,8 @@ namespace EMS
 
         static async Task Main(string[] args)
         {
+            AssemblyInfo.Init();
+
             Options options = new();
 
             Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
