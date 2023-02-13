@@ -6,16 +6,18 @@ namespace EMS.DataStore
 {
 	public class HEMSContext : DbContext
 	{
-        public string DbPath { get; }
-// Disable nullable warning, since the entity framework will set the property ChargingTransactions
-#pragma warning disable CS8618
-        public DbSet<ChargingTransaction> ChargingTransactions { get; set; }
+        // TODO use more elegant way of passing the DbPath
+        // https://www.codeproject.com/Articles/5281767/Scalable-Scenario-to-Configuring-Entity-Framework
+        public static string DbPath { get; set; } = default!;
+        public DbSet<ChargingTransaction> ChargingTransactions { get; set; } = default!;
 
         public HEMSContext()
         {
-#pragma warning restore CS8618
-            var folder = AppDomain.CurrentDomain.BaseDirectory;
-            DbPath = System.IO.Path.Join(folder, "hems.db");
+            if (string.IsNullOrWhiteSpace(DbPath))
+            {
+                var folder = AppDomain.CurrentDomain.BaseDirectory;
+                DbPath = System.IO.Path.Join(folder, "hems.db");
+            }
         }
 
         // The following configures EF to create a Sqlite database file in the

@@ -24,6 +24,7 @@ using EMS.WebHost;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
+using EMS.DataStore;
 
 namespace EMS
 {
@@ -118,10 +119,17 @@ namespace EMS
                            .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
                     }
                     else
-                        Logger.Error("There was an error with the configuration file");
+                        Logger.Error("There was an error with the configuration file");                    
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
+                    /*TODO hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
+                    EMS.DataStore.DbConfig dbConfig = new();
+                    builderContext.Configuration.GetSection("db").Bind(dbConfig);
+                    EMS.DataStore.HEMSContext.DbPath = dbConfig.dbname;
+                    using var a = new HEMSContext();
+                    a.Database.Migrate();
+
                     services
                         .AddDbContext<DataProtectionKeyContext>(o => {
                                 o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
@@ -134,7 +142,7 @@ namespace EMS
                         .PersistKeysToDbContext<DataProtectionKeyContext>();
 
                     services.AddHttpClient();
-
+                    
                     ConfigureInstances(builderContext, services);
 
                     BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
@@ -143,7 +151,6 @@ namespace EMS
                 {
                     webBuilder.UseKestrel((builderContext, kestrelOptions) =>
                     {
-
                         kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();
                         builderContext.Configuration.GetSection("web").Bind(wc);

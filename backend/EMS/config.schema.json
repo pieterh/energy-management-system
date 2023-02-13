@@ -91,12 +91,25 @@
             "expiration",
             "clockskew"
           ]
-
         }
       },
       "required": [
         "port",
         "host"
+      ]
+    },
+    "db": {
+      "type": "object",
+      "properties": {
+        "dbtype": {
+          "type": "string",
+          "enum": [ "sqlite" ]
+        },
+        "dbname": { "type": "string" }
+      },
+      "required": [
+        "dbtype",
+        "dbname"
       ]
     }
   },
