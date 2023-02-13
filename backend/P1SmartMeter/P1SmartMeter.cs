@@ -59,7 +59,6 @@ namespace P1SmartMeter
         {
             Logger = logger;
             _relayServer = relayServer;
-
             Logger.LogInformation("P1SmartMeter({cfg})", config.ToString().Replace(Environment.NewLine, " "));
 
             if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)

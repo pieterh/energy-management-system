@@ -9,12 +9,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using CommandLine;
-using NLog.Extensions.Logging;
+using NLog;
+using NLog.Web;
 using EMS.Library.Configuration;
 using EMS.WebHost;
 using EMS.Library;
 using EMS.Library.Core;
 using EMS.Library.Assembly;
+using Microsoft.AspNetCore.Builder;
 
 namespace EMS
 {
@@ -32,6 +34,7 @@ namespace EMS
 
         static async Task Main(string[] args)
         {
+            EnforceLogging();
             AssemblyInfo.Init();
             ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
             Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "EMS.git.commit.hash.txt")}");
@@ -42,6 +45,8 @@ namespace EMS
             {
                 options = o;
             });
+
+            ConfigureLogging(options);
 
             try
             {
@@ -54,31 +59,49 @@ namespace EMS
             }
         }
 
-        static IHost CreateHost(Options options)
+        /// <summary>
+        /// We need to make sure that if there is no logging configuration, that we will log to the console. This will
+        /// ensure that there is always logging avaialable, even in the scenario of misconfiguration.
+        /// </summary>
+        private static void EnforceLogging()
         {
-            
-            var t = Host.CreateDefaultBuilder()
+            if (Logger.Factory.Configuration == null)
+            {                
+                var config = new NLog.Config.LoggingConfiguration();
+                var logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
+                logconsole.UseDefaultRowHighlightingRules = true;
+                config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logconsole);
+                NLog.LogManager.Configuration = config;
+                Logger.Error("test");
+            }
+        }
+
+        private static void ConfigureLogging(Options options)
+        {
+            Logger.Factory.LoadConfiguration(options.NLogConfig);
+        }
+
+        static IHost CreateHost(Options options)
+        {           
+            var t = Host.CreateDefaultBuilder()                
+                .ConfigureLogging((ILoggingBuilder logBuilder) =>
+                {
+                    logBuilder.ClearProviders();
+                })
+                .UseNLog()
                 .ConfigureAppConfiguration((builderContext, configuration) =>
-                {                    
+                {
                     IHostEnvironment env = builderContext.HostingEnvironment;
-                    Logger.Info($"Hosting environment: {env.EnvironmentName}");                    
+                    Logger.Info($"Hosting environment: {env.EnvironmentName}");
                     if (ConfigurationManager.ValidateConfig(options.ConfigFile))
                     {
                         configuration.Sources.Clear();
-                        
                         configuration
                            .AddJsonFile(options.ConfigFile, optional: false, reloadOnChange: false)
                            .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
                     }
                     else
                         Logger.Error("There was an error with the configuration file");
-
-                })
-                .ConfigureLogging((ILoggingBuilder logBuilder) =>
-                {
-                    logBuilder.ClearProviders();
-                    logBuilder.SetMinimumLevel(LogLevel.Trace);
-                    logBuilder.AddNLog(options.NLogConfig);
                 })
                 .ConfigureServices((builderContext, services) =>
                 {

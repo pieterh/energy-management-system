@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-#id
+
 set -e
 
-#ls -la /app/ems
-#dotnet --version
-#dotnet --list-runtimes
-#dotnet --info
+id
+ls -la /app/ems
+ls -la /app/ems/userdata
 
 printf "\n\033[0;44m---> Starting HEMS \033[0m\n"
 cd /app/ems

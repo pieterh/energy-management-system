@@ -9,7 +9,7 @@
   </PropertyGroup>
   <Target Name="GitInfo" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
     <Message Text="get git commit hash"></Message>
-    <Exec Command="git rev-parse HEAD > git.commit.hash.txt" />
+    <Exec Command="git rev-parse HEAD &gt; git.commit.hash.txt" />
   </Target>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
