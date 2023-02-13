@@ -76,6 +76,7 @@
       "properties": {
         "port": { "type": "number" },
         "host": { "type": "string" },
+        "https": { "type": "boolean" },
         "jwt": {
           "type": "object",
           "properties": {

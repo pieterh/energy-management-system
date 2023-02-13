@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,11 +14,10 @@ using CommandLine;
 using NLog;
 using NLog.Web;
 using EMS.Library.Configuration;
-using EMS.WebHost;
 using EMS.Library;
 using EMS.Library.Core;
 using EMS.Library.Assembly;
-using Microsoft.AspNetCore.Builder;
+using EMS.WebHost;
 
 namespace EMS
 {
@@ -35,9 +36,11 @@ namespace EMS
         static async Task Main(string[] args)
         {
             EnforceLogging();
+            Logger.Info("============================================================");
             AssemblyInfo.Init();
+
             ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
-            Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "EMS.git.commit.hash.txt")}");
+            Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "EMS.git.commit.hash.txt").Trim('\n','\r')}");
 
             Options options = new();
 
@@ -72,13 +75,21 @@ namespace EMS
                 logconsole.UseDefaultRowHighlightingRules = true;
                 config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logconsole);
                 NLog.LogManager.Configuration = config;
-                Logger.Error("test");
             }
         }
 
         private static void ConfigureLogging(Options options)
         {
-            Logger.Factory.LoadConfiguration(options.NLogConfig);
+            try
+            {
+                Logger.Factory.LoadConfiguration(options.NLogConfig);
+            }catch(FileNotFoundException e)
+            {
+                Logger.Error($"There was an error loading the logger configuration file '{options.NLogConfig}'. Using default logging.");
+            }catch(Exception e)
+            {
+                Logger.Error(e, $"There was an error loading the logger configuration file '{options.NLogConfig}'. Using default logging.");
+            }
         }
 
         static IHost CreateHost(Options options)
@@ -118,11 +129,14 @@ namespace EMS
                         kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();
                         builderContext.Configuration.GetSection("web").Bind(wc);
-
+                        
                         kestrelOptions.ListenLocalhost(wc.Port, builder =>
                         {
-                            if (!builderContext.HostingEnvironment.IsDevelopment())
+                            if (wc.https && !builderContext.HostingEnvironment.IsDevelopment())
+                            {
+                                Logger.Warn("Using https is currently not supported.");
                                 builder.UseHttps();
+                            }
                         });
                     });
 

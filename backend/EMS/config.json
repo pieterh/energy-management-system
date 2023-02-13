@@ -60,6 +60,7 @@
   "web": {
     "port": 5005,
     "host": "localhost",
+    "https": false,
     "jwt": {
       "issuer": "hems",
       "audience": "hems",

@@ -15,10 +15,11 @@ using EMS.WebHost.Helpers;
 
 namespace EMS.WebHost
 {
-    public class WebConfig
+    public record WebConfig
     {
         public ushort Port { get; set; }
         public JwtConfig Jwt { get; set; }
+        public bool https { get; set; }
     }
 
     public class Startup
