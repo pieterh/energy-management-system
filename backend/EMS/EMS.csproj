@@ -41,6 +41,8 @@
     <None Remove="NLog.config" />
     <None Remove="git.commit.hash.txt" />
     <None Remove="Engine\Model\" />
+    <None Remove="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+    <None Remove="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
   <ItemGroup>
     <Content Remove="config.schema.json" />

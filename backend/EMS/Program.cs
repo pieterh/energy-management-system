@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,11 +15,15 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using NLog;
 using NLog.Web;
+using EMS.DataStore.InMemory;
 using EMS.Library.Configuration;
 using EMS.Library;
 using EMS.Library.Core;
 using EMS.Library.Assembly;
 using EMS.WebHost;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 
 namespace EMS
 {
@@ -83,9 +89,9 @@ namespace EMS
             try
             {
                 Logger.Factory.LoadConfiguration(options.NLogConfig);
-            }catch(FileNotFoundException e)
+            }catch(FileNotFoundException)
             {
-                Logger.Error($"There was an error loading the logger configuration file '{options.NLogConfig}'. Using default logging.");
+                Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging.");
             }catch(Exception e)
             {
                 Logger.Error(e, $"There was an error loading the logger configuration file '{options.NLogConfig}'. Using default logging.");
@@ -116,7 +122,19 @@ namespace EMS
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
+                    services
+                        .AddDbContext<DataProtectionKeyContext>(o => {
+                                o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
+                                o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                        })
+                        .AddDataProtection()
+                        .AddKeyManagementOptions((opt) => {
+                            opt.XmlEncryptor = new NullXmlEncryptor();
+                            })
+                        .PersistKeysToDbContext<DataProtectionKeyContext>();
+
                     services.AddHttpClient();
+
                     ConfigureInstances(builderContext, services);
 
                     BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
@@ -183,7 +201,6 @@ namespace EMS
             return null;
         }
     }
-
 }
 
 
