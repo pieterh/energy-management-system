@@ -1,14 +1,21 @@
 name: build
-
-on: [push]
-
+run-name: Build for ${{ github.event_name }} of "${{ github.event.head_commit.message }}"  
+on: 
+  push:
+    paths:
+      - ".github/workflows/build.yml"
+      - "backend/**"
+      - "docker/**"
+      - "frontend/**"
+      - global.json
 jobs:
   build_ems_app:
+    name: Build and test HEMS Application
     runs-on: ubuntu-latest
     strategy:
       matrix:
         dotnet-version: [ '7.0.x' ]
-    steps:    
+    steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -52,7 +59,7 @@ jobs:
       shell: bash
       run: |
         mkdir -p ./.sonar/scanner 
-        dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+        dotnet tool install dotnet-sonarscanner --tool-path ./.sonar/scanner
     - name: Install dependencies - backend
       run: dotnet restore
       working-directory: backend
@@ -73,7 +80,7 @@ jobs:
     - name: Dependencies vulnerability scan - excluding test projects
       shell: bash
       if: ${{ false }}
-      run: |        
+      run: |
         IFS="," read -a myarray <<< ${{ steps.find-projects.outputs.PROJECTS }}
         for i in "${myarray[@]}"; do            
           dotnet list ${i} package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
@@ -85,7 +92,7 @@ jobs:
       working-directory: backend
     - name: Dependencies vulnerability scan
       shell: bash
-      run: |        
+      run: |
         dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
         vulnerabilities=true
         grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
@@ -112,11 +119,14 @@ jobs:
       run: dotnet build --no-restore --configuration Release
       working-directory: backend
     - name: Test - backend
-      run: dotnet test --no-restore --configuration Release --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      run: dotnet test --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       working-directory: backend
     - name: Build - Blazor WASM frontend
-      run: dotnet test --no-restore --configuration Release --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-      working-directory: frontend/EMS.BlazorWasm     
+      run: dotnet build --no-restore --configuration Release
+      working-directory: frontend/EMS.BlazorWasm      
+    - name: Test - Blazor WASM frontend
+      run: dotnet test --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: frontend/EMS.BlazorWasm
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
@@ -141,15 +151,14 @@ jobs:
         path: ${{ runner.temp }}/ems.zip
     - name: Publish - Blazor WASM frontend
       run: |
-        dotnet publish EMS.BlazorWasm.sln --configuration Release --output ${{ runner.temp }}/ems.blazorwasm
-        ls -la ${{ runner.temp }}/ems.blazorwasm
-      working-directory: frontend/EMS.BlazorWasm      
+        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazerWasm
+        ls -la publish/ems.blazorwasm 
     - name: Zip Release - Blazor WASM frontend
       uses: TheDoctor0/zip-release@0.7.1
       with:
         filename: ${{ runner.temp }}/ems.blazorwasm.zip
         path: ems.blazorwasm
-        directory: ${{ runner.temp }}
+        directory: publish
     - name: Upload Build Artifact - Blazor WASM frontend
       uses: actions/upload-artifact@v3
       with:
@@ -176,6 +185,7 @@ jobs:
         name: EMS.ReactApp
         path: ${{ runner.temp }}/ems.reactapp.zip
   build_docker_images:
+    name: Build and publish Docker images
     needs: build_ems_app
     runs-on: ubuntu-latest
     steps:    
@@ -190,7 +200,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
-        logout: true     
+        logout: true
     - name: Download environment info
       uses:  actions/download-artifact@v3
       with:
@@ -270,8 +280,8 @@ jobs:
           BACKEND=docker/dist/ems 
           FEREACT=docker/dist/ems.reactapp 
           FEWASM=docker/dist/ems.blazorwasm
-        push: true        
-    - name: Upload docker OCI image    
+        push: true
+    - name: Upload docker OCI image
       uses: actions/upload-artifact@v3
       if: ${{ false }}
       with:
