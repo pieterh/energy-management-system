@@ -2,13 +2,12 @@
 <!--
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
+[![License][license-shield]][license-url]
+[![FOSSA Status][fossa-shield]][fossa-url]
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-
-[![License][license-shield]][license-url]
-[![FOSSA Status][fossa-shield]][fossa-url]
 
 ![Build status][build-shield]
 
@@ -115,14 +114,6 @@ We'd love to get contributions from you! Take a look at the
 ## License
 
 Distributed under the BSD 3-Clause license. See [`LICENSE`](https://github.com/pieterh/energy-management-system/blob/main/LICENSE.md) for more information.
-
-## TODO 
-- [x] Integrate test results with SonarCloud
-- [x] Fix warnings with dependencies that might not be .NET 6/7 compatible
-- [ ] Introduce charge mode that includes EPEX SPOT tarif for cheap charging
-- [ ] Investigate blazor for frontend
-- [ ] Investigate blazor backend
-- [ ] Automatically generate license and attribution information of all used components
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
