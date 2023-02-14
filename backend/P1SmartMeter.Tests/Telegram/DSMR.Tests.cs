@@ -127,14 +127,14 @@ namespace P1SmartMeter.Tests.Telegram
             t.MBusDevice1.Should().NotBeNull();
         }
 
-        // [Fact]
-        // public void ParsesExampleTelegramFromFluvius_1phase()
-        // {
-        //     var t = new DSMRTelegram(MsgToString(telegram_6_fluvius), true);
-        //     t.Should().NotBeNull();
-        //     t.MBusDevice1.Should().NotBeNull();
-        // }
-        
+        //[Fact]
+        //public void ParsesExampleTelegramFromFluvius_1phase()
+        //{
+        //    var t = new DSMRTelegram(MsgToString(telegram_6_fluvius), true);
+        //    t.Should().NotBeNull();
+        //    t.MBusDevice1.Should().NotBeNull();
+        //}
+
         private static string MsgToString(string[] message)
         {
             var str = new StringBuilder();
@@ -360,6 +360,5 @@ namespace P1SmartMeter.Tests.Telegram
             @"0-2:24.2.1(200512134558S)(00872.234*m3)",
             @"!XXXX"
         };
-
     }
 }

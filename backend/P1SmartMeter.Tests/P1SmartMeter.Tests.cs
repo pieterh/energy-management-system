@@ -161,7 +161,9 @@ namespace P1SmartMeter.Tests
 
                 mock.Object.TryTake(out msg).Should().Be(item.expectMessage);
                 errorRaised.Should().Be(item.expectError);
+#if DEBUG
                 Console.WriteLine(item.data);
+#endif
             }
         }
 

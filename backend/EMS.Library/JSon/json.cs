@@ -25,9 +25,13 @@ namespace EMS.Library.JSon
         }
 
         public static void ShowEvaluationDetails(IReadOnlyList<EvaluationResults> results){
-            Console.WriteLine(results.Count());            
+#if DEBUG
+            Console.WriteLine(results.Count());
+#endif
             var invalids = results.Where((x) => !x.IsValid);
+#if DEBUG
             Console.WriteLine(invalids.Count());
+#endif
             foreach(var invalid in invalids)
             {
                 if (invalid.Details.Count > 0)
