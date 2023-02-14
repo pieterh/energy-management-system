@@ -123,7 +123,7 @@ namespace EMS
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
-                    /*TODO hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
+                    /* nog te doen: hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
                     EMS.DataStore.DbConfig dbConfig = new();
                     builderContext.Configuration.GetSection("db").Bind(dbConfig);
                     EMS.DataStore.HEMSContext.DbPath = dbConfig.dbname;

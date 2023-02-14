@@ -14,7 +14,7 @@ namespace EMS
         private readonly Measurements _measurements = new(60);
         private readonly ChargingStateMachine _state = new();
 
-        // TODO refactor
+        // nog te doen refactor
         private Base _model;
         private readonly MaxCharging _maxCharging;
         private readonly EcoFriendly _ecoFriendly;

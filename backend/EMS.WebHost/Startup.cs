@@ -55,7 +55,7 @@ namespace EMS.WebHost
             // not nice to create the service here
             // and we also need a reference to the service later
             // hence we did add it as a dummy arg to configure....
-            // TODO: fix this weird dependency
+            // nog te doen: fix this weird dependency
             IJWTService jwtCreator = null;            
             services.AddSingleton<IJWTService>((x) => {
                 jwtCreator = ActivatorUtilities.CreateInstance<JwtTokenService>(x);
@@ -162,7 +162,7 @@ namespace EMS.WebHost
 
             app.UseSpa(spa =>
             {
-                //TODO do we still need this?
+                // do we still need this?
                 //if (Env.IsDevelopment())
                 //{
                     // Make sure you have started the frontend with npm run dev on port 5010

@@ -6,7 +6,7 @@ namespace EMS.DataStore
 {
 	public class HEMSContext : DbContext
 	{
-        // TODO use more elegant way of passing the DbPath
+        // nog te doen: use more elegant way of passing the DbPath
         // https://www.codeproject.com/Articles/5281767/Scalable-Scenario-to-Configuring-Entity-Framework
         public static string DbPath { get; set; } = default!;
         public DbSet<ChargingTransaction> ChargingTransactions { get; set; } = default!;
