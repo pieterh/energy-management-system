@@ -37,10 +37,6 @@ namespace EMS.WebHost.Middleware
                 return Next(context);
             }
             
-            // it looks like the page is reloading, just serve the index page
-            //context.Response.ContentType = "text/html";
-            //context.Request.Path = Path.Combine("/app", "index.html");           
-            
             return Next(context);
         }    
     }

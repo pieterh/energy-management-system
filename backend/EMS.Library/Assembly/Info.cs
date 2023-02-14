@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -13,14 +14,10 @@ namespace EMS.Library.Assembly
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.AssemblyLoad += new AssemblyLoadEventHandler(MyAssemblyLoadEventHandler);
 
-            var allAppInfo = new StringBuilder();
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where((a) => LogAssembly(a)))
             {
-                if (LogAssembly(a))
-                {
-                    StringBuilder info = GetInfo(a);
-                    Logger.Info(info);
-                }
+                StringBuilder info = GetInfo(a);
+                Logger.Info(info);
             }
         }
 
@@ -48,4 +45,3 @@ namespace EMS.Library.Assembly
         }
     }
 }
-

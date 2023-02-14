@@ -97,7 +97,7 @@ namespace EMS.Library.Tests
         //        {
         //            if (typeof(System.OperationCanceledException) != ie.GetType())
         //            {
-        //                Console.WriteLine($"There was a task with an error");
+        //                g Console.WriteLine($"There was a task with an error");
         //                throw;
         //            }
         //        }

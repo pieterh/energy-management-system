@@ -101,15 +101,15 @@
     "db": {
       "type": "object",
       "properties": {
-        "dbtype": {
+        "type": {
           "type": "string",
           "enum": [ "sqlite" ]
         },
-        "dbname": { "type": "string" }
+        "name": { "type": "string" }
       },
       "required": [
-        "dbtype",
-        "dbname"
+        "type",
+        "name"
       ]
     }
   },

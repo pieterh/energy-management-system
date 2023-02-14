@@ -160,17 +160,6 @@ namespace EMS.WebHost
                 endpoints.MapControllers();
             });
 
-            app.UseSpa(spa =>
-            {
-                // do we still need this?
-                //if (Env.IsDevelopment())
-                //{
-                    // Make sure you have started the frontend with npm run dev on port 5010
-                    //spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");
-                    //spa.UseProxyToSpaDevelopmentServer("http://localhost:5281");                //NOSONAR
-                //}                
-            });
-
             app.Use((context, next) => {
                 Logger.LogInformation("{path}", context.Request.Path);
                 return next.Invoke();

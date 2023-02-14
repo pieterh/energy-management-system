@@ -3,10 +3,10 @@ namespace EMS.DataStore
 {
     public record DbConfig
     {
-        public enum DbTypeEnum { sqlite };
+        public enum DbType { sqlite };
 
-        public DbTypeEnum DbType { get; set; }
-        public string dbname { get; set; } = default!;
+        public DbType type { get; set; }
+        public string name { get; set; } = default!;
     }
 }
 

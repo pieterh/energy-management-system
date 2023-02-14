@@ -19,11 +19,12 @@ public record ChargingTransaction
             if (_costDetails == null) _costDetails = new List<CostDetail>() ;
             return _costDetails;
         }
-        set { _costDetails = value ; }
     }
 
     protected virtual bool PrintMembers(StringBuilder stringBuilder)
     {
+        if (stringBuilder == null) throw new ArgumentNullException(nameof(stringBuilder));
+
         stringBuilder.Append($"ID = {ID}, ");
         stringBuilder.Append($"Timestamp = {Timestamp.ToLocalTime():O}, ");
         stringBuilder.Append($"EnergyDelivered = {EnergyDelivered} kWh, ");
