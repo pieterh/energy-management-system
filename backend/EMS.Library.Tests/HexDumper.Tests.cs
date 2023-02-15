@@ -1,10 +1,11 @@
 using System;
 using System.Text;
 using Xunit;
+using EMS.Library;
 
-namespace EMS.Library.Tests
+namespace HexDumperTest
 {
-    public class HexDumperTests
+    public class HexDumperTest
     {
         [Theory]
         [InlineData(new byte[] { 0x4c, 0x41, 0x2d, 0x46, 0x30, 0x30, 0x30, 0x30, 0x30, 0x33, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00 }, "00   4c 41 2d 46 30 30 30 30 30 33 00 30 00 00 00 00   LA-F000003.0....")]

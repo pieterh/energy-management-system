@@ -3,7 +3,7 @@ using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.TestableDateTime;
 using Xunit;
 
-namespace EMS.Library.Tests
+namespace TariffTests
 {
 	public class TariffTests
 	{

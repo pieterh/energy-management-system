@@ -9,7 +9,7 @@ using Moq;
 using Moq.Protected;
 using EMS.Library;
 
-namespace EMS.Library.Tests
+namespace BackgroundWorker
 {
     public class BackgroundWorkerTests
     {
@@ -18,8 +18,6 @@ namespace EMS.Library.Tests
         [Fact]
         public void CreateAndDispose()
         {
-            Semaphore semaphore = new Semaphore(0, 1);
-
             var mock = new Mock<BGTester>();
 
             mock.Protected().Setup("Dispose", ItExpr.IsAny<bool>()).CallBase();
@@ -34,8 +32,6 @@ namespace EMS.Library.Tests
         [Fact]
         public void CreateAndDoubleDispose()
         {
-            Semaphore semaphore = new Semaphore(0, 1);
-
             var mock = new Mock<BGTester>();
 
             mock.Protected().Setup("Dispose", ItExpr.IsAny<bool>()).CallBase();
@@ -45,6 +41,8 @@ namespace EMS.Library.Tests
             alfen.Dispose();
             alfen.Dispose();
             alfen.Dispose();
+
+            Assert.Null(alfen.BackgroundTask);
         }
 
         //[Fact]
@@ -221,7 +219,7 @@ namespace EMS.Library.Tests
         //}
     }
 
-    public class BGTester : BackgroundWorker
+    public class BGTester : EMS.Library.BackgroundWorker
     {
 
         protected override void DoBackgroundWork()
