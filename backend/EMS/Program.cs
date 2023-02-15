@@ -60,28 +60,34 @@ namespace EMS
 
             try
             {
-                await CreateHost(options).RunAsync();
+                using var host = CreateHost(options);
+                host.Run();
             }
             finally
             {
+                Logger.Info("============================================================");
                 // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
-                NLog.LogManager.Shutdown();
+                NLog.LogManager.Shutdown();               
             }
         }
 
         /// <summary>
         /// We need to make sure that if there is no logging configuration, that we will log to the console. This will
         /// ensure that there is always logging avaialable, even in the scenario of misconfiguration.
+        /// Only basic logging will be provided to prevent excessive logging.
         /// </summary>
-        private static void EnforceLogging()
+        private static void EnforceLogging(bool overrideExisting = false)
         {
-            if (Logger.Factory.Configuration == null)
+            if (NLog.LogManager.Configuration == null ||
+                !NLog.LogManager.GetCurrentClassLogger().IsFatalEnabled || !NLog.LogManager.GetCurrentClassLogger().IsErrorEnabled ||
+                overrideExisting)
             {                
                 var config = new NLog.Config.LoggingConfiguration();
                 var logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
                 logconsole.UseDefaultRowHighlightingRules = true;
-                config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logconsole);
-                NLog.LogManager.Configuration = config;
+                config.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, logconsole);
+                NLog.LogManager.Configuration = config; // Sensitive
+                NLog.LogManager.ReconfigExistingLoggers();  // ensure that all existing loggers are updated with the new configuration
             }
         }
 
@@ -89,13 +95,18 @@ namespace EMS
         {
             try
             {
-                Logger.Factory.LoadConfiguration(options.NLogConfig);
+                NLog.LogManager.LoadConfiguration(options.NLogConfig);
+                NLog.LogManager.ReconfigExistingLoggers();
+                if (!Logger.IsFatalEnabled || !Logger.IsErrorEnabled)
+                {
+                    // set basic logging
+                    EnforceLogging(true);
+                    Logger.Fatal("No logging was configured. Default to basic logging to console.");
+                }
             }catch(FileNotFoundException)
             {
-                Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging.");
-            }catch(Exception e)
-            {
-                Logger.Error(e, $"There was an error loading the logger configuration file '{options.NLogConfig}'. Using default logging.");
+                Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
+                EnforceLogging(true);
             }
         }
 
