@@ -12,13 +12,13 @@
 
 ![Build status][build-shield]
 
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=ncloc)](https://sonarcloud.io/dashboard?id=energy-management-system)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=bugs)](https://sonarcloud.io/dashboard?id=energy-management-system)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=energy-management-system)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=code_smells)](https://sonarcloud.io/dashboard?id=energy-management-system)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=energy-management-system)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=sqale_index)](https://sonarcloud.io/dashboard?id=energy-management-system)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=energy-management-system&metric=coverage)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=ncloc)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=bugs)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=code_smells)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=sqale_index)](https://sonarcloud.io/dashboard?id=energy-management-system)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=pieterh_energy-management-system&metric=coverage)](https://sonarcloud.io/dashboard?id=energy-management-system)
 
 ## Development Startup
 backend: dotnet ems.dll --config config.json --nlogcfg NLog.config (listening on 5005)
