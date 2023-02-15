@@ -183,7 +183,7 @@ namespace P1SmartMeter.Tests.Telegram
             @"!E1FA"
         };
 
-        private static string[] message_2 = {
+        /*private static string[] message_2 = {
             @"/ISK5\2M550T-1013",
             @"",
             @"1-3:0.2.8(50)",
@@ -219,7 +219,7 @@ namespace P1SmartMeter.Tests.Telegram
             @"1-0:42.7.0(00.000*kW)",
             @"1-0:62.7.0(00.000*kW)",
             @"!148A"
-        };
+        };*/
 
         private static string[] message_3 = {
             @"/Ene5\XS210 ESMR 5.0",
@@ -330,7 +330,7 @@ namespace P1SmartMeter.Tests.Telegram
 
         // fluvius example (eMUCs – P1 V1.6 page 14)
         // 1-phase meter with a Gas meter on CH1 and a Water meter on CH2)
-        private static string[] telegram_6_fluvius = {
+        /*private static string[] telegram_6_fluvius = {
             @"/FLU5\253770234_A",
             @"",            
             @"0-0:96.1.4(50216)",
@@ -359,6 +359,6 @@ namespace P1SmartMeter.Tests.Telegram
             @"0-2:96.1.1(3853414731323334353637383930)",
             @"0-2:24.2.1(200512134558S)(00872.234*m3)",
             @"!XXXX"
-        };
+        };*/
     }
 }

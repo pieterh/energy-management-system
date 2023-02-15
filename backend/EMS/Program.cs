@@ -40,7 +40,7 @@ namespace EMS
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             EnforceLogging();
             Logger.Info("============================================================");

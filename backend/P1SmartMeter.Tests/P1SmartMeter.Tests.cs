@@ -37,94 +37,94 @@ namespace P1SmartMeter.Tests
         {
             dataSet.Add(tc01, new TestItem[]
                 {
-                    new TestItem() { data = "A" , expectMessage=false, expectError=true }
+                    new TestItem() { Data = "A" , ExpectMessage=false, ExpectError=true }
                 }
             );
 
             dataSet.Add(tc02, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1) , expectMessage=true, expectError=false }
+                    new TestItem() { Data = MsgToString(message_1) , ExpectMessage=true, ExpectError=false }
                 }
             );
 
             dataSet.Add(tc03, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_2) , expectMessage=true, expectError=false }
+                    new TestItem() { Data = MsgToString(message_2) , ExpectMessage=true, ExpectError=false }
                 }
             );
 
             dataSet.Add(tc04, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, 10) , expectMessage=false, expectError=false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(10) , expectMessage=true, expectError=false }
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(10) , ExpectMessage=true, ExpectError=false }
                 }
             );
 
             dataSet.Add(tc05, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, 10) , expectMessage=false, expectError=false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(10, 10) , expectMessage=false, expectError=false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(20, 10) , expectMessage=false, expectError=false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(30, 10) , expectMessage=false, expectError=false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(40) , expectMessage=true, expectError=false }
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(20, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(30, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(40) , ExpectMessage=true, ExpectError=false }
                 }
             );
 
             dataSet.Add(tc06, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - 25) , expectMessage = false, expectError = true },
-                    new TestItem() { data = MsgToString(message_2) , expectMessage = true, expectError = false }
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - 25) , ExpectMessage = false, ExpectError = true },
+                    new TestItem() { Data = MsgToString(message_2) , ExpectMessage = true, ExpectError = false }
                 }
             );
 
             dataSet.Add(tc07, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, 10) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_2) , expectMessage = true, expectError = true } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2) , ExpectMessage = true, ExpectError = true } ,
                 }
             );
 
             dataSet.Add(tc08, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, 30) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_2).Substring(0, 10) , expectMessage=false, expectError=true } ,
-                    new TestItem() { data = MsgToString(message_2).Substring(10, 10) , expectMessage=false, expectError=false } ,
-                    new TestItem() { data = MsgToString(message_2).Substring(20), expectMessage=true, expectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 30) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
                 }
             );
 
             dataSet.Add(tc08b, new TestItem[]
                 {
-                                new TestItem() { data = MsgToString(message_1).Substring(0, 10) , expectMessage = false, expectError = false } ,
-                                new TestItem() { data = MsgToString(message_2).Substring(0, 10) , expectMessage=false, expectError=true } ,
-                                new TestItem() { data = MsgToString(message_2).Substring(10, 10) , expectMessage=false, expectError=false } ,
-                                new TestItem() { data = MsgToString(message_2).Substring(20), expectMessage=true, expectError=false } ,
+                                new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                                new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
+                                new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
+                                new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
                 }
             );
 
             dataSet.Add(tc09, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, 10) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - 25) , expectMessage = false, expectError = true } ,
-                    new TestItem() { data = MsgToString(message_2).Substring(0, 10) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_2).Substring(10) , expectMessage = true, expectError = false }
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - 25) , ExpectMessage = false, ExpectError = true } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(10) , ExpectMessage = true, ExpectError = false }
                 }
             );
             dataSet.Add(tc10, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (4+2)) , expectMessage = true, expectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (4+2)) , ExpectMessage = true, ExpectError = false } ,
                 }
             );
             dataSet.Add(tc11, new TestItem[]
                 {
-                    new TestItem() { data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (6), 1) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (5), 1) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (4), 1) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (3), 1) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (2), 1) , expectMessage = false, expectError = false } ,
-                    new TestItem() { data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (1), 1) , expectMessage = true, expectError = false }
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (6), 1) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (5), 1) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (4), 1) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (3), 1) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (2), 1) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (1), 1) , ExpectMessage = true, ExpectError = false }
                 }
             );
         }
@@ -156,13 +156,13 @@ namespace P1SmartMeter.Tests
             foreach (var item in items)
             {
                 errorRaised = false;
-                var hasMessage = mock.Object.Add(item.data);
+                var hasMessage = mock.Object.Add(item.Data);
                 string msg;
 
-                mock.Object.TryTake(out msg).Should().Be(item.expectMessage);
-                errorRaised.Should().Be(item.expectError);
+                mock.Object.TryTake(out msg).Should().Be(item.ExpectMessage);
+                errorRaised.Should().Be(item.ExpectError);
 #if DEBUG
-                Console.WriteLine(item.data);
+                Console.WriteLine(item.Data);
 #endif
             }
         }
@@ -399,11 +399,11 @@ namespace P1SmartMeter.Tests
             @"!A5B3"
         };
 
-        public class TestItem
+        private sealed record TestItem
         {
-            public string data { get; set; }
-            public bool expectMessage { get; set; }
-            public bool expectError { get; set; }
+            public string Data { get; set; } = default!;
+            public bool ExpectMessage { get; set; }
+            public bool ExpectError { get; set; }
         }
     }
 }
