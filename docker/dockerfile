@@ -1,5 +1,8 @@
+FROM mcr.microsoft.com/dotnet/aspnet:7.0.2
 
-FROM mcr.microsoft.com/dotnet/aspnet:latest
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod ugo+x /usr/local/bin/entrypoint.sh
+RUN chmod ugo+r /usr/local/bin/entrypoint.sh
 
 ARG BACKEND
 ARG FEREACT
@@ -22,9 +25,5 @@ RUN ls -la /app/ems
 COPY $FEREACT/ /app/ems/dist/
 RUN ls -la /app/ems/dist
 RUN ls -la /app/ems/dist/app
-
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod ugo+x /usr/local/bin/entrypoint.sh
-RUN chmod ugo+r /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
