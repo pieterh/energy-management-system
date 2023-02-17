@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:7.0.2
+FROM mcr.microsoft.com/dotnet/aspnet:7.0.3
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh
