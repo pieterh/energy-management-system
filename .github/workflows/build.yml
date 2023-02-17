@@ -90,7 +90,7 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
-    - name: Dependencies vulnerability scan
+    - name: Dependencies vulnerability scan - Backend
       shell: bash
       run: |
         dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
@@ -99,7 +99,7 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
-    - name: Dependencies deprecation scan
+    - name: Dependencies deprecation scan - Backend
       shell: bash
       run: |
         dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
@@ -108,6 +108,24 @@ jobs:
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies vulnerability scan - Blazor WASM frontend
+      shell: bash
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
+        vulnerabilities=true
+        grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
+        [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
+        exit 0
+      working-directory: frontend/EMS.BlazorWasm      
+    - name: Dependencies deprecation scan - Blazor WASM frontend
+      shell: bash
+      run: |
+        dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
+        deprecations=true
+        grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
+        [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
+        exit 0
+      working-directory: frontend/EMS.BlazorWasm      
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
