@@ -1,48 +1,12 @@
 ﻿@page "/"
-@using EMS.BlazorWasm.Client.Services
-@inject IUserService _userService;
-
 
 <div>
     <AuthorizeView>
         <Authorized>
-            <h1>Your Dashboard - Your Claims</h1>
-            <div>
-                @foreach (var claim in userClaim)
-                {
-                    <div>@claim.Type - @claim.Value</div>
-                }
-            </div>
-            <div>
-                <button type="button" @onclick="Logout">Logout</button>
-            </div>
+            <DashboardRedirect/>
         </Authorized>
         <NotAuthorized>
             <LoginRedirect />
         </NotAuthorized>
     </AuthorizeView>
 </div>
-
-
-@code{
-    [CascadingParameter]
-    private Task<AuthenticationState> authenticationState { get; set; } = default!;
-
-    private IList<Claim> userClaim
-    {
-        get
-        {
-            var auth = authenticationState.Result;
-            if (auth?.User.Identity?.IsAuthenticated ?? false)
-            {
-                return auth.User.Claims.ToList();
-            }
-            return new List<Claim>();
-        }
-    }
-
-    private void Logout()
-    {
-        _userService.LogoutAsync();
-    }
-}
