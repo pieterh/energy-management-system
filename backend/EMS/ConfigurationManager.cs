@@ -16,7 +16,7 @@ namespace EMS
             // read JSON directly from a file
             using var streamReader = GetConfigFile(filename);
             var result = JsonSerializer.Deserialize<JsonElement>(streamReader.BaseStream, Options);
-            var schema = JSon.GetSchema("EMS.config.schema.json");
+            var schema = JSon.GetSchema("config.schema.json");
             SchemaRegistry.Global.Register(new Uri("https://github.com/pieterh/energy-management-system"), schema);
             var validationResult = schema.Evaluate(result, new EvaluationOptions() { OutputFormat = OutputFormat.Hierarchical });
             
@@ -34,12 +34,13 @@ namespace EMS
                 var r = ReadConfig(filename);                
                 return true;
             }
-            catch (Exception e)
+            catch (System.Text.Json.JsonException e)
             {
                 Logger.Error(e, "There was an error validating the config file.");
             }
             return false;
         }
+
         private static StreamReader GetConfigFile(string cfgn)
         {
             Logger.Trace($"Loading configuration file from {cfgn}");

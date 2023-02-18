@@ -137,13 +137,13 @@ jobs:
       run: dotnet build --no-restore --configuration Release
       working-directory: backend
     - name: Test - backend
-      run: dotnet test --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      run: dotnet test --filter "Category=Unit" --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       working-directory: backend
     - name: Build - Blazor WASM frontend
       run: dotnet build --no-restore --configuration Release
       working-directory: frontend/EMS.BlazorWasm      
     - name: Test - Blazor WASM frontend
-      run: dotnet test --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      run: dotnet test --filter "Category=Unit" --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       working-directory: frontend/EMS.BlazorWasm
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}

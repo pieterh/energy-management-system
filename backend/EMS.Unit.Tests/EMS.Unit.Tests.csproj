@@ -4,6 +4,7 @@
 		<IsPackable>false</IsPackable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AssemblyName>EMS.Tests</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
@@ -33,9 +34,11 @@
 		<None Remove="Engine\Model\" />
 		<None Remove="System.Text.RegularExpressions" />
 		<None Remove="System.Net.Http" />
+		<None Remove="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Engine\" />
 		<Folder Include="Engine\Model\" />
+		<Folder Include="Properties\" />
 	</ItemGroup>
 </Project>

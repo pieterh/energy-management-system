@@ -126,7 +126,7 @@ namespace EPEXSPOT
             var uri = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString);
 
             using var resultStream = await client.GetStreamAsync(uri);
-            var schema = JSon.GetSchema("EPEXSPOT.schemas.getapxtariffs.schema.json");
+            var schema = JSon.GetSchema("getapxtariffs.schema.json");
 
             // read the objects directly from the stream, including schema validation
             /*using JsonTextReader reader = new(new StreamReader(resultStream));

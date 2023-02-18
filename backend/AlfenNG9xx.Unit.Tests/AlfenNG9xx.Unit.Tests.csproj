@@ -4,6 +4,7 @@
 		<IsPackable>false</IsPackable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AssemblyName>AlfenNG9xx.Tests</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
@@ -25,17 +26,14 @@
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
+		<ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="System.Net.Http" />
 	  <None Remove="System.Text.RegularExpressions" />
-	  <None Remove="Assembly\" />
+	  <None Remove="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Assembly\" />
-	</ItemGroup>
-	<ItemGroup>
-		<EmbeddedResource Include="ResourcesHelper.Resource.txt" />
+	  <Folder Include="Properties\" />
 	</ItemGroup>
 </Project>

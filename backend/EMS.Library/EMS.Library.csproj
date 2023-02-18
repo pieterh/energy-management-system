@@ -5,9 +5,9 @@
 	<Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.1.1"/>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
-    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2"/>
+    <PackageReference Include="NLog" Version="5.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Adapter\" />

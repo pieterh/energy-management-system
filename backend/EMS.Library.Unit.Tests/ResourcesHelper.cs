@@ -11,7 +11,7 @@ public class ResourcesHelperTests
     public void LoadValidResource()
     {
         var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-        var str = EMS.Library.ResourceHelper.ReadAsString(assembly, "EMS.Library.Tests.ResourcesHelper.Resource.txt");
+        var str = EMS.Library.ResourceHelper.ReadAsString(assembly, "ResourcesHelper.Resource.txt");
         Assert.NotNull(str);
         Assert.False(string.IsNullOrWhiteSpace(str));
         Assert.Equal("dit is een embedded resource text", str);

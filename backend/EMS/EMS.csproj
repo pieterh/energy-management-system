@@ -43,15 +43,16 @@
     <None Remove="Engine\Model\" />
     <None Remove="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <None Remove="Microsoft.EntityFrameworkCore.InMemory" />
+    <None Remove="Schemas\" />
+    <None Remove="Schemas\config.schema.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Remove="config.schema.json" />
+    <EmbeddedResource Include="Schemas\config.schema.json">
+      <LogicalName>config.schema.json</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="config.schema.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="git.commit.hash.txt" />
+    <EmbeddedResource Include="git.commit.hash.txt" LogicalName="git.commit.hash.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.json">
@@ -67,5 +68,6 @@
   <ItemGroup>
     <Folder Include="Engine\" />
     <Folder Include="Engine\Model\" />
+    <Folder Include="Schemas\" />
   </ItemGroup>
 </Project>

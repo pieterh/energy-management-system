@@ -47,7 +47,7 @@ namespace EMS
             AssemblyInfo.Init();
 
             ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
-            Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "EMS.git.commit.hash.txt").Trim('\n','\r')}");
+            Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "git.commit.hash.txt").Trim('\n','\r')}");
 
             Options options = new();
 
