@@ -11,14 +11,13 @@ using EMS.BlazorWasm.Client.Services.Chargepoint;
 using EMS.BlazorWasm.Services.Auth;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 #if DEBUG
 var baseAddres = new Uri("http://localhost:5005");
 #else
 var baseAddres =  new Uri(builder.HostEnvironment.BaseAddress);
 #endif
-
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddSingleton<EMS.BlazorWasm.Services.ILocalStorage, EMS.BlazorWasm.Services.LocalStorageService>();
 builder.Services.AddHttpClient<IUserService, UserService>(client =>
