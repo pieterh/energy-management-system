@@ -30,19 +30,21 @@ namespace EMS.BlazorWasm.Client.Services.Auth
                 throw new ArgumentOutOfRangeException(nameof(authenticationStateProvider));
             _authenticationStateProvider = (CustomAuthenticationProvider)authenticationStateProvider;
 
+            if (localStorage == null) throw new ArgumentNullException(nameof(localStorage));
             _localStorage = localStorage;
         }
 
         public async Task<LoginResponse> LoginAsync(LoginModel model)
         {
-            
-            var jsonString = JsonSerializer.Serialize(model);
-            var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            return await LoginAsync(model, CancellationToken.None);
+        }
 
-            var r = await _httpClient.PostAsync("api/users/authenticate", content);
+        public async Task<LoginResponse> LoginAsync(LoginModel model, CancellationToken cancellationToken)
+        {
+            var content = JsonContent.Create<LoginModel>(model);
+            var r = await _httpClient.PostAsync("api/users/authenticate", content, cancellationToken);
             if (r == null) throw new NullReferenceException("Oeps");
-            string responseBody = await r.Content.ReadAsStringAsync();
-            var loginResponse = JsonSerializer.Deserialize<LoginResponse>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var loginResponse = await r.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
             if (loginResponse == null) throw new NullReferenceException("Oeps2");
 
             var (user, token) = loginResponse;

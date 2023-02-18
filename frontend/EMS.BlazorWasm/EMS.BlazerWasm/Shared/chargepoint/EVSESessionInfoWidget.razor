@@ -1,10 +1,27 @@
-﻿<DashboardCard avatar="@Icons.Material.Filled.EvStation" title="Alfen Eve Single Pro-line" subheader="ALF-0000307 Socker #1">
+﻿@using EMS.BlazorWasm.Client.Services.Chargepoint
+@inject IChargepointService ChargepointService
+
+<DashboardCard avatar="@Icons.Material.Filled.EvStation" title="Alfen Eve Single Pro-line" subheader="ALF-0000307 Socket #1">
     <Body>
         <MudText Typo="Typo.body1">
-            Available<br />
-            No Power<br />
-            7929 kW kWH energy delivered<br />
+            Capacity available @(_socketInfo?.powerAvailableFormatted) @(_socketInfo?.phases == 1 ? "1 phase": "3 phases") <br />
+            <br />
+            @(_socketInfo?.mode3StateMessage) @(_socketInfo?.lastChargingStateChanged)<br />
+            @(_socketInfo?.realEnergyDeliveredFormatted) energy delivered<br />
             11.3 kW
         </MudText>
     </Body>
 </DashboardCard>
+
+@code{
+
+    SocketR? _socketInfo;
+    SessionR? _sessionInfo;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var resp = await ChargepointService.GetSessionInfoAsync(1);
+        _sessionInfo = resp.sessionInfo;
+        _socketInfo = resp.socketInfo;
+    }
+}

@@ -7,20 +7,42 @@ using MudBlazor.Services;
 using EMS.BlazorWasm;
 using EMS.BlazorWasm.Client.Services;
 using EMS.BlazorWasm.Client.Services.Auth;
+using EMS.BlazorWasm.Client.Services.Chargepoint;
+using EMS.BlazorWasm.Services.Auth;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+
+
+#if DEBUG
+var baseAddres = new Uri("http://localhost:5005");
+#else
+var baseAddres =  new Uri(builder.HostEnvironment.BaseAddress);
+#endif
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddSingleton<EMS.BlazorWasm.Services.ILocalStorage, EMS.BlazorWasm.Services.LocalStorageService>();
 builder.Services.AddHttpClient<IUserService, UserService>(client =>
 {
-#if DEBUG
-    client.BaseAddress = new Uri("http://localhost:5005");
-#else
-    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
-#endif
-
+    client.BaseAddress = baseAddres;
 });
+
+builder.Services.AddScoped<IAccessTokenProvider, TokenProvider>();
+builder.Services.AddScoped<CustomAuthorizationMessageHandler>();
+builder.Services.AddHttpClient("ServerAPI", client => client.BaseAddress = baseAddres)
+    .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
+
+
+builder.Services.AddScoped<IChargepointService, ChargepointService>((sp) => {
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient("ServerAPI");
+    var instance = ActivatorUtilities.CreateInstance<ChargepointService>(sp, httpClient);
+    return instance;
+});
+
+
+
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationProvider>();
+
 builder.Services.AddAuthorizationCore();
 builder.Services.AddMudServices();
 
