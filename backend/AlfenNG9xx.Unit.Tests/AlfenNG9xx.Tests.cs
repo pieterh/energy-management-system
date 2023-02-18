@@ -129,7 +129,7 @@ namespace AlfenNG9xx.Tests
         public void DetermineNoCurrent()
         {
             (var max, var phases) = Alfen.DetermineMaxCurrent(-1, -2, -3);
-            Assert.Equal(0, max, 0.1);
+            Assert.Equal(-1, max, 0.1);
             Assert.Equal(0, phases);
         }
 

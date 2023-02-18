@@ -1,11 +1,8 @@
 FROM mcr.microsoft.com/dotnet/aspnet:7.0.3
 
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY build/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh
 RUN chmod ugo+r /usr/local/bin/entrypoint.sh
-
-ARG BACKEND
-ARG FEREACT
 
 RUN mkdir /app
 RUN mkdir /app/ems
@@ -14,8 +11,11 @@ RUN chmod ugo+x /app/ems
 RUN chmod ugo+r /app
 RUN chmod ugo+r /app/ems
 
-RUN echo $BACKEND
-RUN echo $FEREACT
+ARG BACKEND
+ARG FEREACT
+
+ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 5000/tcp
 
 COPY $BACKEND/ /app/ems/
 RUN rm /app/ems/NLog.config

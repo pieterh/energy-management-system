@@ -86,9 +86,9 @@ namespace AlfenNG9xx
         {
             Logger.Info($"Alfen Starting");
 
-            ShowProductInformation();
-            ShowStationStatus();
-            ShowSocketMeasurement();
+            //ShowProductInformation();
+            //ShowStationStatus();
+            //ShowSocketMeasurement();
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -111,8 +111,8 @@ namespace AlfenNG9xx
                 }
                 catch (Exception e)
                 {
-                    Logger.Error("Exception: " + e.Message);
-                    Logger.Error(e, "Unhandled, we try later again");
+                    //Logger.Error("Exception: " + e.Message);
+                    Logger.Error(e, "Unhandled, we try later again\n");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
                     await Task.Delay(2500, stoppingToken);
@@ -150,7 +150,6 @@ namespace AlfenNG9xx
 
         protected virtual void ShowProductInformation()
         {
-            //Modbus TCP over socket
             try
             {
                 var pi = ReadProductIdentification();
@@ -167,45 +166,60 @@ namespace AlfenNG9xx
                 Logger.Info("Up since                   : {0}", pi.UpSinceUtc.ToString("O"));
                 Logger.Info("Timezone                   : {0}", pi.StationTimezone);
             }
-            catch (Exception e)
+            catch (SystemException se)
             {
-                Logger.Error(e, "{0}", e.ToString());
+                Logger.Error(se, $"{se.Message}");
             }
         }
 
         private void ShowStationStatus()
         {
-            var status = ReadStationStatus();
+            try
+            {
+                var status = ReadStationStatus();
+                if (status == null) return;
 
-            Logger.Info($"Station Active Max Current : {status.ActiveMaxCurrent}");
-            Logger.Info($"Temperature                : {status.Temperature}");
-            Logger.Info($"OCCP                       : {status.OCCPState}");
-            Logger.Info($"Nr of sockets              : {status.NrOfSockets}");
+                Logger.Info($"Station Active Max Current : {status.ActiveMaxCurrent}");
+                Logger.Info($"Temperature                : {status.Temperature}");
+                Logger.Info($"OCCP                       : {status.OCCPState}");
+                Logger.Info($"Nr of sockets              : {status.NrOfSockets}");
+            }
+            catch (SystemException se)
+            {
+                Logger.Error(se, $"{se.Message}");
+            }
         }
 
         private void ShowSocketMeasurement()
         {
-            var sm = ReadSocketMeasurement(1);
-            if (sm == null) return;
+            try
+            {
+                var sm = ReadSocketMeasurement(1);
+                if (sm == null) return;
 
-            Logger.Info($"Meter State                : {sm.MeterState}");
-            Logger.Info($"Meter Timestamp            : {sm.MeterTimestamp}");
-            Logger.Info($"Meter Type                 : {sm.MeterType}");
+                Logger.Info($"Meter State                : {sm.MeterState}");
+                Logger.Info($"Meter Timestamp            : {sm.MeterTimestamp}");
+                Logger.Info($"Meter Type                 : {sm.MeterType}");
 
-            Logger.Info($"Real Energy Delivered L1   : {sm.RealEnergyDeliveredL1}");
-            Logger.Info($"Real Energy Delivered L2   : {sm.RealEnergyDeliveredL2}");
-            Logger.Info($"Real Energy Delivered L3   : {sm.RealEnergyDeliveredL3}");
-            Logger.Info($"Real Energy Delivered Sum  : {sm.RealEnergyDeliveredSum}");
+                Logger.Info($"Real Energy Delivered L1   : {sm.RealEnergyDeliveredL1}");
+                Logger.Info($"Real Energy Delivered L2   : {sm.RealEnergyDeliveredL2}");
+                Logger.Info($"Real Energy Delivered L3   : {sm.RealEnergyDeliveredL3}");
+                Logger.Info($"Real Energy Delivered Sum  : {sm.RealEnergyDeliveredSum}");
 
-            Logger.Info($"Availability               : {sm.Availability}");
-            Logger.Info($"Mode 3 State               : {sm.Mode3State}");
+                Logger.Info($"Availability               : {sm.Availability}");
+                Logger.Info($"Mode 3 State               : {sm.Mode3State}");
 
-            Logger.Info($"Actual Applied Max Current : {sm.AppliedMaxCurrent}");
-            Logger.Info($"Max Current Valid Time     : {sm.MaxCurrentValidTime}");
-            Logger.Info($"Max Current                : {sm.MaxCurrent}");
-            Logger.Info($"Active Load Bl safe current: {sm.ActiveLBSafeCurrent}");
-            Logger.Info($"Setpoint accounted for     : {sm.SetPointAccountedFor}");
-            Logger.Info($"Using # phases             : {sm.Phases}");
+                Logger.Info($"Actual Applied Max Current : {sm.AppliedMaxCurrent}");
+                Logger.Info($"Max Current Valid Time     : {sm.MaxCurrentValidTime}");
+                Logger.Info($"Max Current                : {sm.MaxCurrent}");
+                Logger.Info($"Active Load Bl safe current: {sm.ActiveLBSafeCurrent}");
+                Logger.Info($"Setpoint accounted for     : {sm.SetPointAccountedFor}");
+                Logger.Info($"Using # phases             : {sm.Phases}");
+            }
+            catch (SystemException se)
+            {
+                Logger.Error(se, $"{se.Message}");
+            }
         }
 
         public ProductIdentification ReadProductIdentification()
@@ -239,6 +253,7 @@ namespace AlfenNG9xx
 
             return result;
         }
+
         public StationStatus ReadStationStatus()
         {
             var ss = new StationStatus();
@@ -334,6 +349,8 @@ namespace AlfenNG9xx
         public void UpdateMaxCurrent(double maxCurrent, ushort phases)
         {
             Logger.Info($"UpdateMaxCurrent({maxCurrent}, {phases})");
+            if (maxCurrent <= 0)
+                return;
 
             lock (_modbusMasterLock)
             {
@@ -356,6 +373,8 @@ namespace AlfenNG9xx
         {
             Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
             (double maxCurrent, ushort phases) = DetermineMaxCurrent(maxL1, maxL2, maxL3);
+            if (maxCurrent <= 0)
+                return;
             UpdateMaxCurrent(maxCurrent, phases);
         }
 
@@ -363,7 +382,7 @@ namespace AlfenNG9xx
         {
             Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
 
-            if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return (0, 0);
+            if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return (-1, 0);
             ushort phases;
             float maxCurrent;
             if (maxL2 <= 0f || maxL3 <= 0f)

@@ -118,7 +118,7 @@ namespace EMS
 
         public void AddMeasurement(ICurrentMeasurement m, ICurrentMeasurement sm)
         {
-            _measurements.AddData(m.CurrentL1, m.CurrentL2, m.CurrentL3, sm.CurrentL1, sm.CurrentL2, sm.CurrentL3);
+            _measurements.AddData(m?.CurrentL1, m?.CurrentL2, m?.CurrentL3, sm?.CurrentL1, sm?.CurrentL2, sm?.CurrentL3);
         }
 
         private void RaiseStateUpdate(ChargeControlInfo nfo)

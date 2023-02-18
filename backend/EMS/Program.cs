@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,14 +19,13 @@ using CommandLine;
 using NLog;
 using NLog.Web;
 using EMS.DataStore.InMemory;
-using EMS.Library.Configuration;
 using EMS.Library;
-using EMS.Library.Core;
 using EMS.Library.Assembly;
+using EMS.Library.Configuration;
+using EMS.Library.Core;
+
 using EMS.WebHost;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
-using Microsoft.AspNetCore.DataProtection.XmlEncryption;
+
 using EMS.DataStore;
 
 namespace EMS
@@ -32,42 +34,55 @@ namespace EMS
     {
         public record Options
         {
-            [Option('c', "config", Required = true, HelpText = "filename of config")]
+            [Option("config", Required = true, HelpText = "Filename of config.")]
             public string ConfigFile { get; set; }
-            [Option('l', "nlogcfg", Required = false, HelpText = "filename of the nlog file")]
+            [Option("nlogcfg", Required = false, HelpText = "Filename of the nlog file.")]
             public string NLogConfig { get; set; }
+            [Option("nlogdebug", Required = false, Default = false, HelpText = "Throw nlog internal exceptions. Not for production usage.")]
+            public bool NLogDebug { get; set; }
         }
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static NLog.Targets.ColoredConsoleTarget _logconsole;
 
         static void Main(string[] args)
         {
-            EnforceLogging();
-            Logger.Info("============================================================");
-            AssemblyInfo.Init();
-
-            ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
-            Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "git.commit.hash.txt").Trim('\n','\r')}");
-
-            Options options = new();
-
-            Parser.Default.ParseArguments<Options>(args).WithParsed(o =>
-            {
-                options = o;
-            });
-
-            ConfigureLogging(options);
-
             try
             {
+                _logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
+                _logconsole.UseDefaultRowHighlightingRules = true;
+
+                EnforceLogging();
+
+                Options options = new();
+
+                Parser.Default.ParseArguments<Options>(args)
+                    .WithParsed(o =>
+                    {
+                        options = o;
+                    })
+                    .WithNotParsed(errs => {
+                        throw new ArgumentException("Something wrong with your arguments! ;-)");
+                    });
+         
+
+                ConfigureLogging(options);
+                Logger.Info("============================================================");
+                AssemblyInfo.Init();
+
+                ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
+                Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "git.commit.hash.txt").Trim('\n', '\r')}");
+
                 using var host = CreateHost(options);
                 host.Run();
             }
+            catch (ArgumentException) { /* Somehow we need to catch, otherwise the finally doesn't seem to run */ }
             finally
-            {
-                Logger.Info("============================================================");
+            {                
+                Logger.Info("========================= DONE ==============================");
                 // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
-                NLog.LogManager.Shutdown();               
+                NLog.LogManager.Shutdown();                
+                _logconsole.Dispose();                
             }
         }
 
@@ -83,9 +98,7 @@ namespace EMS
                 overrideExisting)
             {                
                 var config = new NLog.Config.LoggingConfiguration();
-                var logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
-                logconsole.UseDefaultRowHighlightingRules = true;
-                config.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, logconsole);
+                config.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, _logconsole);
                 NLog.LogManager.Configuration = config; // Sensitive
                 NLog.LogManager.ReconfigExistingLoggers();  // ensure that all existing loggers are updated with the new configuration
             }
@@ -95,6 +108,12 @@ namespace EMS
         {
             try
             {
+                if (options.NLogDebug)
+                {
+                    Logger.Warn("Enable NLog internal exception throwing. Do not use for production.");
+                    NLog.LogManager.ThrowConfigExceptions = true;
+                    NLog.LogManager.ThrowExceptions = true;
+                }
                 NLog.LogManager.LoadConfiguration(options.NLogConfig);
                 NLog.LogManager.ReconfigExistingLoggers();
                 if (!Logger.IsFatalEnabled || !Logger.IsErrorEnabled)
@@ -102,7 +121,7 @@ namespace EMS
                     // set basic logging
                     EnforceLogging(true);
                     Logger.Fatal("No logging was configured. Default to basic logging to console.");
-                }
+                }                
             }catch(FileNotFoundException)
             {
                 Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
@@ -162,11 +181,11 @@ namespace EMS
                 {
                     webBuilder.UseKestrel((builderContext, kestrelOptions) =>
                     {
+                        
                         kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();
                         builderContext.Configuration.GetSection("web").Bind(wc);
-                        
-                        kestrelOptions.ListenLocalhost(wc.Port, builder =>
+                        kestrelOptions.ListenAnyIP(wc.Port, builder =>
                         {
                             if (wc.https && !builderContext.HostingEnvironment.IsDevelopment())
                             {
@@ -175,7 +194,6 @@ namespace EMS
                             }
                         });
                     });
-
                     webBuilder.UseStartup<Startup>();
                 }).Build();
             
@@ -220,5 +238,3 @@ namespace EMS
         }
     }
 }
-
-

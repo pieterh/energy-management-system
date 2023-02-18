@@ -26,6 +26,6 @@
     <Folder Include="schemas\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="schemas\getapxtariffs.schema.json" LogicalName="getapxtariffs.schema.json"/>
+    <EmbeddedResource Include="schemas\getapxtariffs.schema.json" LogicalName="getapxtariffs.schema.json" />
   </ItemGroup>
 </Project>

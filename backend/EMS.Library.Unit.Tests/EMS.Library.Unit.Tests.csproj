@@ -39,6 +39,6 @@
 	  <Folder Include="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
-		<EmbeddedResource Include="ResourcesHelper.Resource.txt" LogicalName="ResourcesHelper.Resource.txt"/>
+		<EmbeddedResource Include="ResourcesHelper.Resource.txt" LogicalName="ResourcesHelper.Resource.txt" />
 	</ItemGroup>
 </Project>

@@ -4,13 +4,14 @@ on:
   push:
     paths:
       - ".github/workflows/build.yml"
+      - ".github/workflows/integration-tests.yml"
       - "backend/**"
       - "docker/**"
       - "frontend/**"
       - global.json
 jobs:
   build_ems_app:
-    name: Build and test HEMS Application
+    name: Build and test
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -203,7 +204,7 @@ jobs:
         name: EMS.ReactApp
         path: ${{ runner.temp }}/ems.reactapp.zip
   build_docker_images:
-    name: Build and publish Docker images
+    name: Build docker images
     needs: build_ems_app
     runs-on: ubuntu-latest
     steps:    
@@ -290,24 +291,18 @@ jobs:
       uses: docker/build-push-action@v4
       if: github.ref != 'refs/heads/main'
       with:
-        context: .
-        file: docker/dockerfile
+        context: docker
+        file: docker/build/dockerfile
         platforms: linux/amd64,linux/arm64,linux/arm
         tags: ${{ steps.meta.outputs.tags }}
         build-args: |
-          BACKEND=docker/dist/ems 
-          FEREACT=docker/dist/ems.reactapp 
-          FEWASM=docker/dist/ems.blazorwasm
+          BACKEND=dist/ems 
+          FEREACT=dist/ems.reactapp 
+          FEWASM=dist/ems.blazorwasm
         push: true
-    - name: Upload docker OCI image
-      uses: actions/upload-artifact@v3
-      if: ${{ false }}
-      with:
-        name: Docker OCI Image
-        path: ${{ runner.temp }}/docker-hems-oci.tar
-    - name: Upload docker metadata
-      uses: actions/upload-artifact@v3
-      if: ${{ false }}
-      with:
-        name: Docker metadata
-        path: ${{ runner.temp }}docker-hems-metadata.json
+  call-2:
+    name: "Integration tests!"
+    uses: ./.github/workflows/integration-tests.yml
+    needs: build_docker_images
+    with:
+      docker-image-tag: feature-blazorwasm
