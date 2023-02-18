@@ -125,7 +125,47 @@ namespace AlfenNG9xx.Tests
             Assert.Equal(expectedSocketMeasurement.Phases, ss.Phases);
         }
 
-        private ushort[] ConvertBytesToRegisters(byte[] piBytes)
+        [Fact(DisplayName = "Determine no current properly")]
+        public void DetermineNoCurrent()
+        {
+            (var max, var phases) = Alfen.DetermineMaxCurrent(-1, -2, -3);
+            Assert.Equal(0, max, 0.1);
+            Assert.Equal(0, phases);
+        }
+
+        [Fact(DisplayName = "Determine max current one phase (supply one)")]
+        public void DetermineMaxCurrentOnePhase1()
+        {
+            (var max, var phases) = Alfen.DetermineMaxCurrent(14.1, 0, 0);
+            Assert.Equal(14.1, max, 0.1);
+            Assert.Equal(1, phases);
+        }
+
+        [Fact(DisplayName = "Determine max current one phase (suply two)")]
+        public void DetermineMaxCurrentOnePhase2()
+        {
+            (var max, var phases) = Alfen.DetermineMaxCurrent(14.2, 10.0, 0);
+            Assert.Equal(14.2, max, 0.1);
+            Assert.Equal(1, phases);
+        }
+
+        [Fact(DisplayName = "Determine max current three phases (second phase leading)")]
+        public void DetermineMaxCurrentThreePhase1()
+        {
+            (var max, var phases) = Alfen.DetermineMaxCurrent(15.2, 14.2, 15.1);
+            Assert.Equal(14.2, max, 0.1);
+            Assert.Equal(3, phases);
+        }
+
+        [Fact(DisplayName = "Determine max current three phases (third phase current)")]
+        public void DetermineMaxCurrentThreePhase2()
+        {
+            (var max, var phases) = Alfen.DetermineMaxCurrent(15.3, 15.4, 14.3);
+            Assert.Equal(14.3, max, 0.1);
+            Assert.Equal(3, phases);
+        }
+
+        private static ushort[] ConvertBytesToRegisters(byte[] piBytes)
         {
             ushort[] registers = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, registers, 0, piBytes.Length);
@@ -133,7 +173,7 @@ namespace AlfenNG9xx.Tests
         }
     }
 
-    public class TestDataGenerator
+    public static class TestDataGenerator
     {
         public static IEnumerable<object[]> ReadStationStatus()
         {
@@ -279,7 +319,5 @@ namespace AlfenNG9xx.Tests
         {
             throw new NotImplementedException();
         }
-
-
     }
 }

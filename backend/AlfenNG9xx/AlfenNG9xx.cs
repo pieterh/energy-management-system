@@ -330,39 +330,54 @@ namespace AlfenNG9xx
         }
 
 
-        public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
+
+        public void UpdateMaxCurrent(double maxCurrent, ushort phases)
         {
-            Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
+            Logger.Info($"UpdateMaxCurrent({maxCurrent}, {phases})");
 
             lock (_modbusMasterLock)
-            {                
+            {
                 if (_modbusMaster == null)
                     _modbusMaster = ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);
 
                 if (_modbusMaster == null)
                 {
-                    Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3}) -> failed, no connection");
+                    Logger.Info($"UpdateMaxCurrent({maxCurrent}, {phases}) -> failed, no connection");
                     return;
-                }
-           
-                if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return;
-                ushort phases;
-                float maxCurrent;
-                if (maxL2 <= 0f || maxL3 <= 0f)
-                {
-                    phases = 1;
-                    maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
-                }
-                else
-                {
-                    phases = 3;
-                    maxCurrent = (float)Math.Round(Math.Min(maxL1, Math.Min(maxL2, maxL3)), 1, MidpointRounding.ToZero);
                 }
 
                 Logger.Info($"UpdateMaxCurrent {maxCurrent}, {phases}");
-                _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters(maxCurrent));
+                _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters((float)maxCurrent));
                 _modbusMaster.WriteRegister(1, 1215, phases);
             }
+        }
+
+        public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
+        {
+            Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
+            (double maxCurrent, ushort phases) = DetermineMaxCurrent(maxL1, maxL2, maxL3);
+            UpdateMaxCurrent(maxCurrent, phases);
+        }
+
+        public static (double, ushort) DetermineMaxCurrent(double maxL1, double maxL2, double maxL3)
+        {
+            Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
+
+            if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return (0, 0);
+            ushort phases;
+            float maxCurrent;
+            if (maxL2 <= 0f || maxL3 <= 0f)
+            {
+                phases = 1;
+                maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
+            }
+            else
+            {
+                phases = 3;
+                maxCurrent = (float)Math.Round(Math.Min(maxL1, Math.Min(maxL2, maxL3)), 1, MidpointRounding.ToZero);
+            }
+
+            return (maxCurrent, phases);
         }
     }
 }
