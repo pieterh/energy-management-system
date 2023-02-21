@@ -24,27 +24,29 @@ namespace EMS.Library.JSon
             return mySchema;
         }
 
-        public static void ShowEvaluationDetails(IReadOnlyList<EvaluationResults> results){
+        public static void ShowEvaluationDetails(IReadOnlyList<EvaluationResults> results) {
+            if (results == null) throw new ArgumentNullException(nameof(results));
 #if DEBUG
-            Console.WriteLine(results.Count());
+            Console.WriteLine(results.Count);
 #endif
-            var invalids = results.Where((x) => !x.IsValid);
-#if DEBUG
-            Console.WriteLine(invalids.Count());
-#endif
-            foreach(var invalid in invalids)
-            {
-                if (invalid.Details.Count > 0)
-                    ShowEvaluationDetails(invalid.Details);
-                else {
-                    Logger.Error(invalid.SchemaLocation);
-                    if (invalid != null && invalid.HasErrors && invalid.Errors != null){
-                        foreach(var error in invalid.Errors){
-                            Logger.Error(error.Value);
+            results.Where((x) => !x.IsValid)
+                .AsParallel()
+                .ForAll((invalid) =>
+                    {
+                        if (invalid.Details.Count > 0)
+                            ShowEvaluationDetails(invalid.Details);
+                        else
+                        {
+                            Logger.Error(invalid.SchemaLocation);
+                            if (invalid.HasErrors && invalid.Errors != null)
+                            {
+                                foreach (var error in invalid.Errors)
+                                {
+                                    Logger.Error(error.Value);
+                                }
+                            }
                         }
-                    }
-                }
-            }
+                    } );
         }
     }
 }

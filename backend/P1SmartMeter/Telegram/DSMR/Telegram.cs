@@ -68,7 +68,7 @@ namespace P1SmartMeter.Telegram.DSMR
             var timestamp = (DateTime)measurementInfo[0];
             var measurement = (System.ValueTuple<double,System.String>) measurementInfo[1];                        
                 
-            var retval = new MBusDevice((MBusDevice.DeviceTypeEnum)mbusClient, ident, timestamp, measurement.Item1, measurement.Item2);                    
+            var retval = new MBusDevice((MBusDevice.DeviceTypes)mbusClient, ident, timestamp, measurement.Item1, measurement.Item2);                    
             return retval;
         }
 
@@ -139,7 +139,7 @@ namespace P1SmartMeter.Telegram.DSMR
     // device types are taken from "OMS-Spec_Vol2_Primary_v421", page 17, table 2
     public record MBusDevice {
         public MBusDevice(){}
-        public MBusDevice(DeviceTypeEnum type, string identifier, DateTime measurementTimestamp, double measurement, string units){
+        public MBusDevice(DeviceTypes type, string identifier, DateTime measurementTimestamp, double measurement, string units){
             DeviceType = type;
             Identifier = identifier;
             MeasurementTimestamp = measurementTimestamp;
@@ -147,8 +147,8 @@ namespace P1SmartMeter.Telegram.DSMR
             UnitOfMeasurement = units;
         }
 
-        public enum DeviceTypeEnum { Electricity = 2, Gas = 3, Heat = 4, WarmWater = 6,  Water = 7 }
-        public DeviceTypeEnum DeviceType { get; }
+        public enum DeviceTypes {None = 0, Electricity = 2, Gas = 3, Heat = 4, WarmWater = 6,  Water = 7 }
+        public DeviceTypes DeviceType { get; }
 
         public string Identifier { get; }
         public DateTime MeasurementTimestamp {get;}

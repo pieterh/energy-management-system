@@ -113,7 +113,7 @@ namespace P1SmartMeter.Tests.Telegram
             t.PowerReturnedL2.Should().Be(05.555);
             t.PowerReturnedL3.Should().Be(06.666);
             t.MBusDevice1.Should().NotBeNull();
-            t.MBusDevice1.DeviceType.Should().Be(MBusDevice.DeviceTypeEnum.Gas);
+            t.MBusDevice1.DeviceType.Should().Be(MBusDevice.DeviceTypes.Gas);
             t.MBusDevice1.Measurement.Should().Be(12785.123);
             t.MBusDevice1.UnitOfMeasurement.Should().Be("m3");
             t.Crc16.Should().Be("EF2F");

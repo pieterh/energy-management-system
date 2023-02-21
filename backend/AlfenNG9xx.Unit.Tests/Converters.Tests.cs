@@ -57,7 +57,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void ConvertRegisterArrayToShortThrowsExceptionWithIncorrectInput()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersShort(new ushort[0]));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersShort(Array.Empty<ushort>()));
         }
 
         [Theory]
@@ -85,7 +85,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void ConvertRegisterArrayToUInt32ThrowsExceptionWithIncorrectInput()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersUInt32(new ushort[0]));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersUInt32(Array.Empty<ushort>()));
         }
 
         [Theory]
@@ -113,7 +113,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void ConvertRegisterArrayToUInt64ThrowsExceptionWithIncorrectInput()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersLong(new ushort[0]));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersLong(Array.Empty<ushort>()));
         }
 
         [Theory]
@@ -142,7 +142,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void ConvertRegisterArrayToFloatThrowsExceptionWithIncorrectInput()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersFloat(new ushort[0]));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersFloat(Array.Empty<ushort>()));
         }
 
 
@@ -174,7 +174,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void ConvertRegisterArrayToDoubleThrowsExceptionWithIncorrectInput()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersDouble(new ushort[0]));
+            Assert.Throws<ArgumentOutOfRangeException>(() => Converters.ConvertRegistersDouble(Array.Empty<ushort>()));
         }
 
 
