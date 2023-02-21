@@ -29,9 +29,13 @@ namespace EMS.WebHosts
         }
 
         [HttpGet("station")]
-        public ActionResult<SessionInfoModel> GetStationInfo()
+        public ActionResult<StationInfoModel> GetStationInfo()
         {
-            var retval = new SessionInfoModel();
+            var pis = ChargePoint.ReadProductInformation();
+            var sss = ChargePoint.ReadStationStatus();
+
+            var retval = StationInfoModel.Factory(pis, sss);
+
             return new JsonResult(retval);
         }
  
@@ -68,12 +72,14 @@ namespace EMS.WebHosts
             if (socket.VehicleIsConnected && ChargePoint.ChargeSessionInfo != null)
             {
                 var csi = ChargePoint.ChargeSessionInfo;
-                if (csi != null && csi.Start.HasValue)
+                if (csi.Start.HasValue)
                 {
-                    session = new SessionInfoModel();
-                    session.Start = csi.Start.Value;
-                    session.ChargingTime = csi.ChargingTime;
-                    session.EnergyDeliveredFormatted = PrepareDouble(csi.EnergyDelivered / 1000, 1, "kWh"); // kWh
+                    session = new SessionInfoModel
+                    {
+                        Start = csi.Start.Value,
+                        ChargingTime = csi.ChargingTime,
+                        EnergyDeliveredFormatted = PrepareDouble(csi.EnergyDelivered / 1000, 1, "kWh") // kWh
+                    };
                 }
             }
 
@@ -131,5 +137,63 @@ namespace EMS.WebHosts
         public DateTime Start { get; set; }
         public UInt32 ChargingTime { get; set; }
         public string EnergyDeliveredFormatted { get; set; }                // kWh
+    }
+
+    public record StationInfoModel
+    {
+        public static StationInfoModel Factory(ProductInformation productInfo, StationStatus stationStatus)
+        {
+            return new StationInfoModel() {
+                ProductInfo = ProductInfoModel.Factory(productInfo),
+                StationStatus = StationStatusInfoModel.Factory(stationStatus)
+            };
+        }
+
+        public ProductInfoModel ProductInfo { get; init; } 
+        public StationStatusInfoModel StationStatus { get; set; } 
+    }
+
+    public record ProductInfoModel
+    {
+        public static ProductInfoModel Factory(ProductInformation pi)
+        {
+            return new ProductInfoModel()
+            {
+                Name = pi.Name,
+                Manufacturer = pi.Manufacturer,
+                FirmwareVersion = pi.FirmwareVersion,
+                PlatformType = pi.PlatformType,
+                StationSerial = pi.StationSerial,
+                Uptime = pi.Uptime
+            };
+        }
+
+        public string Name { get; init; } 
+        public string Manufacturer { get; init; } 
+        public string FirmwareVersion { get; set; }
+        public string PlatformType { get; set; } 
+        public string StationSerial { get; set; } 
+        public UInt64 Uptime { get; set; } 
+    }
+
+    public record StationStatusInfoModel
+    {
+        public static StationStatusInfoModel Factory(StationStatus ss)
+        {
+            return new StationStatusInfoModel()
+            {
+                ActiveMaxCurrent = ss.ActiveMaxCurrent,
+                Temperature = ss.Temperature,
+                OCCPState = ss.OCCPState.ToString(),
+                NrOfSockets = ss.NrOfSockets
+            };
+        }
+
+        //[JsonConverter(typeof(FloatConverterP1))]
+        public float ActiveMaxCurrent { get; set; } 
+        //[JsonConverter(typeof(FloatConverterP1))]
+        public float Temperature { get; set; } 
+        public string OCCPState { get; set; } 
+        public uint NrOfSockets { get; set; } 
     }
 }

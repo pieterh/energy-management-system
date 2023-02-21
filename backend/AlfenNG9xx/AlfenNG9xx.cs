@@ -254,9 +254,9 @@ namespace AlfenNG9xx
             return result;
         }
 
-        public StationStatus ReadStationStatus()
+        public AlfenNG9xx.Model.StationStatus ReadStationStatusInternal()
         {
-            var ss = new StationStatus();
+            var ss = new AlfenNG9xx.Model.StationStatus();
             var stationStatus = ReadHoldingRegisters(200, 1100, 6);
             Logger.Trace(HexDumper.ConvertToHexDump(stationStatus));
 
@@ -266,6 +266,7 @@ namespace AlfenNG9xx
             ss.NrOfSockets = Converters.ConvertRegistersShort(stationStatus, 5);
             return ss;
         }
+
         public SocketMeasurement ReadSocketMeasurement(byte socket)
         {
             var sm = new SocketMeasurement();
@@ -344,8 +345,32 @@ namespace AlfenNG9xx
             }
         }
 
+        #region IChargePoint
+        /// <summary>
+        /// IChargePoint
+        /// </summary>
+        /// <returns></returns>
+        public ProductInformation ReadProductInformation()
+        {
+            var pi = ReadProductIdentification();
+            return pi;
+        }
 
+        /// <summary>
+        /// IChargePoint
+        /// </summary>
+        /// <returns></returns>
+        public EMS.Library.StationStatus ReadStationStatus()
+        {
+            var ss = ReadStationStatusInternal();
+            return ss;
+        }
 
+        /// <summary>
+        /// IChargePoint
+        /// </summary>
+        /// <param name="maxCurrent"></param>
+        /// <param name="phases"></param>
         public void UpdateMaxCurrent(double maxCurrent, ushort phases)
         {
             Logger.Info($"UpdateMaxCurrent({maxCurrent}, {phases})");
@@ -369,6 +394,12 @@ namespace AlfenNG9xx
             }
         }
 
+        /// <summary>
+        /// IChargePoint
+        /// </summary>
+        /// <param name="maxL1"></param>
+        /// <param name="maxL2"></param>
+        /// <param name="maxL3"></param>
         public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
         {
             Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
@@ -378,6 +409,7 @@ namespace AlfenNG9xx
             UpdateMaxCurrent(maxCurrent, phases);
         }
 
+        #endregion
         public static (double, ushort) DetermineMaxCurrent(double maxL1, double maxL2, double maxL3)
         {
             Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");

@@ -1,16 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
 using Xunit;
 using Moq;
 using Moq.Protected;
 using AlfenNG9xx.Model;
-using EMS.Library.Configuration;
+using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.Library.Adapter.PriceProvider;
-using System.Threading.Tasks;
-using System.Threading;
+using EMS.Library.Configuration;
 using EMS.Library.TestableDateTime;
+
 
 namespace AlfenNG9xx.Tests
 {
@@ -72,8 +75,10 @@ namespace AlfenNG9xx.Tests
 
         [Theory]
         [MemberData(nameof(TestDataGenerator.ReadStationStatus), MemberType = typeof(TestDataGenerator))]
-        public void ReadStationStatus(byte[] piBytes, StationStatus expectedStationStatus)
+        public void ReadStationStatus(byte[] piBytes, AlfenNG9xx.Model.StationStatus expectedStationStatus)
         {
+            if (piBytes == null) throw new ArgumentNullException(nameof(piBytes));
+            if (expectedStationStatus == null) throw new ArgumentNullException(nameof(expectedStationStatus));
 
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
@@ -180,13 +185,13 @@ namespace AlfenNG9xx.Tests
             yield return new object[]
             {
                 new byte[] { 0x80, 0x41, 0x00, 0x00, 0x98, 0x41, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00 },
-                new StationStatus {ActiveMaxCurrent = 16F, Temperature=19F, OCCPState = OccpState.Connected, NrOfSockets =(uint)1},
+                new AlfenNG9xx.Model.StationStatus {ActiveMaxCurrent = 16F, Temperature=19F, OCCPState = OccpState.Connected, NrOfSockets =(uint)1},
             };
 
             yield return new object[]
              {
                 new byte[] { 0x80, 0x41, 0x00, 0x00, 0x98, 0x41, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00 },
-                new StationStatus {ActiveMaxCurrent = 16F, Temperature=19F, OCCPState = OccpState.Disconnected, NrOfSockets =(uint)2},
+                new AlfenNG9xx.Model.StationStatus {ActiveMaxCurrent = 16F, Temperature=19F, OCCPState = OccpState.Disconnected, NrOfSockets =(uint)2},
              };
         }
 

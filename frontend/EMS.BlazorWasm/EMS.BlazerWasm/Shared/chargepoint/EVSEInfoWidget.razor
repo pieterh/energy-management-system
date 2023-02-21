@@ -1,9 +1,26 @@
-﻿<DashboardCard avatar="@Icons.Material.Filled.EvStation" title="Alfen Eve Single Pro-line" subheader="ALF-0000307">
+﻿@using EMS.BlazorWasm.Client.Services.Chargepoint
+@inject IChargepointService ChargepointService
+
+<DashboardCard avatar="@Icons.Material.Filled.EvStation" title="Alfen Eve Single Pro-line" subheader="ALF-0000307">
     <Body>
         <MudText Typo="Typo.body1">
-            Backoffice is connected<br />
+            @(_productInfo?.Manufacturer)<br />
+            @(_productInfo?.Name)<br />
+            @(_productInfo?.StationSerial)<br />
             Firmware version 4.14<br />
             Uptime 14 days
         </MudText>
     </Body>
 </DashboardCard>
+
+@code{
+    ProductInfoModel? _productInfo;
+    StationStatusInfoModel? _stationStatusInfo;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var resp = await ChargepointService.GetStationInfoAsync(CancellationToken.None);
+        _productInfo = resp.ProductInfo;
+        _stationStatusInfo = resp.StationStatus;
+    }
+}

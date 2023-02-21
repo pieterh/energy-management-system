@@ -4,11 +4,11 @@
 <DashboardCard avatar="@Icons.Material.Filled.EvStation" title="Alfen Eve Single Pro-line" subheader="ALF-0000307 Socket #1">
     <Body>
         <MudText Typo="Typo.body1">
-            Capacity available @(_socketInfo?.powerAvailableFormatted) @(_socketInfo?.phases == 1 ? "1 phase": "3 phases") <br />
+            Aavailable @(_socketInfo?.powerAvailableFormatted) @(_socketInfo?.phases == 1 ? "1 phase": "3 phases") <br />
+            Energy delivered @(_socketInfo?.realEnergyDeliveredFormatted) energy delivered<br />
             <br />
             @(_socketInfo?.mode3StateMessage) @(_socketInfo?.lastChargingStateChanged)<br />
-            @(_socketInfo?.realEnergyDeliveredFormatted) energy delivered<br />
-            11.3 kW
+            Connected @(_socketInfo?.vehicleIsConnected) / Charging @(_socketInfo?.vehicleIsCharging)
         </MudText>
     </Body>
 </DashboardCard>
@@ -20,7 +20,7 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var resp = await ChargepointService.GetSessionInfoAsync(1);
+        var resp = await ChargepointService.GetSessionInfoAsync(1, CancellationToken.None);
         _sessionInfo = resp.sessionInfo;
         _socketInfo = resp.socketInfo;
     }

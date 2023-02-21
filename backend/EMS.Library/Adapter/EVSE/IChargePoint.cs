@@ -1,11 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using EMS.Library.Adapter.EVSE;
 using EMS.Library.Core;
 using Microsoft.Extensions.Hosting;
 
 namespace EMS.Library
 {
+    public enum OccpState
+    {
+        Disconnected = 0,
+        Connected = 1
+    }
+
     public class Status
     {
         public bool IsCharging { get { return Measurement.VehicleIsCharging; } }
@@ -17,12 +24,34 @@ namespace EMS.Library
         }
     }
 
+    public record ProductInformation
+    {
+        public string Name { get; set; } = default!;
+        public string Manufacturer { get; set; } = default!;
+        public string FirmwareVersion { get; set; } = default!;
+        public string PlatformType { get; set; } = default!;
+        public string StationSerial { get; set; } = default!;
+        public UInt64 Uptime { get; set; }
+        public DateTime UpSinceUtc { get; set; }
+    }
+
+    public record StationStatus
+    {
+        public float ActiveMaxCurrent { get; set; }
+        public float Temperature { get; set; }
+        public OccpState OCCPState { get; set; }
+        public uint NrOfSockets { get; set; }
+    }
+
     public interface IChargePoint : IAdapter, IHostedService
     {
         SocketMeasurementBase LastSocketMeasurement { get; }
         ChargeSessionInfoBase ChargeSessionInfo { get; }
 
+        ProductInformation ReadProductInformation();
+        StationStatus ReadStationStatus();
         void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3);
+
 
         public class StatusUpdateEventArgs : EventArgs
         {
@@ -42,7 +71,7 @@ namespace EMS.Library
             public bool SessionEnded { get; set; }
             public double? EnergyDelivered { get; set; }
             public Decimal Cost { get; set; }
-            public IList<Cost> Costs { get; set; }
+            public IList<Cost> Costs { get; init; }
             public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered, Decimal cost, IList<Cost> costs)
             {
                 Status = new Status(measurement);

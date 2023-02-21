@@ -1,17 +1,43 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using EMS.BlazorWasm.Client.Services.Auth;
 
 namespace EMS.BlazorWasm.Client.Services.Chargepoint
 {
 	public interface IChargepointService
 	{
-        Task<SocketInfoResponse> GetSessionInfoAsync(int socket);
+        Task<StationInfoResponse> GetStationInfoAsync(CancellationToken cancellationToken);
+        Task<SocketInfoResponse> GetSessionInfoAsync(int socket, CancellationToken cancellationToken);
+    }
+
+    public record StationInfoResponse : Response
+    {
+        public ProductInfoModel ProductInfo { get; init; } = default!;
+        public StationStatusInfoModel StationStatus { get; set; } = default!;
     }
 
     public record SocketInfoResponse : Response
     {
         public SocketR socketInfo { get; set; } = default!;
         public SessionR sessionInfo { get; set; } = default!;
+    }
+
+    public record ProductInfoModel
+    {
+        public string Name { get; init; } = default!;
+        public string Manufacturer { get; init; } = default!;
+        public string FirmwareVersion { get; set; } = default!;
+        public string PlatformType { get; set; } = default!;
+        public string StationSerial { get; set; } = default!;
+        public UInt64 Uptime { get; set; } 
+    }
+
+    public record StationStatusInfoModel
+    {
+        public float ActiveMaxCurrent { get; set; }
+        public float Temperature { get; set; } 
+        public string OCCPState { get; set; } = default!;
+        public uint NrOfSockets { get; set; } 
     }
 
     public record SessionR

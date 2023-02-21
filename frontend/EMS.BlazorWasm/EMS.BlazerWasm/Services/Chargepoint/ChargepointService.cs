@@ -16,9 +16,23 @@ namespace EMS.BlazorWasm.Client.Services.Chargepoint
             _httpClient = httpClient;
         }
 
-        public async Task<SocketInfoResponse> GetSessionInfoAsync(int socket)
+        public async Task<StationInfoResponse> GetStationInfoAsync(CancellationToken cancellationToken)
         {
-            return await GetSessionInfoAsync(socket, CancellationToken.None);
+            var response = await _httpClient.GetAsync($"api/evse/station");
+            switch (response.StatusCode)
+            {
+                case System.Net.HttpStatusCode.OK:
+                    {
+                        var stationInfoResponse = await response.Content.ReadFromJsonAsync<StationInfoResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
+                        if (stationInfoResponse == null)
+                            throw new HEMSApplicationException("No response!");
+                        return stationInfoResponse;
+                    }
+                case System.Net.HttpStatusCode.Unauthorized:
+                    throw new HEMSApplicationException("Unauthorized!");
+                default:
+                    throw new HEMSApplicationException($"Uhh {response.StatusCode}");
+            }
         }
 
         public async Task<SocketInfoResponse> GetSessionInfoAsync(int socket, CancellationToken cancellationToken)
