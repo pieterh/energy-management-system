@@ -5,23 +5,24 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SharpModbus;
 using EMS.Library;
-using EMS.Library.Configuration;
-using AlfenNG9xx.Model;
 using EMS.Library.Adapter.EVSE;
-using EMS.Library.TestableDateTime;
 using EMS.Library.Adapter.PriceProvider;
+using EMS.Library.Configuration;
+using EMS.Library.TestableDateTime;
+
+using AlfenNG9xx.Model;
 
 namespace AlfenNG9xx
 {
     public class Alfen : Microsoft.Extensions.Hosting.BackgroundService, IChargePoint
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private bool _disposed = false;
+        private bool _disposed;
 
         private readonly IPriceProvider _priceProvider;
 
         private readonly object _modbusMasterLock = new();
-        private ModbusMaster _modbusMaster = null;
+        private ModbusMaster _modbusMaster;
         private readonly string _alfenIp;
         private readonly int _alfenPort;
         private readonly ChargingSession _chargingSession = new();        
@@ -35,13 +36,16 @@ namespace AlfenNG9xx
      
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
             BackgroundServiceHelper.CreateAndStart<IChargePoint, Alfen>(services, instance.Config);
         }
 
         public Alfen(Config config, IPriceProvider priceProvider)
         {
+            if (config == null) throw new ArgumentNullException(nameof(config));
+
             dynamic cfg = config;
-            Logger.Info($"Alfen({config.ToString().Replace(Environment.NewLine, " ")})");
+            Logger.Info($"Alfen({config.ToString().Replace(Environment.NewLine, " ", StringComparison.OrdinalIgnoreCase)})");
             _alfenIp = cfg.Host;
             _alfenPort = cfg.Port;
 
@@ -50,7 +54,7 @@ namespace AlfenNG9xx
 
         public override void Dispose()
         {
-            Grind(true);
+            Dispose(true);
             base.Dispose();
             GC.SuppressFinalize(this);  // Suppress finalization.
         }
@@ -58,7 +62,7 @@ namespace AlfenNG9xx
         // calling this method grind to keep sonar happy
         // unfortunately the base class doesn't implement the dispose pattern
         // properly, so there is no method Dispose(bool disposing) to override...
-        protected virtual void Grind(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             Logger.Trace($"Dispose({disposing}) _disposed {_disposed}");
 
@@ -73,7 +77,9 @@ namespace AlfenNG9xx
             Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
         }
 
-        private void DisposeModbusMaster()
+
+
+        protected void DisposeModbusMaster()
         {
             lock (_modbusMasterLock)
             {
@@ -96,7 +102,7 @@ namespace AlfenNG9xx
                 {
                     HandleWork();
 
-                    await Task.Delay(1250, stoppingToken);
+                    await Task.Delay(1250, stoppingToken).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException tce)
                 {
@@ -105,7 +111,7 @@ namespace AlfenNG9xx
                         Logger.Error("Exception: " + tce.Message);
                     }
                 }
-                catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
+                catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.OrdinalIgnoreCase))
                 {
                     Logger.Error("Partial Modbus packaged received, we try later again");
                 }
@@ -115,7 +121,7 @@ namespace AlfenNG9xx
                     Logger.Error(e, "Unhandled, we try later again\n");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
-                    await Task.Delay(2500, stoppingToken);
+                    await Task.Delay(2500, stoppingToken).ConfigureAwait(false); 
                 }
             }
             Logger.Info($"Canceled");
@@ -248,8 +254,24 @@ namespace AlfenNG9xx
                 ).ToUniversalTime();
             result.StationTimezone = Converters.ConvertRegistersShort(pi, 78);
             result.DateTimeLocal = new DateTime(result.DateTimeUtc.AddMinutes(result.StationTimezone).Ticks, DateTimeKind.Local);
-            result.Uptime = Converters.ConvertRegistersLong(pi, 74);
+            result.Uptime = (long)Converters.ConvertRegistersLong(pi, 74);
             result.UpSinceUtc = DateTime.UtcNow.AddMilliseconds(0 - (double)result.Uptime);
+
+            switch(result.PlatformType)
+            {
+                case "NG900":
+                    result.Model = "Alfen Eve Single S-line";
+                    break;
+                case "NG910":
+                    result.Model = "Alfen Eve Single Pro-line";
+                    break;
+                case "NG920":
+                    result.Model = "Alfen Eve Double Pro-line / Eve Double PG / Twin 4XL";
+                    break;                    
+                default:
+                    result.Model = $"Unknown {result.PlatformType}";
+                    break;
+            }
 
             return result;
         }
@@ -316,7 +338,7 @@ namespace AlfenNG9xx
             sm.Availability = Converters.ConvertRegistersShort(sm_part2, 0) == 1;
 
             sm.Mode3State = SocketMeasurement.ParseMode3State(Converters.ConvertRegistersToString(sm_part2, 1, 5));
-            sm.LastChargingStateChanged = (LastSocketMeasurement == null || LastSocketMeasurement?.Mode3State != sm.Mode3State) ? DateTimeProvider.Now : LastSocketMeasurement.LastChargingStateChanged;
+            sm.LastChargingStateChanged = (LastSocketMeasurement == null || LastSocketMeasurement.Mode3State != sm.Mode3State) ? DateTimeProvider.Now : LastSocketMeasurement.LastChargingStateChanged;
 
             sm.AppliedMaxCurrent = Converters.ConvertRegistersFloat(sm_part2, 6);
             sm.MaxCurrentValidTime = Converters.ConvertRegistersUInt32(sm_part2, 8);

@@ -29,10 +29,11 @@ namespace EMS.Library
         public string Name { get; set; } = default!;
         public string Manufacturer { get; set; } = default!;
         public string FirmwareVersion { get; set; } = default!;
-        public string PlatformType { get; set; } = default!;
+        public string Model { get; set; } = default!;
         public string StationSerial { get; set; } = default!;
-        public UInt64 Uptime { get; set; }
+        public long Uptime { get; set; }
         public DateTime UpSinceUtc { get; set; }
+        public DateTime DateTimeUtc { get; set; }
     }
 
     public record StationStatus

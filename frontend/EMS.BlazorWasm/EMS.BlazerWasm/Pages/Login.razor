@@ -1,8 +1,10 @@
-﻿@page "/login"
+﻿@implements IDisposable
+@page "/login"
 @inject IDialogService DialogService
 @using System.Timers;
 
 @code {
+    private bool _disposed = false;
     // We need to use a timer to open the dialog and let it stay open when this page is loaded after a route change
     private System.Timers.Timer? _timer = null;
 
@@ -10,20 +12,24 @@
     {
         if (firstRender)
         {
-            if (_timer != null)
-                DisposeTimer();
+            DisposeTimer();
 
-            _timer = new System.Timers.Timer(1);
+            _timer = new System.Timers.Timer()
+            {
+                Interval = 1,
+                AutoReset = false,
+                Enabled = true                    
+            };
+            
             _timer.Elapsed += this.OnTimedEvent;
-            _timer.AutoReset = false;
-            _timer.Enabled = true;
         }
     }
 
     private async void OnTimedEvent(Object? source, ElapsedEventArgs e)
     {
         DisposeTimer();
-        DialogOptions opt = new DialogOptions() {
+        DialogOptions opt = new DialogOptions()
+        {
             Position = DialogPosition.Center,
             DisableBackdropClick = true,
             CloseOnEscapeKey = false
@@ -44,6 +50,21 @@
 
     public void Dispose()
     {
-        DisposeTimer();
+        // Dispose of unmanaged resources.
+        Dispose(true);
+        // Suppress finalization.
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) { return; }
+
+        if (disposing)
+        {
+            DisposeTimer();
+        }
+
+        _disposed = true;
     }
 }

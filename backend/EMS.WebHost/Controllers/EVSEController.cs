@@ -162,18 +162,20 @@ namespace EMS.WebHosts
                 Name = pi.Name,
                 Manufacturer = pi.Manufacturer,
                 FirmwareVersion = pi.FirmwareVersion,
-                PlatformType = pi.PlatformType,
+                Model = pi.Model,
                 StationSerial = pi.StationSerial,
-                Uptime = pi.Uptime
+                Uptime = pi.Uptime,
+                DateTimeUtc= pi.DateTimeUtc
             };
         }
 
         public string Name { get; init; } 
         public string Manufacturer { get; init; } 
         public string FirmwareVersion { get; set; }
-        public string PlatformType { get; set; } 
+        public string Model { get; set; } 
         public string StationSerial { get; set; } 
-        public UInt64 Uptime { get; set; } 
+        public long Uptime { get; set; }
+        public DateTime DateTimeUtc { get; set; }
     }
 
     public record StationStatusInfoModel

@@ -1,14 +1,18 @@
 ﻿@using EMS.BlazorWasm.Client.Services.Chargepoint
 @inject IChargepointService ChargepointService
 
-<DashboardCard avatar="@Icons.Material.Filled.EvStation" title="Alfen Eve Single Pro-line" subheader="ALF-0000307">
+<DashboardCard avatar="@Icons.Material.Filled.EvStation" title=@(_productInfo?.Model) subheader=@(_productInfo?.Name)>
     <Body>
         <MudText Typo="Typo.body1">
             @(_productInfo?.Manufacturer)<br />
+            @(_productInfo?.Model)<br />
             @(_productInfo?.Name)<br />
             @(_productInfo?.StationSerial)<br />
-            Firmware version 4.14<br />
-            Uptime 14 days
+            Firmware version @(_productInfo?.FirmwareVersion)<br />
+            Uptime @(_productInfo != null ? TimeSpan.FromMilliseconds(_productInfo.Uptime).Days : -1) days<br />
+            Active Max Current @(_stationStatusInfo?.ActiveMaxCurrent) A<br />
+            OCCP @(_stationStatusInfo?.OCCPState)<br/>
+            Nr of sockets @(_stationStatusInfo?.NrOfSockets)
         </MudText>
     </Body>
 </DashboardCard>

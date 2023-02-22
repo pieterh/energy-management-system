@@ -27,9 +27,9 @@ namespace EMS.BlazorWasm.Client.Services.Chargepoint
         public string Name { get; init; } = default!;
         public string Manufacturer { get; init; } = default!;
         public string FirmwareVersion { get; set; } = default!;
-        public string PlatformType { get; set; } = default!;
+        public string Model { get; set; } = default!;
         public string StationSerial { get; set; } = default!;
-        public UInt64 Uptime { get; set; } 
+        public long Uptime { get; set; } 
     }
 
     public record StationStatusInfoModel
