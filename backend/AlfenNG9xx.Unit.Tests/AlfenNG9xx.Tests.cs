@@ -41,12 +41,57 @@ namespace AlfenNG9xx.Tests
             mock.Protected()
                 .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
                 .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
+            mock.Setup(m => m.Dispose()).CallBase();
+            mock.Setup(m => m.Grind(It.IsAny<bool>())).CallBase();
 
-            //mock.Protected().Verify("DisposeModbusMaster", Times.AtLeastOnce());
-
+            Assert.False(mock.Object.isDisposed);
             var pi = mock.Object.ReadProductIdentification();
-            mock.Object.Dispose();            
+
+            mock.Object.Dispose();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
             Assert.NotNull(pi);
+            Assert.True(mock.Object.isDisposed);
+        }
+        [Fact]
+        public void DisposesCanSafelyCalledTwice()
+        {
+            byte[] piBytes = {
+                0x4c, 0x41, 0x2d, 0x46, 0x30, 0x30, 0x30, 0x30, 0x30, 0x33 ,0x00, 0x30, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x6c, 0x41, 0x65, 0x66, 0x20, 0x6e, 0x56, 0x4e, 0x00, 0x00, 0x01, 0x00, 0x2e, 0x34,
+                0x30, 0x30, 0x30, 0x2e, 0x33, 0x2d, 0x39, 0x39, 0x00, 0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x47, 0x4e, 0x31, 0x39, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x63, 0x61, 0x30, 0x65, 0x30, 0x30, 0x38, 0x35, 0x30, 0x30, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe4, 0x07, 0x0c, 0x00, 0x17, 0x00, 0x14, 0x00,
+                0x31, 0x00, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0xdc, 0x06, 0x7e, 0xf7, 0x3c, 0x00
+                };
+            ushort[] piRegisters = new ushort[piBytes.Length / 2];
+            Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
+
+            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            mock.Protected()
+                .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
+                .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
+            mock.Setup(m => m.Dispose()).CallBase();
+            mock.Setup(m => m.Grind(It.IsAny<bool>())).CallBase();
+
+            Assert.False(mock.Object.isDisposed);
+            var pi = mock.Object.ReadProductIdentification();
+
+            mock.Object.Dispose();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Assert.NotNull(pi);
+            Assert.True(mock.Object.isDisposed);
+
+            // and for the second time
+            mock.Object.Dispose();
+            Assert.True(mock.Object.isDisposed);
         }
 
         [Fact]
@@ -114,14 +159,14 @@ namespace AlfenNG9xx.Tests
 
         [Theory]
         [MemberData(nameof(TestDataGenerator.ReadSocketMeasurement), MemberType = typeof(TestDataGenerator))]
-        public void ReadSocketMeasurement(byte[] piBytes_300, byte[] piBytes_1200, SocketMeasurement expectedSocketMeasurement)
+        public void ReadSocketMeasurement(byte[] piBytes300, byte[] piBytes1200, SocketMeasurement expectedSocketMeasurement)
         {
-            if (piBytes_300 == null) throw new ArgumentNullException(nameof(piBytes_300));
-            if (piBytes_1200 == null) throw new ArgumentNullException(nameof(piBytes_1200));
+            if (piBytes300 == null) throw new ArgumentNullException(nameof(piBytes300));
+            if (piBytes1200 == null) throw new ArgumentNullException(nameof(piBytes1200));
             if (expectedSocketMeasurement == null) throw new ArgumentNullException(nameof(expectedSocketMeasurement));
 
-            ushort[] piRegisters_300 = ConvertBytesToRegisters(piBytes_300);
-            ushort[] piRegisters_1200 = ConvertBytesToRegisters(piBytes_1200);
+            ushort[] piRegisters_300 = ConvertBytesToRegisters(piBytes300);
+            ushort[] piRegisters_1200 = ConvertBytesToRegisters(piBytes1200);
 
             var mock = new Mock<Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mock.Protected()

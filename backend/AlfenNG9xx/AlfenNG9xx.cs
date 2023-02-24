@@ -18,6 +18,7 @@ namespace AlfenNG9xx
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed;
+        internal bool isDisposed { get { return _disposed; } }
 
         private readonly IPriceProvider _priceProvider;
 
@@ -54,7 +55,7 @@ namespace AlfenNG9xx
 
         public override void Dispose()
         {
-            Dispose(true);
+            Grind(true);
             base.Dispose();
             GC.SuppressFinalize(this);  // Suppress finalization.
         }
@@ -62,7 +63,8 @@ namespace AlfenNG9xx
         // calling this method grind to keep sonar happy
         // unfortunately the base class doesn't implement the dispose pattern
         // properly, so there is no method Dispose(bool disposing) to override...
-        protected virtual void Dispose(bool disposing)
+        // https://github.com/dotnet/runtime/issues/34809
+        internal virtual void Grind(bool disposing)
         {
             Logger.Trace($"Dispose({disposing}) _disposed {_disposed}");
 
@@ -77,8 +79,6 @@ namespace AlfenNG9xx
             Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
         }
 
-
-
         protected void DisposeModbusMaster()
         {
             lock (_modbusMasterLock)
@@ -90,11 +90,13 @@ namespace AlfenNG9xx
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Logger.Info($"Alfen Starting");
+            Logger.Info("Alfen NG9xx - Starting");
 
-            //ShowProductInformation();
-            //ShowStationStatus();
-            //ShowSocketMeasurement();
+#if DEBUG
+            ShowProductInformation();
+            ShowStationStatus();
+            ShowSocketMeasurement();
+#endif
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -117,14 +119,14 @@ namespace AlfenNG9xx
                 }
                 catch (Exception e)
                 {
-                    //Logger.Error("Exception: " + e.Message);
                     Logger.Error(e, "Unhandled, we try later again\n");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
                     await Task.Delay(2500, stoppingToken).ConfigureAwait(false); 
                 }
             }
-            Logger.Info($"Canceled");
+
+            Logger.Info("Alfen NG9xx - Canceled");
         }
 
         private void HandleWork()
