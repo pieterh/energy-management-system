@@ -9,7 +9,8 @@ namespace EMS
     public static class ConfigurationManager
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static readonly JsonSerializerOptions Options = new JsonSerializerOptions();
+        private static readonly JsonSerializerOptions Options = new();
+        private static readonly Uri schemaUri = new("https://github.com/pieterh/energy-management-system");
 
         public static JsonElement ReadConfig(string filename)
         {
@@ -17,7 +18,7 @@ namespace EMS
             using var streamReader = GetConfigFile(filename);
             var result = JsonSerializer.Deserialize<JsonElement>(streamReader.BaseStream, Options);
             var schema = JSon.GetSchema("config.schema.json");
-            SchemaRegistry.Global.Register(new Uri("https://github.com/pieterh/energy-management-system"), schema);
+            SchemaRegistry.Global.Register(schemaUri, schema);
             var validationResult = schema.Evaluate(result, new EvaluationOptions() { OutputFormat = OutputFormat.Hierarchical });
             
             if (!validationResult.IsValid){
@@ -32,7 +33,7 @@ namespace EMS
             try
             {
                 var r = ReadConfig(filename);                
-                return true;
+                return !string.IsNullOrWhiteSpace(r.GetRawText());
             }
             catch (System.Text.Json.JsonException e)
             {

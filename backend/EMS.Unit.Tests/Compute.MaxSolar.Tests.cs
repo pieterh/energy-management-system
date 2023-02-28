@@ -116,16 +116,19 @@ namespace EMS.Tests
         }
 
 
-        [Theory]
+        [Theory(DisplayName = "040 Test3")]
         [MemberData(nameof(GetData), parameters: "_040_Test3")]
-        public void _040_Test3(ICurrentMeasurement sm, ICurrentMeasurement evse, ICurrentMeasurement expected, string because)
+        public void T040Test3(ICurrentMeasurement sm, ICurrentMeasurement evse, ICurrentMeasurement expected, string because)
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(sm, evse);
 
-            mock.Object.Charging().Should().Be((expected.CurrentL1.Value, expected.CurrentL2.Value, expected.CurrentL3.Value), because);
+            var l1 = expected?.CurrentL1 ?? double.NaN;
+            var l2 = expected?.CurrentL2 ?? double.NaN;
+            var l3 = expected?.CurrentL3 ?? double.NaN;
+            mock.Object.Charging().Should().Be((l1, l2, l3), because);
         }
 
         public static IEnumerable<object[]> GetData(string testset)

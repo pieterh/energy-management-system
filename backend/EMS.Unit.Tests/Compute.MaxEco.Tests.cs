@@ -31,15 +31,15 @@ namespace EMS.Tests
 
     public class ComputeMaxEco
     {
-        [Fact]
-        public void _010_HandlesMeasurementArrayNull()
+        [Fact(DisplayName = "010 HandlesMeasurementArrayNull")]
+        public void T010HandlesMeasurementArrayNull()
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
             mock.Object.Charging().Should().Be((-1, -1, -1), "-1 should be returned when there are no or not enough samples");
         }
 
-        [Fact]
-        public void _020_HandlesLessThenMinimum()
+        [Fact(DisplayName = "020 HandlesLessThenMinimum")]
+        public void T020HandlesLessThenMinimum()
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
 
@@ -49,8 +49,8 @@ namespace EMS.Tests
             mock.Object.Charging().Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
 
-        [Fact]
-        public void _030_Test2()
+        [Fact(DisplayName = "030 Test2")]
+        public void T030Test2()
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
 
@@ -60,16 +60,19 @@ namespace EMS.Tests
             mock.Object.Charging().Should().Be((10.83f, 0, 0));
         }
 
-        [Theory]
+        [Theory(DisplayName = "040 Test3")]
         [MemberData(nameof(GetData), parameters: "_040_Test3")]
-        public void _040_Test3(ICurrentMeasurement sm, ICurrentMeasurement evse, ICurrentMeasurement expected, string because)
+        public void T040Test3(ICurrentMeasurement sm, ICurrentMeasurement evse, ICurrentMeasurement expected, string because)
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(sm, evse);
 
-            mock.Object.Charging().Should().Be((expected.CurrentL1.Value, expected.CurrentL2.Value, expected.CurrentL3.Value), because);
+            var l1 = expected?.CurrentL1 ?? double.NaN;
+            var l2 = expected?.CurrentL2 ?? double.NaN;
+            var l3 = expected?.CurrentL3 ?? double.NaN;
+            mock.Object.Charging().Should().Be((l1, l2, l3), because);
         }
 
         public static IEnumerable<object[]> GetData(string testset)
@@ -87,9 +90,8 @@ namespace EMS.Tests
             return allData;
         }
 
-
-        [Fact]
-        public void _050_StartChargeThreshold_before_no_charge()
+        [Fact(DisplayName = "050 StartChargeThreshold_before_no_charge")]
+        public void T050StartChargeThresholdBeforeNoCharge()
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
 
@@ -99,8 +101,8 @@ namespace EMS.Tests
             mock.Object.Charging().Should().Be((0, 0, 0), "we have not enough energy return to start charging");
         }
 
-        [Fact]
-        public void _060_StartChargeThreshold_at_start_charge()
+        [Fact(DisplayName = "060 StartChargeThreshold_at_start_charge")]
+        public void T060StartChargeThresholdAtStartCharge()
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
 
@@ -110,8 +112,8 @@ namespace EMS.Tests
             mock.Object.Charging().Should().Be((6.6f, 0, 0), "we reached minimum energy return, so we can start charging");
         }
 
-        [Fact]
-        public void _070_StartChargeThreshold_after_good_charge()
+        [Fact(DisplayName = "070 StartChargeThreshold_after_good_charge")]
+        public void T070StartChargeThresholdAfterGoodCharge()
         {
             var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
 
@@ -120,88 +122,5 @@ namespace EMS.Tests
 
             mock.Object.Charging().Should().Be((6.85f, 0, 0), "we have more than enough energy return available so that we can increase above minimum");
         }
-
-        //[Fact]
-        //public void _080_HandlesTransition()
-        //{
-        //    var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
-
-        //    // start filling buffer with data that will not allow ecomode to charge the car
-        //    var dateTime = new DateTime(2021, 05, 01, 13, 15, 0);
-        //    for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
-        //    {
-        //        using (new DateTimeProviderContext(dateTime))
-        //        {
-        //            mock.Object.AddMeasurement(new CurrentMeasurement(1 - mock.Object.MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
-        //        }
-        //        dateTime = dateTime.AddSeconds(1);
-        //    }
-        //    using (new DateTimeProviderContext(dateTime))
-        //        mock.Object.Charging().Should().Be((0, 0, 0), "we have not yet enough energy return to start charging");
-
-        //    // add data to the buffer so that we have enough overcapacity to allow the car to charge
-        //    for (int i = 0; i < mock.Object.MinimumDataPoints / 3; i++)
-        //    {
-        //        using (new DateTimeProviderContext(dateTime))
-        //        {
-        //            mock.Object.AddMeasurement(new CurrentMeasurement(-15 - mock.Object.MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
-        //        }
-        //        dateTime = dateTime.AddSeconds(1);
-        //    }
-
-        //    using (new DateTimeProviderContext(dateTime))
-        //        mock.Object.Charging().Should().Be((15.85f, 0, 0), "we have now enough overcapicity and we take the last 15 seconds to determine the charge current");
-
-        //    // there are some clouds ;-) so add some data with no return
-        //    for (int i = 0; i < mock.Object.MinimumDataPoints / 4; i++)
-        //    {
-        //        using (new DateTimeProviderContext(dateTime))
-        //        {
-        //            mock.Object.AddMeasurement(new CurrentMeasurement(0, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
-        //        }
-        //        dateTime = dateTime.AddSeconds(1);
-        //    }
-        //    using (new DateTimeProviderContext(dateTime))
-        //        mock.Object.Charging().Should().Be((6, 0, 0), "not enough overcapicity, but switched recently ");
-
-        //    // more clouds for 5 minutes
-        //    for (int i = 0; i < 300; i++)
-        //    {
-        //        using (new DateTimeProviderContext(dateTime))
-        //        {
-        //            mock.Object.AddMeasurement(new CurrentMeasurement(1, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
-        //        }
-        //        dateTime = dateTime.AddSeconds(1);
-        //    }
-
-        //    using (new DateTimeProviderContext(dateTime))
-        //        mock.Object.Charging().Should().Be((0, 0, 0), "not enough overcapicity we shoudl stop");
-
-        //    // there is the sun very bright for 5 minutes
-        //    for (int i = 0; i < 300; i++)
-        //    {
-        //        using (new DateTimeProviderContext(dateTime))
-        //        {
-        //            mock.Object.AddMeasurement(new CurrentMeasurement(-12.5f, 0f, 0f), new CurrentMeasurement(0f, 0f, 0f));
-        //        }
-        //        dateTime = dateTime.AddSeconds(1);
-        //    }
-
-        //    using (new DateTimeProviderContext(dateTime))
-        //        mock.Object.Charging().Should().Be((12.35f, 0, 0), "enough overcapicity, and 15 seconds is used");
-
-        //    // there is still some sun for the second half minimum time
-        //    for (int i = 0; i < ChargingStateMachine.DEFAULT_MINIMUM_TRANSITION_TIME / 2; i++)
-        //    {
-        //        using (new DateTimeProviderContext(dateTime))
-        //        {
-        //            mock.Object.AddMeasurement(new CurrentMeasurement(0 - mock.Object.MinimumEcoModeExportStop, 0, 0), new CurrentMeasurement(0f, 0f, 0f));
-        //        }
-        //        dateTime = dateTime.AddSeconds(1);
-        //    }
-
-        //    using (new DateTimeProviderContext(dateTime))
-        //        mock.Object.Charging().Should().Be((6, 0, 0), "enough overcapicity and transition was enough time in the past");
-        //}
     }
 }

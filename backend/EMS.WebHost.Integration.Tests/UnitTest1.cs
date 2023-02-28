@@ -9,11 +9,15 @@ namespace EMS.WebHost.Integration.Tests;
 
 public class UsersController
 {
+#if DEBUG
     private readonly string _dashes;
+#endif
     private readonly Uri _baseAddress;
 
     public UsersController() {
+#if DEBUG
         _dashes = "----------------------------";
+#endif
         _baseAddress = new Uri("http://localhost:5005");
     }
 

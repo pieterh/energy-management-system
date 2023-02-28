@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EMS.DataStore
 {
-	public class HEMSContext : DbContext
+	public class HEMSContext : DbContext // NOSONAR
 	{
         // nog te doen: use more elegant way of passing the DbPath
         // https://www.codeproject.com/Articles/5281767/Scalable-Scenario-to-Configuring-Entity-Framework

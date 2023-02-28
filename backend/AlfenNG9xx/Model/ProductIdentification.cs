@@ -1,5 +1,7 @@
 
 using System;
+using System.Text;
+
 namespace AlfenNG9xx.Model 
 {
     /* Platform type
@@ -13,5 +15,16 @@ namespace AlfenNG9xx.Model
         public DateTime DateTimeLocal {get; set; }
         public int StationTimezone {get; set; }
         public string PlatformType { get; set; } = default!;
+        public override StringBuilder ToPrintableString()
+        {
+            var retval = base.ToPrintableString();
+
+            retval.AppendFormat("Table version              : {0}", TableVersion);
+            retval.AppendFormat("Platform type              : {0}", PlatformType);
+            retval.AppendFormat("Station serial             : {0}", StationSerial);
+            retval.AppendFormat("Date Local                 : {0}", DateTimeLocal.ToString("O"));
+            retval.AppendFormat("Timezone                   : {0}", StationTimezone);
+            return retval;
+        }
     }
 }

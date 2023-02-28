@@ -26,7 +26,7 @@ namespace AlfenNG9xx
         private ModbusMaster _modbusMaster;
         private readonly string _alfenIp;
         private readonly int _alfenPort;
-        private readonly ChargingSession _chargingSession = new();        
+        private readonly ChargingSession _chargingSession = new();
 
         public SocketMeasurementBase LastSocketMeasurement { get; private set; }
         public ChargeSessionInfoBase ChargeSessionInfo { get { return _chargingSession.ChargeSessionInfo; } }
@@ -34,7 +34,7 @@ namespace AlfenNG9xx
         public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
         public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
 
-     
+
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
@@ -122,7 +122,7 @@ namespace AlfenNG9xx
                     Logger.Error(e, "Unhandled, we try later again\n");
                     Logger.Error("Disposing connection");
                     DisposeModbusMaster();
-                    await Task.Delay(2500, stoppingToken).ConfigureAwait(false); 
+                    await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
                 }
             }
 
@@ -138,7 +138,7 @@ namespace AlfenNG9xx
             _chargingSession.UpdateSession(sm, tariff);
 
             var chargingStateChanged = LastSocketMeasurement?.Mode3State != sm.Mode3State;
-            
+
             LastSocketMeasurement = sm;
             StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
             if (chargingStateChanged)
@@ -150,34 +150,18 @@ namespace AlfenNG9xx
 
                 foreach (var c in _chargingSession.ChargeSessionInfo.Costs)
                 {
-                    Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff.TariffUsage );
+                    Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff.TariffUsage);
                 }
                 ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
             }
         }
 
+#if DEBUG
         protected virtual void ShowProductInformation()
         {
-            try
-            {
-                var pi = ReadProductIdentification();
-                if (pi == null) return;
-                Logger.Info("Name                       : {0}", pi.Name);
-                Logger.Info("Manufacturer               : {0}", pi.Manufacturer);
-                Logger.Info("Table version              : {0}", pi.TableVersion);
-                Logger.Info("Firmware version           : {0}", pi.FirmwareVersion);
-                Logger.Info("Platform type              : {0}", pi.PlatformType);
-                Logger.Info("Station serial             : {0}", pi.StationSerial);
-                Logger.Info("Date Local                 : {0}", pi.DateTimeLocal.ToString("O"));
-                Logger.Info("Date UTC                   : {0}", pi.DateTimeUtc.ToString("O"));
-                Logger.Info("Uptime                     : {0}", pi.Uptime);
-                Logger.Info("Up since                   : {0}", pi.UpSinceUtc.ToString("O"));
-                Logger.Info("Timezone                   : {0}", pi.StationTimezone);
-            }
-            catch (SystemException se)
-            {
-                Logger.Error(se, $"{se.Message}");
-            }
+            var pi = ReadProductIdentification();
+            if (pi == null) return;
+            Logger.Info(pi.ToPrintableString());
         }
 
         private void ShowStationStatus()
@@ -229,7 +213,7 @@ namespace AlfenNG9xx
                 Logger.Error(se, $"{se.Message}");
             }
         }
-
+#endif
         public ProductIdentification ReadProductIdentification()
         {
             var result = new ProductIdentification();
@@ -259,7 +243,7 @@ namespace AlfenNG9xx
             result.Uptime = (long)Converters.ConvertRegistersLong(pi, 74);
             result.UpSinceUtc = DateTime.UtcNow.AddMilliseconds(0 - (double)result.Uptime);
 
-            switch(result.PlatformType)
+            switch (result.PlatformType)
             {
                 case "NG900":
                     result.Model = "Alfen Eve Single S-line";
@@ -269,7 +253,7 @@ namespace AlfenNG9xx
                     break;
                 case "NG920":
                     result.Model = "Alfen Eve Double Pro-line / Eve Double PG / Twin 4XL";
-                    break;                    
+                    break;
                 default:
                     result.Model = $"Unknown {result.PlatformType}";
                     break;
@@ -324,7 +308,7 @@ namespace AlfenNG9xx
             sm.RealPowerL1 = Converters.ConvertRegistersFloat(sm_part1, 38);
             sm.RealPowerL2 = Converters.ConvertRegistersFloat(sm_part1, 40);
             sm.RealPowerL3 = Converters.ConvertRegistersFloat(sm_part1, 42);
-            sm.RealPowerSum = Converters.ConvertRegistersFloat(sm_part1, 45);  /* */
+            sm.RealPowerSum = Converters.ConvertRegistersFloat(sm_part1, 45);
 
             /* power factor l1, l2 and l3 are null */
             /* power factor sum 1 */
@@ -363,9 +347,9 @@ namespace AlfenNG9xx
                 {
                     Logger.Error($"ReadHoldingRegisters() -> failed, no connection");
                     return Array.Empty<ushort>();
-                }            
-             
-                return _modbusMaster.ReadHoldingRegisters(slave, address, count);             
+                }
+
+                return _modbusMaster.ReadHoldingRegisters(slave, address, count);
             }
         }
 

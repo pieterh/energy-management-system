@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
+using System.Text;
 using EMS.Library.Adapter.EVSE;
 using EMS.Library.Core;
 using Microsoft.Extensions.Hosting;
@@ -34,6 +35,20 @@ namespace EMS.Library
         public long Uptime { get; set; }
         public DateTime UpSinceUtc { get; set; }
         public DateTime DateTimeUtc { get; set; }
+
+        public virtual StringBuilder ToPrintableString()
+        {
+            var retval = new StringBuilder();
+            retval.AppendFormat("Name                       : {0}", Name);            
+            retval.AppendFormat("Manufacturer               : {0}", Manufacturer);
+            retval.AppendFormat("Firmware version           : {0}", FirmwareVersion);
+            retval.AppendFormat("Model                      : {0}", Model);
+            retval.AppendFormat("Station serial             : {0}", StationSerial);
+            retval.AppendFormat("Uptime                     : {0}", Uptime);
+            retval.AppendFormat("Up since                   : {0}", UpSinceUtc.ToString("O"));
+            retval.AppendFormat("Date UTC                   : {0}", DateTimeUtc.ToString("O"));
+            return retval;
+        }
     }
 
     public record StationStatus

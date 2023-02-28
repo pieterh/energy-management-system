@@ -174,8 +174,12 @@ namespace AlfenNG9xx.Tests
         }
 
 
+        private static DateTime NextMeasurement(DateTime fakeDate, ChargingSession t, SocketMeasurement sm, int duration, double energy, Mode3State state)
+        {
+            return NextMeasurement(fakeDate, t, sm, duration, energy, state, null);
+        }
 
-        private static DateTime NextMeasurement(DateTime fakeDate, ChargingSession t, SocketMeasurement sm, int duration, double energy, Mode3State state, Tariff tariff = null)
+        private static DateTime NextMeasurement(DateTime fakeDate, ChargingSession t, SocketMeasurement sm, int duration, double energy, Mode3State state, Tariff? tariff)
         {
             using (new DateTimeProviderContext(fakeDate))
             {
