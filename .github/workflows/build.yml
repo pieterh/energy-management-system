@@ -183,26 +183,6 @@ jobs:
       with:
         name: EMS.BlazorWasm
         path: ${{ runner.temp }}/ems.blazorwasm.zip
-    - name: Install yarn
-      run: npm install --global yarn
-      working-directory: frontend/EMS.ReactApp
-    - name: Install packages using yarn and respect lock file
-      run: yarn install --frozen-lockfile
-      working-directory: frontend/EMS.ReactApp
-    - name: Build - React frontend
-      run: npm run build
-      working-directory: frontend/EMS.ReactApp
-    - name: Zip Release - Blazor React frontend
-      uses: TheDoctor0/zip-release@0.7.1
-      with:
-        filename: ${{ runner.temp }}/ems.reactapp.zip
-        path: app
-        directory: frontend/EMS.ReactApp/dist
-    - name: Upload Build Artifact - React frontend
-      uses: actions/upload-artifact@v3
-      with:
-        name: EMS.ReactApp
-        path: ${{ runner.temp }}/ems.reactapp.zip
   build_docker_images:
     name: Build docker images
     needs: build_ems_app
@@ -254,16 +234,6 @@ jobs:
       run: |
         mkdir -p dist/ems
         unzip ${{ runner.temp }}/ems.zip -d dist
-      working-directory: docker
-    - name: Download EMS.ReactApp Build Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: EMS.ReactApp
-        path: ${{ runner.temp }}/
-    - name: Unzip - EMS.ReactApp
-      run: |
-        mkdir -p dist/ems.reactapp
-        unzip ${{ runner.temp }}/ems.reactapp.zip -d dist/ems.reactapp
       working-directory: docker     
     - name: Download EMS.BlazorWasm Build Artifact
       uses: actions/download-artifact@v3
@@ -280,8 +250,8 @@ jobs:
         ls -la docker
         ls -la docker/dist
         ls -la docker/dist/ems
-        ls -la docker/dist/ems.reactapp
         ls -la docker/dist/ems.blazorwasm
+        ls -la docker/dist/ems.blazorwasm/ems.blazorwasm
     - name: Docker metadata
       id: meta
       uses: docker/metadata-action@v4
@@ -297,8 +267,7 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         build-args: |
           BACKEND=dist/ems 
-          FEREACT=dist/ems.reactapp 
-          FEWASM=dist/ems.blazorwasm
+          FEBLAZORWASM=dist/ems.blazorwasm/ems.blazorwasm
         push: true
   call-2:
     name: "Integration tests!"
