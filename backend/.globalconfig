@@ -1,0 +1,16 @@
+#
+# https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/configuration-options
+#
+
+# Top level entry required to mark this as a global AnalyzerConfig file
+is_global = true
+
+# NOTE: No section headers for configuration entries
+
+#### .NET Coding Conventions ####
+
+
+#### Diagnostic configuration ####
+# https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/configuration-options#severity-level
+# CA1305: Specify IFormatProvider
+dotnet_diagnostic.CA1305.severity = none

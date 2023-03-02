@@ -1,0 +1,11 @@
+﻿@inject EMS.BlazorWasm.Services.ILocalStorage LocalStorage
+@inject NavigationManager UriHelper
+
+@code {
+    protected override async void OnInitialized()
+    {
+        var token = await LocalStorage.GetStringAsync("token");
+        if (string.IsNullOrWhiteSpace(token))
+            UriHelper.NavigateTo("login");
+    }
+}

@@ -1,15 +1,22 @@
 name: build
-
-on: [push]
-
+run-name: Build for ${{ github.event_name }} of "${{ github.event.head_commit.message }}"  
+on: 
+  push:
+    paths:
+      - ".github/workflows/build.yml"
+      - ".github/workflows/integration-tests.yml"
+      - "backend/**"
+      - "docker/**"
+      - "frontend/**"
+      - global.json
 jobs:
-  build:
+  build_ems_app:
+    name: Build and test
     runs-on: ubuntu-latest
     strategy:
       matrix:
         dotnet-version: [ '7.0.x' ]
-
-    steps:    
+    steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -24,7 +31,17 @@ jobs:
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
     - name: dotnet info
-      run: dotnet --info     
+      run: |
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt
+        echo "--                        dotnet                          --" >> ${{ runner.temp }}/environment.txt
+        dotnet --info | tee -a ${{ runner.temp }}/environment.txt
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt
+        echo ""
+    - name: Upload environment info
+      uses: actions/upload-artifact@v3
+      with:
+        name: Environment information
+        path: ${{ runner.temp }}/environment.txt      
     - name: Cache SonarQube packages
       uses: actions/cache@v3
       with:
@@ -43,10 +60,13 @@ jobs:
       shell: bash
       run: |
         mkdir -p ./.sonar/scanner 
-        dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
-    - name: Install dependencies
+        dotnet tool install dotnet-sonarscanner --tool-path ./.sonar/scanner
+    - name: Install dependencies - backend
       run: dotnet restore
       working-directory: backend
+    - name: Install dependencies - frontend Blazor WASM
+      run: dotnet restore
+      working-directory: frontend/EMS.BlazorWasm      
     - name: Scan for projects
       id: find-projects
       shell: bash
@@ -61,7 +81,7 @@ jobs:
     - name: Dependencies vulnerability scan - excluding test projects
       shell: bash
       if: ${{ false }}
-      run: |        
+      run: |
         IFS="," read -a myarray <<< ${{ steps.find-projects.outputs.PROJECTS }}
         for i in "${myarray[@]}"; do            
           dotnet list ${i} package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
@@ -71,16 +91,16 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
-    - name: Dependencies vulnerability scan
+    - name: Dependencies vulnerability scan - Backend
       shell: bash
-      run: |        
+      run: |
         dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
         vulnerabilities=true
         grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
-    - name: Dependencies deprecation scan
+    - name: Dependencies deprecation scan - Backend
       shell: bash
       run: |
         dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
@@ -89,6 +109,24 @@ jobs:
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies vulnerability scan - Blazor WASM frontend
+      shell: bash
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
+        vulnerabilities=true
+        grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
+        [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
+        exit 0
+      working-directory: frontend/EMS.BlazorWasm      
+    - name: Dependencies deprecation scan - Blazor WASM frontend
+      shell: bash
+      run: |
+        dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
+        deprecations=true
+        grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
+        [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
+        exit 0
+      working-directory: frontend/EMS.BlazorWasm      
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
@@ -100,8 +138,14 @@ jobs:
       run: dotnet build --no-restore --configuration Release
       working-directory: backend
     - name: Test - backend
-      run: dotnet test --no-restore --configuration Release --verbosity normal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      run: dotnet test --filter "Category=Unit" --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
       working-directory: backend
+    - name: Build - Blazor WASM frontend
+      run: dotnet build --no-restore --configuration Release
+      working-directory: frontend/EMS.BlazorWasm      
+    - name: Test - Blazor WASM frontend
+      run: dotnet test --filter "Category=Unit" --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: frontend/EMS.BlazorWasm
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
@@ -113,22 +157,121 @@ jobs:
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
         ls -la publish/ems
-    - name: Install yarn
-      run: npm install --global yarn
-      working-directory: frontend/EMS.ReactApp
-    - name: Install packages using yarn and respect lock file
-      run: yarn install --frozen-lockfile
-      working-directory: frontend/EMS.ReactApp
-    - name: Build - frontend
-      run: npm run build
-      working-directory: frontend/EMS.ReactApp
-    - name: Build the docker image
+    - name: Zip Release - backend
+      uses: TheDoctor0/zip-release@0.7.1
+      with:
+        filename: ${{ runner.temp }}/ems.zip
+        path: ems
+        directory: publish
+    - name: Upload Build Artifact - backend
+      uses: actions/upload-artifact@v3
+      with:
+        name: EMS
+        path: ${{ runner.temp }}/ems.zip
+    - name: Publish - Blazor WASM frontend
+      run: |
+        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazerWasm
+        ls -la publish/ems.blazorwasm 
+    - name: Zip Release - Blazor WASM frontend
+      uses: TheDoctor0/zip-release@0.7.1
+      with:
+        filename: ${{ runner.temp }}/ems.blazorwasm.zip
+        path: ems.blazorwasm
+        directory: publish
+    - name: Upload Build Artifact - Blazor WASM frontend
+      uses: actions/upload-artifact@v3
+      with:
+        name: EMS.BlazorWasm
+        path: ${{ runner.temp }}/ems.blazorwasm.zip
+  build_docker_images:
+    name: Build docker images
+    needs: build_ems_app
+    runs-on: ubuntu-latest
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Docker Setup QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Docker Setup Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Docker Login
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
+        logout: true
+    - name: Download environment info
+      uses:  actions/download-artifact@v3
+      with:
+        name: Environment information
+        path: ${{ runner.temp }}/
+    - name: docker info
+      run: |
+        ls -la ${{ runner.temp }}
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt
+        echo "--                         docker                         --" >> ${{ runner.temp }}/environment.txt
+        echo "-- docker version                                         --" >> ${{ runner.temp }}/environment.txt
+        docker version | tee -a ${{ runner.temp }}/environment.txt
+        echo "------------------------------------------------------------" >> ${{ runner.temp }}/environment.txt
+        echo "-- buildx version                                         --" >> ${{ runner.temp }}/environment.txt
+        docker buildx version | tee -a ${{ runner.temp }}/environment.txt
+        echo "------------------------------------------------------------" >> ${{ runner.temp }}/environment.txt
+        echo "-- buildx builder instances and nodes                     --" >> ${{ runner.temp }}/environment.txt
+        docker buildx ls | tee -a ${{ runner.temp }}/environment.txt
+        echo "============================================================" >> ${{ runner.temp }}/environment.txt        
+        echo ""
+    - name: Upload environment info
+      uses: actions/upload-artifact@v3
+      with:
+        name: Environment information
+        path: ${{ runner.temp }}/environment.txt          
+    - name: Download EMS Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: EMS
+        path: ${{ runner.temp }}/
+    - name: Unzip - EMS
+      run: |
+        mkdir -p dist/ems
+        unzip ${{ runner.temp }}/ems.zip -d dist
+      working-directory: docker     
+    - name: Download EMS.BlazorWasm Build Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: EMS.BlazorWasm
+        path: ${{ runner.temp }}/
+    - name: Unzip - EMS.BlazorWasm
+      run: |
+        mkdir -p dist/ems.blazorwasm
+        unzip ${{ runner.temp }}/ems.blazorwasm.zip -d dist/ems.blazorwasm
+      working-directory: docker
+    - name: ls
+      run: |
+        ls -la docker
+        ls -la docker/dist
+        ls -la docker/dist/ems
+        ls -la docker/dist/ems.blazorwasm
+        ls -la docker/dist/ems.blazorwasm/ems.blazorwasm
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}
+    - name: Docker build and push
+      uses: docker/build-push-action@v4
       if: github.ref != 'refs/heads/main'
-      run: |
-        docker build . --file docker/dockerfile --build-arg BACKEND=publish/ems --build-arg FEREACT=frontend/EMS.ReactApp/dist/
-    - name: Push the docker image
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin docker.io
-        docker build . --file docker/dockerfile --tag docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
-        docker push docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}:latest
+      with:
+        context: docker
+        file: docker/build/dockerfile
+        platforms: linux/amd64,linux/arm64,linux/arm
+        tags: ${{ steps.meta.outputs.tags }}
+        build-args: |
+          BACKEND=dist/ems 
+          FEBLAZORWASM=dist/ems.blazorwasm/ems.blazorwasm
+        push: true
+  call-2:
+    name: "Integration tests!"
+    uses: ./.github/workflows/integration-tests.yml
+    needs: build_docker_images
+    with:
+      docker-image-tag: feature-blazorwasm

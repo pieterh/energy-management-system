@@ -6,6 +6,6 @@ namespace EMS.Library
 {
     public interface IBackgroundWorker 
     {
-        public Task BackgroundTask { get; }
+        public Task? BackgroundTask { get; }
     }
 }

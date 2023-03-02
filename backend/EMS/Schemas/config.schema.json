@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "adapters": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [ "chargepoint", "smartmeter", "priceprovider" ]
+            },
+            "name": {
+              "type": "string"
+            },
+            "driver": {
+              "type": "object",
+              "properties": {
+                "assembly": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "assembly",
+                "type"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "type",
+            "name",
+            "driver"
+          ]
+        }
+      ]
+    },
+    "instances": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "adapterid": {
+              "type": "string"
+            },
+            "config": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "adapterid",
+            "config"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "number" },
+        "host": { "type": "string" },
+        "https": { "type": "boolean" },
+        "jwt": {
+          "type": "object",
+          "properties": {
+            "issuer": { "type": "string" },
+            "audience": { "type": "string" },
+            "expiration": { "type": "number" },
+            "clockskew": { "type": "number" }
+          },
+          "required": [
+            "issuer",
+            "audience",
+            "expiration",
+            "clockskew"
+          ]
+        }
+      },
+      "required": [
+        "port",
+        "host"
+      ]
+    },
+    "db": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [ "sqlite" ]
+        },
+        "name": { "type": "string" }
+      },
+      "required": [
+        "type",
+        "name"
+      ]
+    }
+  },
+  "required": [
+    "adapters",
+    "instances",
+    "web"
+  ]
+}

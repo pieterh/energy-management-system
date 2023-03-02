@@ -1,0 +1,12 @@
+﻿@page "/"
+
+<div>
+    <AuthorizeView>
+        <Authorized>
+            <DashboardRedirect/>
+        </Authorized>
+        <NotAuthorized>
+            <LoginRedirect />
+        </NotAuthorized>
+    </AuthorizeView>
+</div>

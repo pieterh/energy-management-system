@@ -107,9 +107,9 @@ namespace P1SmartMeter.Connection
                 }
                 isConnected = true;
             }
-            catch (SocketException)
+            catch (SocketException se)
             {
-                Logger.Trace($"nope");
+                Logger.Error(se, $"Socket exception {se.Message}");
             }
             return isConnected;
         }

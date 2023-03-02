@@ -57,6 +57,11 @@ namespace EMS.Engine
 
         public void AddData(double? l1, double? l2, double? l3, double? chargerl1, double? chargerl2, double? chargerl3)
         {
+            if (l1 == null || l2 == null || l3 == null || chargerl1 == null || chargerl2 == null || chargerl3 == null)
+            {
+                return;
+            }
+
             var s = new Measurement(l1.Value, l2.Value, l3.Value, chargerl1.Value, chargerl2.Value, chargerl3.Value);
 
             lock (_measurements)

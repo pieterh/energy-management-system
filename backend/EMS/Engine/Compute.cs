@@ -14,7 +14,7 @@ namespace EMS
         private readonly Measurements _measurements = new(60);
         private readonly ChargingStateMachine _state = new();
 
-        // TODO refactor
+        // nog te doen refactor
         private Base _model;
         private readonly MaxCharging _maxCharging;
         private readonly EcoFriendly _ecoFriendly;
@@ -118,7 +118,7 @@ namespace EMS
 
         public void AddMeasurement(ICurrentMeasurement m, ICurrentMeasurement sm)
         {
-            _measurements.AddData(m.CurrentL1, m.CurrentL2, m.CurrentL3, sm.CurrentL1, sm.CurrentL2, sm.CurrentL3);
+            _measurements.AddData(m?.CurrentL1, m?.CurrentL2, m?.CurrentL3, sm?.CurrentL1, sm?.CurrentL2, sm?.CurrentL3);
         }
 
         private void RaiseStateUpdate(ChargeControlInfo nfo)

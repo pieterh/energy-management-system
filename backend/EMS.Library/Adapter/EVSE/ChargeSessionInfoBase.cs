@@ -25,6 +25,6 @@ namespace EMS.Library.Adapter.EVSE
             }
         }
         public Decimal RunningCost { get; set; }
-        public IList<Cost> Costs { get; set; }
+        public required IList<Cost> Costs { get; init; }
     }
 }

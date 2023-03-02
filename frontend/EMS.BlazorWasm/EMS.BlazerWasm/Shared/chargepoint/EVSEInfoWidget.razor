@@ -1,0 +1,30 @@
+﻿@using EMS.BlazorWasm.Client.Services.Chargepoint
+@inject IChargepointService ChargepointService
+
+<DashboardCard avatar="@Icons.Material.Filled.EvStation" title=@(_productInfo?.Model) subheader=@(_productInfo?.Name)>
+    <Body>
+        <MudText Typo="Typo.body1">
+            @(_productInfo?.Manufacturer)<br />
+            @(_productInfo?.Model)<br />
+            @(_productInfo?.Name)<br />
+            @(_productInfo?.StationSerial)<br />
+            Firmware version @(_productInfo?.FirmwareVersion)<br />
+            Uptime @(_productInfo != null ? TimeSpan.FromMilliseconds(_productInfo.Uptime).Days : -1) days<br />
+            Active Max Current @(_stationStatusInfo?.ActiveMaxCurrent) A<br />
+            OCCP @(_stationStatusInfo?.OCCPState)<br/>
+            Nr of sockets @(_stationStatusInfo?.NrOfSockets)
+        </MudText>
+    </Body>
+</DashboardCard>
+
+@code{
+    ProductInfoModel? _productInfo;
+    StationStatusInfoModel? _stationStatusInfo;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var resp = await ChargepointService.GetStationInfoAsync(CancellationToken.None);
+        _productInfo = resp.ProductInfo;
+        _stationStatusInfo = resp.StationStatus;
+    }
+}

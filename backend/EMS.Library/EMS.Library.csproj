@@ -1,23 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NLog" Version="5.1.1"/>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1"/>
-    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2"/>
+    <PackageReference Include="NLog" Version="5.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Adapter\"/>
-    <Folder Include="Configuration\"/>
-    <Folder Include="Adapter\EVSE\"/>
-    <Folder Include="DateTime\"/>
-    <Folder Include="Core\"/>
-    <Folder Include="Adapter\SmartMeter\"/>
-    <Folder Include="Adapter\PriceProvider\"/>
+    <Folder Include="Adapter\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="Adapter\EVSE\" />
+    <Folder Include="DateTime\" />
+    <Folder Include="Core\" />
+    <Folder Include="Adapter\SmartMeter\" />
+    <Folder Include="Adapter\PriceProvider\" />
+    <Folder Include="Assembly\" />
+    <Folder Include="Exceptions\" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Adapter\PriceProvider\"/>
+    <None Remove="Adapter\PriceProvider\" />
+    <None Remove="Assembly\" />
+    <None Remove="Exceptions\" />
   </ItemGroup>
 </Project>

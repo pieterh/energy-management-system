@@ -9,10 +9,10 @@ using EMS.Library.TestableDateTime;
 
 namespace EPEXSPOT
 {
-    public class EPEXSPOT : Microsoft.Extensions.Hosting.BackgroundService, IPriceProvider
+    public class EPEXSPOT : Microsoft.Extensions.Hosting.BackgroundService, IPriceProvider // NOSONAR
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private bool _disposed = false;
+        private bool _disposed;
 
         private readonly string _endpoint;           // ie. https://mijn.easyenergy.com
         private readonly IHttpClientFactory _httpClientFactory;
@@ -123,30 +123,13 @@ namespace EPEXSPOT
                 { "endTimestamp", endUtc.ToString("o") }
             };
 
-            var uri = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString);
+            Uri uri = new (Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString));
 
-            using var resultStream = await client.GetStreamAsync(uri);
-            var schema = JSon.GetSchema("EPEXSPOT.schemas.getapxtariffs.schema.json");
+            using var resultStream = await client.GetStreamAsync(uri).ConfigureAwait(false);
+            var schema = JSon.GetSchema("getapxtariffs.schema.json");
 
-            // read the objects directly from the stream, including schema validation
-            /*using JsonTextReader reader = new(new StreamReader(resultStream));
-            JSchemaValidatingReader validatingReader = new(reader);
-            validatingReader.Schema = GetSchema();
-            IList<string> messages = new List<string>();
-            validatingReader.ValidationEventHandler += (o, a) => messages.Add(a.Message);
-
-            JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
-            */
             using var streamReader = new StreamReader(resultStream);
             var result = JsonSerializer.Deserialize<SpotTariff[]>(streamReader.BaseStream, new JsonSerializerOptions());            
-/*
-            if (messages.Count > 0)
-            {
-                Logger.Error("There was a problem with the getapxtariffs response.");
-                foreach (var m in messages)
-                    Logger.Debug(m);
-                return Array.Empty<Tariff>();
-            }*/
 
             // calculate consumer price by adding the 'opslag duurzame energie', 'energie belasting' and 'inkoopkosten'
             var r = from x in result
@@ -163,13 +146,11 @@ namespace EPEXSPOT
             using var client = _httpClientFactory.CreateClient();
 
             var getapxtariffslasttimestampUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffslasttimestamp");
-            using var resultStream = await client.GetStreamAsync(getapxtariffslasttimestampUri);
+            using var resultStream = await client.GetStreamAsync(getapxtariffslasttimestampUri).ConfigureAwait(false);
             using var streamReader = new StreamReader(resultStream);
             var result = JsonSerializer.Deserialize<DateTime>(streamReader.BaseStream, new JsonSerializerOptions());    
 
-            //JsonSerializer serializer = new() { DateTimeZoneHandling = DateTimeZoneHandling.Utc };
-            //var result = serializer.Deserialize<DateTime>(reader);
-            Logger.Info($"taris lasttime -> {result}");
+            Logger.Info($"tariff lasttime -> {result}");
             return result;
         }
 
@@ -198,23 +179,6 @@ namespace EPEXSPOT
             var t2 = t.Where((x) => x.Timestamp > DateTime.UtcNow.AddHours(-2)).ToArray();
             Array.Sort(t2, (x, y) => { return x.Timestamp.CompareTo(y.Timestamp); });
             return t2;
-        }
-
-        private static JsonSchema GetSchema()
-        {
-            var schemaFile = "EPEXSPOT.schemas.getapxtariffs.schema.json";
-           var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            Logger.Trace($"looking for resources in {assembly.Location}");
-            foreach (var s in assembly.GetManifestResourceNames())
-            {
-                Logger.Trace($"resource file {s}");
-            }
-            using Stream? resource = assembly.GetManifestResourceStream(schemaFile);
-            if (resource == null) throw new FileNotFoundException($"Unable to load embedded resource {schemaFile}");
-
-            using var r = new StreamReader(resource);
-            var mySchema = JsonSchema.FromText(r.ReadToEnd());
-            return mySchema;
         }
     }
 }

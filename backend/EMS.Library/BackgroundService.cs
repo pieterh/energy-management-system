@@ -9,7 +9,7 @@ namespace EMS.Library
         protected static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         protected bool _disposed = false;
  
-        private CancellationTokenSource _tokenSource = null;
+        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
         public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
 
         protected abstract void Start();
@@ -38,9 +38,8 @@ namespace EMS.Library
 
         private void DisposeTokenSource()
         {
-            _tokenSource?.Cancel();
-            _tokenSource?.Dispose();
-            _tokenSource = null;
+            _tokenSource.Cancel();
+            _tokenSource.Dispose();
         }
 
         protected bool StopRequested(int ms)
@@ -50,13 +49,17 @@ namespace EMS.Library
             if (ms == 0) return false;
 
             Task.Delay(ms, _tokenSource.Token).GetAwaiter().GetResult();
-            return (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested);
+            return (_tokenSource.Token.IsCancellationRequested);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.Trace($"Starting");
-            TokenSource = new CancellationTokenSource();
+            if (!TokenSource.TryReset())
+            {
+                DisposeTokenSource();
+                TokenSource = new CancellationTokenSource();
+            }
 
             Start();            
 
@@ -65,7 +68,7 @@ namespace EMS.Library
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            TokenSource?.Cancel();
+            TokenSource.Cancel();
 
             Stop();
 

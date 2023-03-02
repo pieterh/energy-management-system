@@ -1,0 +1,5 @@
+
+
+# The Migrations folder contain generated files. We don't want to analyze them
+[Migrations/*.cs]
+generated_code = true

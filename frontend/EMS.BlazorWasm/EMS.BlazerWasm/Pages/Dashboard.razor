@@ -1,0 +1,98 @@
+﻿@page "/dashboard"
+@using EMS.BlazorWasm.Client.Services
+@inject IUserService _userService;
+
+
+<style>
+    .bullet {
+        display: inline-block;
+        margin: 0 2px;
+        transform: scale(0.8);
+    }
+</style>
+
+<PageTitle>Dashboard</PageTitle>
+
+<h1>Dashboard</h1>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid Justify="Justify.FlexStart">
+            <MudItem xs="3">
+                <EVSEInfoWidget></EVSEInfoWidget>
+            </MudItem>
+            <MudItem xs="3">
+                <EVSESocketInfoWidget></EVSESocketInfoWidget>
+            </MudItem>
+            <MudItem xs="3">
+                <DashboardCard Title="2">
+                    <Body>
+                        <MudText Typo="Typo.body1">
+                            Word of the Day
+                        </MudText>
+                        <MudText Typo="Typo.h5" Style="font-size:1.5rem">
+                            be@(bull)nev@(bull)o@(bull)lent
+                        </MudText>
+                        <MudText Typo="Typo.body1">
+                            adjective
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            well meaning and kindly.
+                            <br />
+                            "a benevolent smile"
+                        </MudText>
+                    </Body>
+                </DashboardCard>
+            </MudItem>
+            <MudItem xs="3">
+                <DashboardCard Title="Your Dashboard - Your Claims">
+                    <Body>
+                        <div>
+                            @foreach (var claim in userClaim)
+                            {
+                                <div>@claim.Type - @claim.Value</div>
+                            }
+                        </div>
+                    </Body>
+                    <Actions>
+                        <MudIconButton @onclick="Logout">Logout</MudIconButton>
+                    </Actions>
+                </DashboardCard>
+            </MudItem>
+            <MudItem xs="3">
+                <DashboardCard Title="4"></DashboardCard>
+            </MudItem>
+            <MudItem xs="3">
+                <DashboardCard Title="5"></DashboardCard>
+            </MudItem>
+            <MudItem xs="3">
+                <DashboardCard Title="6"></DashboardCard>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+@code{
+    MarkupString bull = new MarkupString("<span class='bullet'>•</span>");
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; } = default!;
+
+    private IList<Claim> userClaim
+    {
+        get
+        {
+            var auth = authenticationState.Result;
+            if (auth?.User.Identity?.IsAuthenticated ?? false)
+            {
+                return auth.User.Claims.ToList();
+            }
+            return new List<Claim>();
+        }
+    }
+
+    private void Logout()
+    {
+        _userService.LogoutAsync();
+    }
+}

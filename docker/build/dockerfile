@@ -1,0 +1,29 @@
+FROM mcr.microsoft.com/dotnet/aspnet:7.0.3
+
+COPY build/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod ugo+x /usr/local/bin/entrypoint.sh
+RUN chmod ugo+r /usr/local/bin/entrypoint.sh
+
+RUN mkdir /app
+RUN mkdir /app/ems
+RUN chmod ugo+x /app
+RUN chmod ugo+x /app/ems
+RUN chmod ugo+r /app
+RUN chmod ugo+r /app/ems
+
+ARG BACKEND
+ARG FEREACT
+ARG FEBLAZORWASM
+
+ENV ASPNETCORE_URLS=http://+:5000
+EXPOSE 5000/tcp
+
+COPY $BACKEND/ /app/ems/
+RUN rm /app/ems/NLog.config
+RUN rm /app/ems/config.json
+RUN ls -la /app/ems
+
+COPY $FEBLAZORWASM/wwwroot /app/ems/dist/
+RUN ls -la /app/ems/dist
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

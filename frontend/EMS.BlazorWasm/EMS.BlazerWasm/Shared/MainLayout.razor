@@ -1,0 +1,87 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject EMS.BlazorWasm.Services.ILocalStorage LocalStorage
+
+<CascadingValue Value="this">
+    <MudThemeProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
+    <MudLayout>
+        <MudAppBar Elevation="1">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => onDrawerToggle())" Disabled="@(!_isLoggedIn)" />
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit" Edge="Edge.End" />
+        </MudAppBar>
+        <MudDrawer @bind-Open="@_drawerOpen" Elevation="2">
+            <MudDrawerHeader>
+                <MudText Typo="Typo.h5" Class="mt-1">HEMS</MudText>
+            </MudDrawerHeader>
+            <NavMenu />
+        </MudDrawer>
+        <MudMainContent>
+            <MudContainer MaxWidth="MaxWidth.Large">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</CascadingValue>
+
+
+@code {
+
+    [Inject]
+    public AuthenticationStateProvider authenticationStateProvider { get; set; } = default!;
+
+
+    [CascadingParameter]
+    private  Task<AuthenticationState>? authenticationState { get; set; }
+
+    private bool _isLoggedIn = false;
+    private bool _drawerOpen = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        _isLoggedIn = await isLoggedInAsync();
+        _drawerOpen = _isLoggedIn;
+        authenticationStateProvider.AuthenticationStateChanged += this.OnAuthenticationStateChanged;
+    }
+
+    private async Task<bool> isLoggedInAsync()
+    {
+        if (authenticationState == null) return false;
+        var t = await authenticationState;
+
+        if (t.User.Identity == null) return false;
+        return t.User.Identity.IsAuthenticated;
+    }
+
+    protected void OnAuthenticationStateChanged(object sender)
+    {
+        _isLoggedIn = isLoggedInAsync().GetAwaiter().GetResult();
+        _drawerOpen = _isLoggedIn;
+        Console.WriteLine("IsAuthenticated {0}", _isLoggedIn);
+
+        // We need to indicate that the state has changed, otherwise the UI is not updated with
+        // the values we set in this event handler
+        // https://learn.microsoft.com/en-us/aspnet/core/blazor/components/rendering?
+        StateHasChanged();
+        if (!_isLoggedIn && !string.Equals(Navigation.Uri, "login"))
+            Navigation.NavigateTo("login");
+    }
+
+    private void onDrawerToggle()
+    {
+        if (_isLoggedIn)
+        {
+            _drawerOpen = !_drawerOpen;
+        }
+        else
+            _drawerOpen = false;
+    }
+
+    public void Dispose() => authenticationStateProvider.AuthenticationStateChanged -= this.OnAuthenticationStateChanged;
+}

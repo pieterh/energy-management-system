@@ -67,7 +67,7 @@ namespace EMS
             using (var db = new HEMSContext())
             {
 
-                Logger.LogInformation("Database path: {path}.", db.DbPath);
+                Logger.LogInformation("Database path: {path}.", HEMSContext.DbPath);
 
                 var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
                 foreach (var item in items)

@@ -8,3 +8,11 @@ Contributions are what make the open source community such an amazing place to b
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
+## Development Startup
+backend: dotnet ems.dll --config config.json --nlogcfg NLog.config (listening on 5005)
+frontend: npm start (listening on 5010)
+browser: http://127.0.0.1:5005 (connecting to the backend that also services the static content)
+
+## Installation
+...
+

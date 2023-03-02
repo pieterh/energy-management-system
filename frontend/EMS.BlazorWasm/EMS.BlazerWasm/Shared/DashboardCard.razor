@@ -1,0 +1,40 @@
+﻿
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                <MudIcon Icon="@avatar"></MudIcon>
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.body1">
+                @(title)
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @(subheader)
+            </MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>        
+        @Body
+    </MudCardContent>
+@if (@Actions != null)
+{
+    <MudCardActions>
+        @Actions
+    </MudCardActions>
+}
+</MudCard>
+
+@code {
+    [Parameter]
+    public string avatar { get; set; } = default!;
+    [Parameter]
+    public string title { get; set; } = "";
+    [Parameter]
+    public string subheader { get; set; } = "";
+    [Parameter]
+    public RenderFragment Body { get; set; } = default!;
+    [Parameter]
+    public RenderFragment Actions { get; set; } = default!;
+}

@@ -18,7 +18,7 @@ namespace EMS.Library.Adapter.PriceProvider
         /// Returns the current tariff
         /// </summary>
         /// <returns></returns>
-        Tariff GetTariff();
+        Tariff? GetTariff();
     }
 }
 

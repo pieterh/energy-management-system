@@ -15,10 +15,11 @@ using EMS.WebHost.Helpers;
 
 namespace EMS.WebHost
 {
-    public class WebConfig
+    public record WebConfig
     {
         public ushort Port { get; set; }
         public JwtConfig Jwt { get; set; }
+        public bool https { get; set; }
     }
 
     public class Startup
@@ -31,6 +32,7 @@ namespace EMS.WebHost
 
         public IWebHostEnvironment Env => _env;
         public IConfiguration Configuration => _configuration;
+        static readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
         static Startup()
         {
@@ -53,7 +55,7 @@ namespace EMS.WebHost
             // not nice to create the service here
             // and we also need a reference to the service later
             // hence we did add it as a dummy arg to configure....
-            // TODO: fix this weird dependency
+            // nog te doen: fix this weird dependency
             IJWTService jwtCreator = null;            
             services.AddSingleton<IJWTService>((x) => {
                 jwtCreator = ActivatorUtilities.CreateInstance<JwtTokenService>(x);
@@ -75,7 +77,22 @@ namespace EMS.WebHost
                 options.SaveToken = true;
             });
 
-
+#if DEBUG
+            services.AddCors(options => {
+                options.AddPolicy(name: MyAllowSpecificOrigins,
+                      builder =>
+                      {
+                          builder.WithOrigins("http://127.0.0.1:5005",
+                                              "http://localhost:5005",
+                                              "http://127.0.0.1:5281",
+                                              "http://localhost:5281"
+                                              )
+                          .AllowCredentials()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod(); 
+                      });
+            });
+#endif
 
             //In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -86,6 +103,8 @@ namespace EMS.WebHost
 
         public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJWTService t /*see comment above*/)
         {
+            
+           
             Logger = logger;
             if (Env.IsDevelopment())
             {
@@ -122,7 +141,6 @@ namespace EMS.WebHost
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
 
-
             app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
             app.UseStaticFiles();
@@ -131,13 +149,7 @@ namespace EMS.WebHost
 
             app.UseRouting();
 
-            app.UseCors(builder =>
-            {
-                builder.WithOrigins("http://127.0.0.1:5010")
-                .AllowCredentials()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-            });
+            app.UseCors(MyAllowSpecificOrigins);
 
             // put this between UseRouting and UseEndpoints
             app.UseAuthentication();
@@ -146,15 +158,6 @@ namespace EMS.WebHost
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-            });
-
-            app.UseSpa(spa =>
-            {
-                if (Env.IsDevelopment())
-                {
-                    // Make sure you have started the frontend with npm run dev on port 5010
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:5010");                //NOSONAR
-                }                
             });
 
             app.Use((context, next) => {

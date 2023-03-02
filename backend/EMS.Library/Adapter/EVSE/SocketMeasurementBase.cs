@@ -96,7 +96,7 @@ namespace EMS.Library.Adapter.EVSE
 
         public static Mode3State ParseMode3State(string mode3State)
         {
-            if (Enum.TryParse(typeof(Mode3State), mode3State, out object mode3StateEnum))
+            if (Enum.TryParse(typeof(Mode3State), mode3State, out object? mode3StateEnum))
             {
                 return (Mode3State)mode3StateEnum;
             }

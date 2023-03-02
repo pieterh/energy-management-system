@@ -18,7 +18,9 @@ public record CostDetail
 
 	protected virtual bool PrintMembers(StringBuilder stringBuilder)
 	{
-		stringBuilder.Append($"ID = {ID}, ");
+        if (stringBuilder == null) throw new ArgumentNullException(nameof(stringBuilder));
+
+        stringBuilder.Append($"ID = {ID}, ");
 		stringBuilder.Append($"Timestamp = {Timestamp.ToLocalTime():O}, ");
 		stringBuilder.Append($"EnergyDelivered = {EnergyDelivered} kWh, ");
 		stringBuilder.Append($"Cost = €{Cost:F2}, ");

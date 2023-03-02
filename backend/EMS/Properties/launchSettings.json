@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EMS": {
+      "commandName": "Project",
+      "commandLineArgs": "--config=config.json --nlogcfg=nlog.config"
+    }
+  }
+}
