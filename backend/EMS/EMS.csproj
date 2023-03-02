@@ -30,7 +30,7 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="5.2.2" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.2" />
     <PackageReference Include="System.Text.Json" Version="7.0.2" />
-    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta2" />
+    <PackageReference Include="JsonSchema.Net" Version="4.0.0-beta3" />
     <PackageReference Include="Microsoft.Json.Schema.Validation" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
