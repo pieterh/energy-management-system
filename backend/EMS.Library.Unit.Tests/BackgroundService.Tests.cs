@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using FluentAssertions;
 
 namespace EMS.Library.Unit.Tests
 {
@@ -42,7 +43,8 @@ namespace EMS.Library.Unit.Tests
             Assert.False(await mock.Object.StopRequested(500).ConfigureAwait(false));
             // should delay a bit when not canceled
             var duration = DateTime.Now - start;
-            Assert.True(duration.TotalMilliseconds > 500);
+            duration.Milliseconds.Should().BeInRange(500, 1000, because: "It should wait atleast a bit");
+
         }
         [Fact(DisplayName = "Stop requested handles cancel")]
         async Task HandleStopRequested()
