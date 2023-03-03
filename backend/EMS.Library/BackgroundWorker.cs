@@ -6,13 +6,13 @@ namespace EMS.Library
 {
     public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
-        private Task? _backgroundTask = null;
+        private Task? _backgroundTask;
         public Task? BackgroundTask { get { return _backgroundTask; } }
 
         protected abstract void DoBackgroundWork();
         protected override void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (Disposed) return;
             base.Dispose(disposing);
 
             if (disposing)

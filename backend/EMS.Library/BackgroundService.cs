@@ -7,10 +7,12 @@ namespace EMS.Library
     public abstract class BackgroundService : IBackgroundService
     {
         protected static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        protected bool _disposed = false;
- 
+        private bool _disposed;
+        public  bool Disposed { get => _disposed; set => _disposed = value; }
+        
         private CancellationTokenSource _tokenSource = new CancellationTokenSource();
         public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
+
 
         protected abstract void Start();
         protected abstract void Stop();
@@ -23,32 +25,37 @@ namespace EMS.Library
 
         protected virtual void Dispose(bool disposing)
         {
-            Logger.Trace($"Dispose({disposing}) _disposed {_disposed}");
+            Logger.Trace($"Dispose({disposing}) _disposed {Disposed}");
 
-            if (_disposed) return;
+            if (Disposed) return;
 
             if (disposing)
             {
                 DisposeTokenSource();
             }
 
-            _disposed = true;
-            Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
+            Disposed = true;
+            Logger.Trace($"Dispose({disposing}) done => _disposed {Disposed}");
         }
 
         private void DisposeTokenSource()
         {
-            _tokenSource.Cancel();
-            _tokenSource.Dispose();
+            _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
         }
 
-        protected bool StopRequested(int ms)
+        public bool StopRequested(int ms)
         {
             if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
                 return true;
-            if (ms == 0) return false;
-
-            Task.Delay(ms, _tokenSource.Token).GetAwaiter().GetResult();
+            if (ms > 0)
+            {
+                try
+                {
+                    Task.Delay(ms, _tokenSource.Token).GetAwaiter().GetResult();
+                }
+                catch (TaskCanceledException) { /* nothing to do here */  }
+            }
             return (_tokenSource.Token.IsCancellationRequested);
         }
 
