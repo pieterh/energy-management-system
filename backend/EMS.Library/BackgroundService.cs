@@ -6,13 +6,12 @@ namespace EMS.Library
 {
     public abstract class BackgroundService : IBackgroundService
     {
-        protected static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private bool _disposed;
-        public  bool Disposed { get => _disposed; set => _disposed = value; }
-        
-        private CancellationTokenSource _tokenSource = new CancellationTokenSource();
-        public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        public bool Disposed { get; protected set; }
+
+        private CancellationTokenSource _tokenSource = new();
+        public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
 
         protected abstract void Start();
         protected abstract void Stop();
@@ -40,19 +39,20 @@ namespace EMS.Library
 
         private void DisposeTokenSource()
         {
-            _tokenSource?.Cancel();
-            _tokenSource?.Dispose();
+            _tokenSource.Cancel();
+            _tokenSource.Dispose();
         }
 
-        public bool StopRequested(int ms)
+        public async Task<bool> StopRequested(int ms)
         {
-            if (_tokenSource?.Token == null || _tokenSource.Token.IsCancellationRequested)
+            if (_tokenSource.Token.IsCancellationRequested)
                 return true;
             if (ms > 0)
             {
                 try
                 {
-                    Task.Delay(ms, _tokenSource.Token).GetAwaiter().GetResult();
+                    //Task.Delay(ms, _tokenSource.Token).GetAwaiter().GetResult();
+                    await Task.Delay(ms, _tokenSource.Token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { /* nothing to do here */  }
             }

@@ -6,6 +6,8 @@ namespace P1SmartMeter.Connection
 {
     public class ReaderTTY : Reader                                   //NOSONAR
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private readonly string _usbPort;
         private SerialPort _serialPort;
 

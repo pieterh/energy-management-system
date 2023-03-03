@@ -22,16 +22,16 @@ public class UsersController
     }
 
     [Theory(DisplayName = "Ping - is method allowed")]
-    [InlineData(HttpTools.Methods.POST, true)]
-    [InlineData(HttpTools.Methods.PUT, true)]
-    [InlineData(HttpTools.Methods.DELETE, true)]
-    internal async void Test3(HttpTools.Methods method, bool methodNotAllowed)
+    [InlineData(Methods.POST, true)]
+    [InlineData(Methods.PUT, true)]
+    [InlineData(Methods.DELETE, true)]
+    public async Task Test3(Methods method, bool methodNotAllowed)
     {
         Assert.Equal(methodNotAllowed, await HttpTools.MethodNotAllowed(_baseAddress, method, "api/users/ping").ConfigureAwait(true));
     }
 
     [Fact(DisplayName = "Ping - Should give 401 when not authenticated,")]
-    public async void Test1()
+    public async Task Test1()
     {
         using var _client = new HttpClient() { BaseAddress = _baseAddress };
         var response = await _client.GetAsync(new Uri(_client.BaseAddress, "api/users/ping")).ConfigureAwait(true);
@@ -44,7 +44,7 @@ public class UsersController
     }
 
     [Fact(DisplayName = "Authenticate - Should give an error when credentials are invalid")]
-    public async void Test5()
+    public async Task Test5()
     {
         using var _client = new HttpClient() { BaseAddress = new Uri("http://localhost:5005") };
         var model = new LoginModel() { Username = "a", Password = "b" };
@@ -60,7 +60,7 @@ public class UsersController
     }
 
     [Fact(DisplayName = "Authenticate - Should give a token when credentials are valid")]
-    public async void Test6()
+    public async Task Test6()
     {
         using var _client = new HttpClient() { BaseAddress = new Uri("http://localhost:5005") };
         var model = new LoginModel() { Username = "admin", Password = "admin" };

@@ -6,6 +6,8 @@ namespace EMS.Library
 {
     public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private Task? _backgroundTask;
         public Task? BackgroundTask { get { return _backgroundTask; } }
 
@@ -80,12 +82,12 @@ namespace EMS.Library
 
         protected override void Start()
         {
-            _backgroundTask = Task.Run(() =>
+            _backgroundTask = Task.Run(async () =>
             {
                 Logger.Trace($"BackgroundTask running");
                 try
                 {
-                    Run();
+                    await Run().ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
                 catch (Exception ex)
@@ -98,9 +100,9 @@ namespace EMS.Library
         }
 
         protected virtual int Interval { get { return 2500; } }
-        private void Run()
+        private async Task Run()
         {
-            while (!StopRequested(Interval))
+            while (!await StopRequested(Interval).ConfigureAwait(false))
             {
                 DoBackgroundWork();
             }

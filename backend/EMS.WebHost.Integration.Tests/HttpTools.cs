@@ -4,9 +4,10 @@ using System.Net.Http.Json;
 
 namespace EMS.WebHost.Integration.Tests
 {
-	internal static class HttpTools
+    public enum Methods { POST, PUT, DELETE }
+    internal static class HttpTools
 	{
-        public enum Methods {POST, PUT, DELETE }
+       
         private const string _dashes = "----------------------------";
 
         public static async Task<bool> MethodNotAllowed(Uri baseUri, Methods method, string path)

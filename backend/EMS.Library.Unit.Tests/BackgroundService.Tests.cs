@@ -35,24 +35,24 @@ namespace EMS.Library.Unit.Tests
         }
 
         [Fact(DisplayName = "Stop requested waits when not canceled")]
-        void HandleNoStoprequested()
+        async Task HandleNoStoprequested()
         {
             var mock = new Mock<BackgroundService>();
             var start = DateTime.Now;
-            Assert.False(mock.Object.StopRequested(500));
+            Assert.False(await mock.Object.StopRequested(500).ConfigureAwait(false));
             // should delay a bit when not canceled
             var duration = DateTime.Now - start;
             Assert.True(duration.TotalMilliseconds > 500);
         }
         [Fact(DisplayName = "Stop requested handles cancel")]
-        async void HandleStopRequested()
+        async Task HandleStopRequested()
         {
             var mock = new Mock<BackgroundService>();
             var start =  DateTime.Now;
             mock.Object.TokenSource.CancelAfter(100);
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                Assert.True(mock.Object.StopRequested(5000));
+                Assert.True(await mock.Object.StopRequested(5000).ConfigureAwait(false));
             }).ConfigureAwait(false);
 
             // should be canceled within a reasonable time
@@ -60,17 +60,17 @@ namespace EMS.Library.Unit.Tests
             Assert.True(duration.TotalMilliseconds < 500);
         }
         [Fact(DisplayName = "StopRequested accepts no waiting")]
-        void AcceptsNoDelayForStopping()
+        async Task AcceptsNoDelayForStopping()
         {
             var mock = new Mock<BackgroundService>();
-            Assert.False(mock.Object.StopRequested(0));
+            Assert.False(await mock.Object.StopRequested(0).ConfigureAwait(false));
         }
         [Fact(DisplayName = "StopRequested can be called if already stopped")]
-        void AlreadyStoppped()
+        async Task AlreadyStoppped()
         {
             var mock = new Mock<BackgroundService>();
             mock.Object.TokenSource.Cancel();
-            Assert.True(mock.Object.StopRequested(0));
+            Assert.True(await mock.Object.StopRequested(0).ConfigureAwait(false));
         }
     }
 }
