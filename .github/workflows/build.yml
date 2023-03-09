@@ -146,8 +146,8 @@ jobs:
         path: ${{ runner.temp }}/sbom/*
     - name: SBOM submission action
       uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
-        with:
-          sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json ${{ runner.temp }}/sbom/sbom-frontend-ems.json
+      with:
+        sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json ${{ runner.temp }}/sbom/sbom-frontend-ems.json
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
