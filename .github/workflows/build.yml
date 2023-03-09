@@ -139,6 +139,7 @@ jobs:
       shell: bash
       run: |  
         dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
+        ls -la ${{ runner.temp }}/sbom
     - name: Upload SBOM Artifact
       uses: actions/upload-artifact@v3
       with:
@@ -147,7 +148,7 @@ jobs:
     - name: SBOM submission action
       uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
       with:
-        sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json ${{ runner.temp }}/sbom/sbom-frontend-ems.json
+        sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
