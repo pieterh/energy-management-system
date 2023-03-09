@@ -1,5 +1,7 @@
 ﻿using System.IO.Ports;
 using System.Linq;
+using System.Threading.Tasks;
+
 using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
@@ -25,6 +27,7 @@ namespace P1SmartMeter.Connection
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
             if (disposing)
             {
                 DisposeSerialPort();
@@ -38,7 +41,7 @@ namespace P1SmartMeter.Connection
             _serialPort = null;
         }
 
-        protected override void Start()
+        protected override Task Start()
         {
             Logger.Info($"BackgroundTask start");
 
@@ -54,7 +57,8 @@ namespace P1SmartMeter.Connection
             _serialPort.DataReceived += Str_DataReceived;
             _serialPort.Open();
 
-            Logger.Info($"BackgroundTask has started");           
+            Logger.Info($"BackgroundTask has started");   
+            return Task.CompletedTask;
         }
 
         protected override void Stop()

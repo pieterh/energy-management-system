@@ -21,10 +21,11 @@ namespace P1SmartMeter
         {            
         }
 
-        protected override void Start()
+        protected override Task Start()
         {           
             _listener = new TcpListener(IPAddress.Any, 8080);
             _listener.Start();
+            return Task.CompletedTask;
         }
 
         protected override void Stop()

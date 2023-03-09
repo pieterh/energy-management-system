@@ -37,8 +37,6 @@ namespace P1SmartMeter.Connection
 
         private void DisposeBackgroundTask()
         {
-            if (!Disposed)
-                TokenSource.Cancel();
             _backgroundTask?.Wait(5000);
             _backgroundTask?.Dispose();
             _backgroundTask = null;
@@ -58,7 +56,7 @@ namespace P1SmartMeter.Connection
             _tcpClient = null;
         }
 
-        protected override void Start()
+        protected override Task Start()
         {
             _backgroundTask = Task.Run(async () =>
             {
@@ -66,10 +64,11 @@ namespace P1SmartMeter.Connection
                 try
                 {
                     bool run;
-                    do {
-                        run = !await Connect().ConfigureAwait(false) && ! await StopRequested(2000).ConfigureAwait(false);
+                    do
+                    {
+                        run = !await Connect().ConfigureAwait(false) && !await StopRequested(2000).ConfigureAwait(false);
                     }
-                    while (run);                   
+                    while (run);
                 }
                 catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
                 catch (Exception ex)
@@ -78,11 +77,17 @@ namespace P1SmartMeter.Connection
                     throw;
                 }
                 Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
-            }, TokenSource.Token);            
+            }, TokenSource.Token);
+
+            return _backgroundTask;
         }
 
         protected override void Stop()
         {
+            TokenSource.Cancel();
+            /* wait a bit for the background task in the case that it still is trying to connect */
+            _backgroundTask.Wait(750);
+
             DisposeStream();
             DisposeBackgroundTask();
         }
@@ -94,7 +99,7 @@ namespace P1SmartMeter.Connection
             {
                 Logger.Info($"Connecting {_host}:{_port}");
                 /* should keep try connecting */
-                _tcpClient = new TcpClient()               
+                _tcpClient = new TcpClient()
                 {
                     ReceiveBufferSize = RECEIVE_BUFFER_SIZE,
                     ReceiveTimeout = 30000
@@ -115,45 +120,45 @@ namespace P1SmartMeter.Connection
                 }
                 isConnected = true;
             }
-            catch (SocketException se1) when (se1.SocketErrorCode == SocketError.TimedOut)
+            catch (SocketException se1) 
+                when (se1.SocketErrorCode == SocketError.TimedOut ||
+                      se1.SocketErrorCode == SocketError.ConnectionRefused)
             {
                 DisposeStream();
-                Logger.Error("Socket timed out while connecting.");
+                Logger.Error($"Socket error {se1.SocketErrorCode} while connecting.");
             }
-            catch(SocketException se2) 
+            catch (SocketException se2)
             {
                 DisposeStream();
-                Logger.Error(se2, $"Socket exception {se2.Message}");
+                Logger.Error(se2, $"Unexpected socket exception while connecting.");
             }
+            Logger.Info($"Connected {isConnected}");
             return isConnected;
         }
 
         private async Task ProcesReceivedData(SocketAsyncEventArgs receiveEventArgs)
         {
             if (await StopRequested(0).ConfigureAwait(false)) { return; }
-            if (!_stream.Socket.Connected) { 
-                await RestartConnection().ConfigureAwait(false); return;
+            if (!_stream.Socket.Connected)
+            {
+                await RestartConnection().ConfigureAwait(false);
+                return;
             }
-            
-            if (receiveEventArgs.BytesTransferred <= 0)            
+
+            if (receiveEventArgs.BytesTransferred <= 0)
             {
                 Logger.Error("No bytes received. Lost connection and retry.");
                 await RestartConnection().ConfigureAwait(false);
                 return;
             }
 
-            var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span.Slice(0, receiveEventArgs.BytesTransferred));
+            var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
             OnDataArrived(new DataArrivedEventArgs() { Data = data });
 
+            // Start receiving more data
             if (!_stream.Socket.ReceiveAsync(receiveEventArgs))
             {
-                if (receiveEventArgs.BytesTransferred <= 0)
-                {
-                    Logger.Error("No bytes received. Lost connection and retry..");
-                    await RestartConnection().ConfigureAwait(false);
-                    return;
-                }
-
+                // completion was synch, so process immediatly
                 await ProcesReceivedData(receiveEventArgs).ConfigureAwait(false);
             }
         }
@@ -163,7 +168,8 @@ namespace P1SmartMeter.Connection
             try
             {
                 await ProcesReceivedData(e).ConfigureAwait(false);
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.Error(ex, "While processing received data");
             }
@@ -173,11 +179,9 @@ namespace P1SmartMeter.Connection
         {
             Logger.Warn($"Restart connection... first stop");
             Stop();
-            if (!await StopRequested(500).ConfigureAwait(false))
-            {
-                Logger.Warn($"and try again");
-                Start();
-            }
+
+            Logger.Warn($"and try again");
+            await StartAsync().ConfigureAwait(false);
         }
     }
 }

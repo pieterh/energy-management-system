@@ -80,7 +80,7 @@ namespace EMS.Library
             }
         }
 
-        protected override void Start()
+        protected override Task Start()
         {
             _backgroundTask = Task.Run(async () =>
             {
@@ -97,6 +97,7 @@ namespace EMS.Library
                 }
                 Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
             }, TokenSource.Token);
+            return _backgroundTask;
         }
 
         protected virtual int Interval { get { return 2500; } }

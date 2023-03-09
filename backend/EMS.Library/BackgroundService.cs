@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EMS.Library.Exceptions;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,10 +11,12 @@ namespace EMS.Library
 
         public bool Disposed { get; protected set; }
 
+        private CancellationToken? _parentToken;
         private CancellationTokenSource _tokenSource = new();
         public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
 
-        protected abstract void Start();
+
+        protected abstract Task Start();
         protected abstract void Stop();
 
         public void Dispose()
@@ -51,7 +54,6 @@ namespace EMS.Library
             {
                 try
                 {
-                    //Task.Delay(ms, _tokenSource.Token).GetAwaiter().GetResult();
                     await Task.Delay(ms, _tokenSource.Token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { /* nothing to do here */  }
@@ -62,13 +64,23 @@ namespace EMS.Library
         public Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.Trace($"Starting");
-            if (!TokenSource.TryReset())
-            {
-                DisposeTokenSource();
-                TokenSource = new CancellationTokenSource();
-            }
 
-            Start();            
+            _parentToken = cancellationToken;
+            return StartAsync();
+        }
+        protected Task StartAsync()
+        {
+            if (_parentToken == null) throw new HEMSApplicationException("Missing parent token");
+            _parentToken.Value.ThrowIfCancellationRequested(); // not starting anymore
+
+            DisposeTokenSource();
+            TokenSource = CancellationTokenSource.CreateLinkedTokenSource(_parentToken.Value);
+
+            var task = Start();
+            if (task.IsCompleted)
+            {
+                return task;
+            }
 
             return Task.CompletedTask;
         }
