@@ -14,12 +14,12 @@ namespace EPEXSPOT
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed;
 
-        private readonly string _endpoint;           // ie. https://mijn.easyenergy.com
+        private readonly string _endpoint;              // ie. https://mijn.easyenergy.com
         private readonly IHttpClientFactory _httpClientFactory;
 
-        private readonly Decimal INKOOP = 0.01331m;    // inkoopkosten per kWh (incl. btw)
-        private readonly Decimal ODE = 0.03691m;       // opslag doorzame energie per kWh (incl. btw)
-        private readonly Decimal EB = 0.04452m;        // energie belasting per kWh (incl. btw)
+        private readonly Decimal INKOOP = 0.01331m;     // inkoopkosten per kWh (incl. btw)
+        private readonly Decimal ODE = 0.03691m;        // opslag doorzame energie per kWh (incl. btw)
+        private readonly Decimal EB = 0.04452m;         // energie belasting per kWh (incl. btw)
 
         private Tariff[] _tariffs = Array.Empty<Tariff>();   // time sorted array of tariffs that where fetched
 
@@ -70,7 +70,7 @@ namespace EPEXSPOT
                         HandleWork();
 
                         // pause for five minutes, before we handle some work again
-                        await Task.Delay(60000 * 5, stoppingToken);
+                        await Task.Delay(60000 * 5, stoppingToken).ConfigureAwait(false);
                     }
                     catch (TaskCanceledException tce)
                     {
@@ -88,7 +88,7 @@ namespace EPEXSPOT
                         Logger.Error("Exception: " + e.Message);
                         Logger.Error("Unhandled, we try later again");
                         Logger.Error("Disposing connection");
-                        await Task.Delay(2500, stoppingToken);
+                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
                 Logger.Info($"Canceled");
@@ -132,7 +132,6 @@ namespace EPEXSPOT
             Uri uri = new (Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString));
 
             using var resultStream = await client.GetStreamAsync(uri).ConfigureAwait(false);
-            var schema = JSon.GetSchema("getapxtariffs.schema.json");
 
             using var streamReader = new StreamReader(resultStream);
             var result = JsonSerializer.Deserialize<SpotTariff[]>(streamReader.BaseStream, new JsonSerializerOptions());            

@@ -27,13 +27,13 @@ namespace EMS.WebHosts
         [HttpGet]
         public ActionResult<SettingsModel> Get()
         {
-            return new JsonResult(new SettingsModel());
+            throw new NotImplementedException();
         }
 
         [HttpPost]
         public ActionResult<bool> Post([FromBody] SettingsModel model)
         {
-            return true;
+            return true; throw new NotImplementedException();
         }
     }
 
