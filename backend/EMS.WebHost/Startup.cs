@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 
 using EMS.WebHost.Helpers;
 
@@ -64,6 +65,11 @@ namespace EMS.WebHost
 
             services.AddControllers();
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
+            });
+
             services.AddAuthentication(options =>
             {
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -102,9 +108,7 @@ namespace EMS.WebHost
         }
 
         public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJWTService t /*see comment above*/)
-        {
-            
-           
+        {  
             Logger = logger;
             if (Env.IsDevelopment())
             {
@@ -158,8 +162,14 @@ namespace EMS.WebHost
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapSwagger();
             });
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("v1/swagger.json", "HEMS API V1");
+            });
             app.Use((context, next) => {
                 Logger.LogInformation("{path}", context.Request.Path);
                 return next.Invoke();

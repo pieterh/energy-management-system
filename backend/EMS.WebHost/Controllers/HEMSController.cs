@@ -32,6 +32,8 @@ namespace EMS.WebHosts
         }
 
         [Route("api/[controller]/info")]
+        [HttpGet]
+        [Produces("application/json")]
         public ActionResult<SessionInfoModel> GetHemsInfo()
         {
             var info = new HemsInfoModel();
@@ -62,6 +64,8 @@ namespace EMS.WebHosts
         }
 
         [Route("api/[controller]/sessions")]
+        [HttpGet]
+        [Produces("application/json")]
         public ActionResult<HemsLastSessionsResponse> GetSessionInfo()
         {
             var sessions = new List<Session>();

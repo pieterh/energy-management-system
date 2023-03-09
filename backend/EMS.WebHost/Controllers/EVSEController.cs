@@ -29,6 +29,7 @@ namespace EMS.WebHosts
         }
 
         [HttpGet("station")]
+        [Produces("application/json")]
         public ActionResult<StationInfoModel> GetStationInfo()
         {
             var pis = ChargePoint.ReadProductInformation();
@@ -40,6 +41,7 @@ namespace EMS.WebHosts
         }
  
         [HttpGet("socket/{id}")]
+        [Produces("application/json")]
         public ActionResult<SocketInfoResponse> GetSocketInfo(int id)
         {
             var socket = new SocketInfoModel();
