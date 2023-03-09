@@ -12,19 +12,20 @@ namespace P1SmartMeter
 {
     public class P1RelayServer : BackgroundWorker
     {
-        private readonly List<TcpClient> _clients = new List<TcpClient>();
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private readonly List<TcpClient> _clients = new();
         private TcpListener _listener;
-
 
         public P1RelayServer()
         {            
         }
 
-        protected override void Start()
+        protected override Task Start()
         {           
             _listener = new TcpListener(IPAddress.Any, 8080);
             _listener.Start();
+            return Task.CompletedTask;
         }
 
         protected override void Stop()

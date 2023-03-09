@@ -7,7 +7,7 @@ namespace EMS.WebHost.Helpers
 {
     public class FloatConverterP0 : JsonConverter<float>
     {
-        private readonly static CultureInfo _cultureInfo = System.Globalization.CultureInfo.GetCultureInfo("en");
+        private readonly static CultureInfo _cultureInfo = CultureInfo.GetCultureInfo("en");
         public override float Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
@@ -21,7 +21,7 @@ namespace EMS.WebHost.Helpers
 
     public class FloatConverterP1 : JsonConverter<float>
     {
-        private readonly static CultureInfo _cultureInfo =  System.Globalization.CultureInfo.GetCultureInfo("en");
+        private readonly static CultureInfo _cultureInfo =  CultureInfo.GetCultureInfo("en");
         public override float Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();

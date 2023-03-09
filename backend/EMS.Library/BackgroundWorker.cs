@@ -6,13 +6,15 @@ namespace EMS.Library
 {
     public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     {
-        private Task? _backgroundTask = null;
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+        private Task? _backgroundTask;
         public Task? BackgroundTask { get { return _backgroundTask; } }
 
         protected abstract void DoBackgroundWork();
         protected override void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (Disposed) return;
             base.Dispose(disposing);
 
             if (disposing)
@@ -78,14 +80,14 @@ namespace EMS.Library
             }
         }
 
-        protected override void Start()
+        protected override Task Start()
         {
-            _backgroundTask = Task.Run(() =>
+            _backgroundTask = Task.Run(async () =>
             {
                 Logger.Trace($"BackgroundTask running");
                 try
                 {
-                    Run();
+                    await Run().ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
                 catch (Exception ex)
@@ -95,12 +97,13 @@ namespace EMS.Library
                 }
                 Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
             }, TokenSource.Token);
+            return _backgroundTask;
         }
 
         protected virtual int Interval { get { return 2500; } }
-        private void Run()
+        private async Task Run()
         {
-            while (!StopRequested(Interval))
+            while (!await StopRequested(Interval).ConfigureAwait(false))
             {
                 DoBackgroundWork();
             }

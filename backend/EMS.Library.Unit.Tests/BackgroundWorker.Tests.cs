@@ -8,58 +8,59 @@ using Xunit;
 using Moq;
 using Moq.Protected;
 using EMS.Library;
+using FluentAssertions;
 
 namespace BackgroundWorker
 {
     public class BackgroundWorkerTests
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
         [Fact]
         public void CreateAndDispose()
         {
-            var mock = new Mock<BGTester>();
+            var mock = new Mock<EMS.Library.BackgroundWorker>
+            {
+                CallBase = true
+            };
 
-            mock.Protected().Setup("Dispose", ItExpr.IsAny<bool>()).CallBase();
+            mock.Object.Disposed.Should().BeFalse("Object was just created and not yet disposed");
 
-            var alfen = mock.Object as BGTester;
+            var bgWorker = mock.Object;
             // and dispose immediatly
-            alfen.Dispose();
-
-            Assert.Null(alfen.BackgroundTask);
+            bgWorker.Dispose();
+            bgWorker.Disposed.Should().BeTrue("Object is just disposed");
+            bgWorker.BackgroundTask.Should().BeNull("Aftecr disposing there should not ba a background task");
         }
 
         [Fact]
         public void CreateAndDoubleDispose()
         {
-            var mock = new Mock<BGTester>();
-
-            mock.Protected().Setup("Dispose", ItExpr.IsAny<bool>()).CallBase();
-
-            var alfen = mock.Object as BGTester;
+            var mock = new Mock<EMS.Library.BackgroundWorker>
+            {
+                CallBase = true
+            };
+            mock.Object.Disposed.Should().BeFalse("Object was just created and not yet disposed");
+            var bgWorker = mock.Object;
             // and dispose immediatly a few times...
-            alfen.Dispose();
-            alfen.Dispose();
-            alfen.Dispose();
-
-            Assert.Null(alfen.BackgroundTask);
+            bgWorker.Dispose();
+            bgWorker.Disposed.Should().BeTrue("Object is just disposed");
+            bgWorker.BackgroundTask.Should().BeNull("Aftecr disposing there should not ba a background task");
+            bgWorker.Dispose();
+            bgWorker.Dispose();
         }
 
         //[Fact]
         //public void CreateStopAndDispose()
         //{
-        //    Semaphore semaphore = new Semaphore(0, 1);
-
+        //    // var mock = new Mock<EMS.Library.BackgroundWorker>();
         //    var mock = new Mock<BGTester>();
+        //    mock.CallBase = true;
 
-        //    mock.Protected().Setup("Dispose", ItExpr.IsAny<bool>()).CallBase();
-
-        //    var alfen = mock.Object as BGTester;
+        //    var bgWorker = mock.Object;
         //    // stop and dispose immediatly
-        //    alfen.Stop();
-        //    alfen.Dispose();
+        //    bgWorker.Stop();
+        //    bgWorker.Dispose();
 
-        //    Assert.Null(alfen.BackgroundTask);
+        //    Assert.Null(bgWorker.BackgroundTask);
         //}
 
         //[Fact]
@@ -227,7 +228,7 @@ namespace BackgroundWorker
 
         }
 
-        protected override void Start()
+        protected override Task Start()
         {
             throw new NotImplementedException();
         }
@@ -236,5 +237,6 @@ namespace BackgroundWorker
         {
             throw new NotImplementedException();
         }
+       
     }
 }

@@ -27,9 +27,9 @@ namespace P1SmartMeter
 
         private readonly string _usbPort;
 
-        private IP1Interface _reader = null;
-        private MessageBuffer _buffer = null;
-        private readonly P1RelayServer _relayServer = null;
+        private IP1Interface _reader;
+        private MessageBuffer _buffer;
+        private readonly P1RelayServer _relayServer;
 
         public SmartMeterMeasurementBase LastMeasurement { get => Measurement; }
 
@@ -104,80 +104,88 @@ namespace P1SmartMeter
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Logger.LogInformation($"P1SmartMeter Starting");
-            TransformManyBlock<string, string> _firstBlock;
-            BroadcastBlock<string> _broadcastRaw;
-            TransformBlock<string, DSMRTelegram> _secondBlock;
-
-            ActionBlock<string> _relayBlock;
-            ActionBlock<DSMRTelegram> _lastBlock;
-
-            _buffer = new MessageBuffer();
-            _firstBlock = new TransformManyBlock<string, string>(input =>
-            {
-                _buffer.Add(input);
-                var l = new List<string>();
-                while (_buffer.TryTake(out string msg))
-                {
-                    Logger.LogDebug("first received complete message. passing it to transform... {len}", msg.Length);
-                    l.Add(msg);
-                }
-
-                return l;
-            });
-
-            _broadcastRaw = new BroadcastBlock<string>(input => input);
-
-            _secondBlock = new TransformBlock<string, DSMRTelegram>(input =>
-            {
-                Logger.LogDebug($"second received it and is going to transform it");
-                var t = new DSMRTelegram(input);
-
-                return t;
-            });
-
-            _lastBlock = new ActionBlock<DSMRTelegram>(x =>
-            {
-                Logger.LogDebug("read transformed message{nl}{telegram}", Environment.NewLine, x);
-                var m = new Reading.Measurement(x) { Received = DateTimeProvider.Now };
-
-                Logger.LogDebug("Message {measurement}", m);
-                Measurement = m;
-            });
-
-            _firstBlock.LinkTo(_broadcastRaw);
-
-            _broadcastRaw.LinkTo(_secondBlock);
-
-            if (_relayServer != null)
-            {
-                _relayBlock = new ActionBlock<string>(input =>
-                {
-                    _relayServer.Relay(input);
-                });
-                _broadcastRaw.LinkTo(_relayBlock);
-            }
-
-            _secondBlock.LinkTo(_lastBlock);
-
-            _reader = CreateMeterReader();
-            _reader.DataArrived += (sender, args) =>
-            {
-                _firstBlock.Post(args.Data);
-            };
-            
+            Logger.LogInformation("P1SmartMeter Starting");
             try
             {
-                await _reader.StartAsync(stoppingToken);
-                while (!stoppingToken.IsCancellationRequested)
+                TransformManyBlock<string, string> _firstBlock;
+                BroadcastBlock<string> _broadcastRaw;
+                TransformBlock<string, DSMRTelegram> _secondBlock;
+
+                ActionBlock<string> _relayBlock;
+                ActionBlock<DSMRTelegram> _lastBlock;
+
+                _buffer = new MessageBuffer();
+                _firstBlock = new TransformManyBlock<string, string>(input =>
                 {
-                    await Task.Delay(1000, stoppingToken);
+                    _buffer.Add(input);
+                    var l = new List<string>();
+                    while (_buffer.TryTake(out string msg))
+                    {
+                        Logger.LogDebug("first received complete message. passing it to transform... {len}", msg.Length);
+                        l.Add(msg);
+                    }
+
+                    return l;
+                });
+
+                _broadcastRaw = new BroadcastBlock<string>(input => input);
+
+                _secondBlock = new TransformBlock<string, DSMRTelegram>(input =>
+                {
+                    Logger.LogDebug($"second received it and is going to transform it");
+                    var t = new DSMRTelegram(input);
+
+                    return t;
+                });
+
+                _lastBlock = new ActionBlock<DSMRTelegram>(x =>
+                {
+                    Logger.LogDebug("read transformed message{nl}{telegram}", Environment.NewLine, x);
+                    var m = new Reading.Measurement(x) { Received = DateTimeProvider.Now };
+
+                    Logger.LogDebug("Message {measurement}", m);
+                    Measurement = m;
+                });
+
+                _firstBlock.LinkTo(_broadcastRaw);
+
+                _broadcastRaw.LinkTo(_secondBlock);
+
+                if (_relayServer != null)
+                {
+                    _relayBlock = new ActionBlock<string>(input =>
+                    {
+                        _relayServer.Relay(input);
+                    });
+                    _broadcastRaw.LinkTo(_relayBlock);
                 }
-            }
-            finally
+
+                _secondBlock.LinkTo(_lastBlock);
+
+                _reader = CreateMeterReader();
+                _reader.DataArrived += (sender, args) =>
+                {
+                    _firstBlock.Post(args.Data);
+                };
+
+                try
+                {
+                    await _reader.StartAsync(stoppingToken).ConfigureAwait(false);
+                    while (!stoppingToken.IsCancellationRequested)
+                    {
+                        await Task.Delay(1000, stoppingToken).ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    await _reader.StopAsync(stoppingToken).ConfigureAwait(false);
+                }
+            }catch(TaskCanceledException)
             {
-                await _reader.StopAsync(stoppingToken);
-                Logger.LogInformation($"Canceled");
+                Logger.LogInformation("Canceled");
+            }catch(Exception ex)
+            {
+                Logger.LogError(ex, "Unhandled exceptio");
             }
         }
 

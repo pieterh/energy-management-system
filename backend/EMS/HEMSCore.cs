@@ -62,41 +62,50 @@ namespace EMS
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            ChargingMode = ChargingMode.MaxCharge;
-
-            using (var db = new HEMSContext())
+            try
             {
+                ChargingMode = ChargingMode.MaxCharge;
 
-                Logger.LogInformation("Database path: {path}.", HEMSContext.DbPath);
-
-                var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
-                foreach (var item in items)
+                using (var db = new HEMSContext())
                 {
-                    Logger.LogInformation("Transaction: {trans}", item.ToString());
-                    db.Entry(item)
-                        .Collection(b => b.CostDetails)
-                        .Load();
-                    foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp ))
+
+                    Logger.LogInformation("Database path: {path}.", HEMSContext.DbPath);
+
+                    var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
+                    foreach (var item in items)
                     {
-                        Logger.LogInformation("Transaction detail: {detail}", detail.ToString());
+                        Logger.LogInformation("Transaction: {trans}", item.ToString());
+                        db.Entry(item)
+                            .Collection(b => b.CostDetails)
+                            .Load();
+                        foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp))
+                        {
+                            Logger.LogInformation("Transaction detail: {detail}", detail.ToString());
+                        }
                     }
                 }
-            }
 
-            while (!stoppingToken.IsCancellationRequested)
+                while (!stoppingToken.IsCancellationRequested)
+                {
+                    var (l1, l2, l3) = _compute.Charging();
+
+                    try
+                    {
+                        _chargePoint.UpdateMaxCurrent(l1, l2, l3);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogError(e, "while update max current");
+                    }
+
+                    await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
+                }
+            }catch(TaskCanceledException)
             {
-                var (l1, l2, l3) = _compute.Charging();
-               
-                try
-                {
-                    _chargePoint.UpdateMaxCurrent(l1, l2, l3);
-                }
-                catch (Exception e)
-                {
-                    Logger.LogError(e, "while update max current");
-                }
-
-                await Task.Delay(_interval, stoppingToken);
+                Logger.LogInformation("Canceled");
+            }catch (Exception ex)
+            {
+                Logger.LogError(ex, "Unhandled exception");
             }
         }
 

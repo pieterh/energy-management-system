@@ -91,42 +91,47 @@ namespace AlfenNG9xx
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Logger.Info("Alfen NG9xx - Starting");
-
+            try
+            {
 #if DEBUG
-            ShowProductInformation();
-            ShowStationStatus();
-            ShowSocketMeasurement();
+                ShowProductInformation();
+                ShowStationStatus();
+                ShowSocketMeasurement();
 #endif
 
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
+                while (!stoppingToken.IsCancellationRequested)
                 {
-                    HandleWork();
-
-                    await Task.Delay(1250, stoppingToken).ConfigureAwait(false);
-                }
-                catch (TaskCanceledException tce)
-                {
-                    if (!stoppingToken.IsCancellationRequested)
+                    try
                     {
-                        Logger.Error("Exception: " + tce.Message);
+                        HandleWork();
+
+                        await Task.Delay(1250, stoppingToken).ConfigureAwait(false);
+                    }
+                    catch (TaskCanceledException tce)
+                    {
+                        if (!stoppingToken.IsCancellationRequested)
+                        {
+                            Logger.Error("Exception: " + tce.Message);
+                        }
+                    }
+                    catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Logger.Error("Partial Modbus packaged received, we try later again");
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e, "Unhandled, we try later again\n");
+                        Logger.Error("Disposing connection");
+                        DisposeModbusMaster();
+                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
-                catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.Error("Partial Modbus packaged received, we try later again");
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e, "Unhandled, we try later again\n");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
-                }
-            }
 
-            Logger.Info("Alfen NG9xx - Canceled");
+                Logger.Info("Alfen NG9xx - Canceled");
+            }catch (Exception ex)
+            {
+                Logger.Error(ex, "Alfen NG9xx - Unhandled exception");
+            }
         }
 
         private void HandleWork()

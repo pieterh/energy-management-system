@@ -126,7 +126,29 @@ jobs:
         grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
-      working-directory: frontend/EMS.BlazorWasm      
+      working-directory: frontend/EMS.BlazorWasm
+    - name: Install CycloneDX .NET
+      shell: bash
+      run: |  
+        dotnet tool install CycloneDX --global
+    - name: CycloneDX .NET Generate SBOM - backend
+      shell: bash
+      run: |  
+        dotnet CycloneDX backend/ems.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-backend-ems.json
+    - name: CycloneDX .NET Generate SBOM - frontend
+      shell: bash
+      run: |  
+        dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
+        ls -la ${{ runner.temp }}/sbom
+    - name: Upload SBOM Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: SBOM
+        path: ${{ runner.temp }}/sbom/*
+    - name: SBOM submission action
+      uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
+      with:
+        sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:

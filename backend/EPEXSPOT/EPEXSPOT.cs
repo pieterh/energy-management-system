@@ -14,12 +14,12 @@ namespace EPEXSPOT
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed;
 
-        private readonly string _endpoint;           // ie. https://mijn.easyenergy.com
+        private readonly string _endpoint;              // ie. https://mijn.easyenergy.com
         private readonly IHttpClientFactory _httpClientFactory;
 
-        private readonly Decimal INKOOP = 0.01331m;    // inkoopkosten per kWh (incl. btw)
-        private readonly Decimal ODE = 0.03691m;       // opslag doorzame energie per kWh (incl. btw)
-        private readonly Decimal EB = 0.04452m;        // energie belasting per kWh (incl. btw)
+        private readonly Decimal INKOOP = 0.01331m;     // inkoopkosten per kWh (incl. btw)
+        private readonly Decimal ODE = 0.03691m;        // opslag doorzame energie per kWh (incl. btw)
+        private readonly Decimal EB = 0.04452m;         // energie belasting per kWh (incl. btw)
 
         private Tariff[] _tariffs = Array.Empty<Tariff>();   // time sorted array of tariffs that where fetched
 
@@ -59,37 +59,43 @@ namespace EPEXSPOT
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            Logger.Info($"EPEXSPOT Starting");
-
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
-                {
-                    HandleWork();
+                Logger.Info($"EPEXSPOT Starting");
 
-                    // pause for five minutes, before we handle some work again
-                    await Task.Delay(60000 * 5, stoppingToken);                    
-                }
-                catch (TaskCanceledException tce)
+                while (!stoppingToken.IsCancellationRequested)
                 {
-                    if (!stoppingToken.IsCancellationRequested)
+                    try
                     {
-                        Logger.Error("Exception: " + tce.Message);
+                        HandleWork();
+
+                        // pause for five minutes, before we handle some work again
+                        await Task.Delay(60000 * 5, stoppingToken).ConfigureAwait(false);
+                    }
+                    catch (TaskCanceledException tce)
+                    {
+                        if (!stoppingToken.IsCancellationRequested)
+                        {
+                            Logger.Error("Exception: " + tce.Message);
+                        }
+                    }
+                    catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
+                    {
+                        Logger.Error("Partial Modbus packaged received, we try later again");
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error("Exception: " + e.Message);
+                        Logger.Error("Unhandled, we try later again");
+                        Logger.Error("Disposing connection");
+                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
-                catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
-                {
-                    Logger.Error("Partial Modbus packaged received, we try later again");
-                }
-                catch (Exception e)
-                {
-                    Logger.Error("Exception: " + e.Message);
-                    Logger.Error("Unhandled, we try later again");
-                    Logger.Error("Disposing connection");
-                    await Task.Delay(2500, stoppingToken);
-                }
+                Logger.Info($"Canceled");
+            }catch (Exception ex)
+            {
+                Logger.Error(ex, "Unhandled exception");
             }
-            Logger.Info($"Canceled");
         }
 
         private void HandleWork()
@@ -126,7 +132,6 @@ namespace EPEXSPOT
             Uri uri = new (Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString));
 
             using var resultStream = await client.GetStreamAsync(uri).ConfigureAwait(false);
-            var schema = JSon.GetSchema("getapxtariffs.schema.json");
 
             using var streamReader = new StreamReader(resultStream);
             var result = JsonSerializer.Deserialize<SpotTariff[]>(streamReader.BaseStream, new JsonSerializerOptions());            

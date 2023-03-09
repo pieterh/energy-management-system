@@ -27,6 +27,8 @@ namespace EMS.WebHosts
         }
 
         [Route("api/[controller]/info")]
+        [HttpGet]
+        [Produces("application/json")]
         public ActionResult<SessionInfoModel> GetSmartMeterInfo()
         {
             var retval = new SmartMeterInfoModel();

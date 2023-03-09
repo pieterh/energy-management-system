@@ -18,22 +18,25 @@ namespace EMS.WebHosts
     {
         private ILogger Logger { get; init; }
 
-        public SettingsController(ILogger<MyDemoController> logger)
+        public SettingsController(ILogger<SettingsController> logger)
         {
             Logger = logger;
         }
 
 
         [HttpGet]
+        [Produces("application/json")]
         public ActionResult<SettingsModel> Get()
         {
-            return new JsonResult(new SettingsModel());
+            throw new NotImplementedException();
         }
 
         [HttpPost]
+        [Consumes("application/json")]
+        [Produces("application/json")]
         public ActionResult<bool> Post([FromBody] SettingsModel model)
         {
-            return true;
+            return true; throw new NotImplementedException();
         }
     }
 
