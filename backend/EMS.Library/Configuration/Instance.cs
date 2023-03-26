@@ -5,6 +5,7 @@ namespace EMS.Library.Configuration
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = default!;
+        public bool Enabled { get; set; } = true;
         public Guid AdapterId { get; set; }
         public Config Config { get; set; } = default!;
     }

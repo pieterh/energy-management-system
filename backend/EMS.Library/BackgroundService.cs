@@ -61,12 +61,12 @@ namespace EMS.Library
             return (_tokenSource.Token.IsCancellationRequested);
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.Trace($"Starting");
 
             _parentToken = cancellationToken;
-            return StartAsync();
+            await StartAsync().ConfigureAwait(false);
         }
         protected Task StartAsync()
         {
