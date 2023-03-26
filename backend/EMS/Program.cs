@@ -27,6 +27,7 @@ using EMS.Library.Core;
 using EMS.WebHost;
 
 using EMS.DataStore;
+using System.Linq;
 
 namespace EMS
 {
@@ -207,8 +208,9 @@ namespace EMS
 
             var instances = new List<Instance>();
             hostingContext.Configuration.GetSection("instances").Bind(instances);
+            var activeInstances = instances.Where((x) => x.Enabled);
 
-            foreach (var instance in instances)
+            foreach (var instance in activeInstances)
             {
                 Logger.Debug($"Instance [{instance.Name}]");
                 var adapter = GetAdapter(adapters, instance.AdapterId);
