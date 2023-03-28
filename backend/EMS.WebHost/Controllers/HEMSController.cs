@@ -15,12 +15,13 @@ using System.Collections.Generic;
 using EMS.DataStore;
 using System.Linq;
 using EMS.Library.Adapter.PriceProvider;
-
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.WebHosts
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class HEMSController : ControllerBase                                    //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class HEMSController : ControllerBase
     {
         private ILogger Logger { get; init; }
         private IHEMSCore Hems { get; init; }

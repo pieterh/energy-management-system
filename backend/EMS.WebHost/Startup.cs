@@ -57,8 +57,8 @@ namespace EMS.WebHost
             // and we also need a reference to the service later
             // hence we did add it as a dummy arg to configure....
             // nog te doen: fix this weird dependency
-            IJWTService jwtCreator = null;            
-            services.AddSingleton<IJWTService>((x) => {
+            IJwtService jwtCreator = null;            
+            services.AddSingleton<IJwtService>((x) => {
                 jwtCreator = ActivatorUtilities.CreateInstance<JwtTokenService>(x);
                 return jwtCreator;
             });            
@@ -107,7 +107,7 @@ namespace EMS.WebHost
             });
         }
 
-        public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJWTService t /*see comment above*/)
+        public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJwtService t /*see comment above*/)
         {  
             Logger = logger;
             if (Env.IsDevelopment())

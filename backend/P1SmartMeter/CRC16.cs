@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter
 {
     /**
      * CRC-16-IBM with a reverse polynomial representation (polynomial 0xA001)
      */
-    public class CRC16                                                      //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class CRC16
     {
         private const ushort polynomial = 0xA001;
         private readonly ushort[] _lookupTable = new ushort[256];

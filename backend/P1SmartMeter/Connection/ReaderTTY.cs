@@ -1,4 +1,5 @@
-﻿using System.IO.Ports;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -6,7 +7,8 @@ using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
 {
-    public class ReaderTTY : Reader                                   //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class ReaderTTY : Reader
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -57,7 +59,7 @@ namespace P1SmartMeter.Connection
             _serialPort.DataReceived += Str_DataReceived;
             _serialPort.Open();
 
-            Logger.Info($"BackgroundTask has started");   
+            Logger.Info($"BackgroundTask has started");
             return Task.CompletedTask;
         }
 

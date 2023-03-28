@@ -11,13 +11,15 @@ using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.WebHosts
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/[controller]")]
-    public class EVSEController : ControllerBase                                    //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class EVSEController : ControllerBase
     {
         private ILogger Logger { get; init; }
         private IChargePoint ChargePoint { get; init; }

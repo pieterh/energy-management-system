@@ -3,8 +3,6 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Telegram\" />
-    <Folder Include="Telegram\DSMR\" />
     <Folder Include="Connection\" />
     <Folder Include="Reading\" />
   </ItemGroup>

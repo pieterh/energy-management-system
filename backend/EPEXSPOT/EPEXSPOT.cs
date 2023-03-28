@@ -6,10 +6,12 @@ using Json.Schema;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.JSon;
 using EMS.Library.TestableDateTime;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EPEXSPOT
 {
-    public class EPEXSPOT : Microsoft.Extensions.Hosting.BackgroundService, IPriceProvider // NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class EPEXSPOT : Microsoft.Extensions.Hosting.BackgroundService, IPriceProvider
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed;

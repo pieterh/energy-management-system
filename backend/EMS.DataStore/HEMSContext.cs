@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 
 
 namespace EMS.DataStore
 {
-	public class HEMSContext : DbContext // NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class HEMSContext : DbContext
 	{
         // nog te doen: use more elegant way of passing the DbPath
         // https://www.codeproject.com/Articles/5281767/Scalable-Scenario-to-Configuring-Entity-Framework
