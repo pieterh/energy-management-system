@@ -1,17 +1,23 @@
 version: 2
 updates:
-- package-ecosystem: npm
-  directory: "/frontend/EMS.ReactApp"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  target-branch: "develop"
 - package-ecosystem: nuget
   directory: "/backend"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
   target-branch: "develop"
+- package-ecosystem: nuget
+  directory: "/shared"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  target-branch: "develop"
+- package-ecosystem: nuget
+  directory: "/frontend/EMS.BlazorWasm"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  target-branch: "develop"  
 - package-ecosystem: docker
   directory: "/docker"
   schedule:
