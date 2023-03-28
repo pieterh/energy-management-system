@@ -28,6 +28,7 @@ using EMS.WebHost;
 
 using EMS.DataStore;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS
 {
@@ -92,6 +93,7 @@ namespace EMS
         /// ensure that there is always logging avaialable, even in the scenario of misconfiguration.
         /// Only basic logging will be provided to prevent excessive logging.
         /// </summary>
+        [SuppressMessage("SonarLint", "S4792", Justification = "Ignored intentionally")]
         private static void EnforceLogging(bool overrideExisting = false)
         {
             if (NLog.LogManager.Configuration == null ||

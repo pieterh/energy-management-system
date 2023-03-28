@@ -23,9 +23,9 @@ namespace EMS.Engine.Model
 
         }
 
-        public override (double l1, double l2, double l3) Get()
+        public override (double l1, double l2, double l3) GetCurrent()
         {
-            var avg = _measurements.CalculateAggregatedAverageUsage();
+            var avg = Measurements.CalculateAggregatedAverageUsage();
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
             Logger?.LogInformation("avg current {averageUsage} and charging at {averageCharge}", avg.averageUsage, avg.averageCharge);
@@ -72,16 +72,16 @@ namespace EMS.Engine.Model
         {
             double retval;
             bool stateHasChanged = false;
-            if (_state.Current != ChargingState.NotCharging)
+            if (State.Current != ChargingState.NotCharging)
             {
-                if (_state.Current == ChargingState.ChargingPaused)
+                if (State.Current == ChargingState.ChargingPaused)
                 {
                     retval = 0.0;
                     Logger?.LogInformation("Not enough solar power... We have stopped charging...");
                 }
                 else
                 {
-                    stateHasChanged = _state.Pause();
+                    stateHasChanged = State.Pause();
                     if (stateHasChanged)
                     {
                         retval = 0.0;

@@ -111,7 +111,7 @@ namespace EMS
         public (double l1, double l2, double l3) Charging()
         {
             if (_model == null) return (-1, -1, -1);
-            var t = _model.Get();
+            var t = _model.GetCurrent();
             Info = new ChargeControlInfo(Mode, _state.Current, _state.LastStateChange, t.l1, t.l2, t.l3, _measurements.GetMeasurements());
             return t;
         }

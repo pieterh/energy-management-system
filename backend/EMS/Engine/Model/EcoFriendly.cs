@@ -25,9 +25,9 @@ namespace EMS.Engine.Model
         {
         }
 
-        public override (double l1, double l2, double l3) Get()
+        public override (double l1, double l2, double l3) GetCurrent()
         {
-            var avg = _measurements.CalculateAggregatedAverageUsage();
+            var avg = Measurements.CalculateAggregatedAverageUsage();
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
 
@@ -35,12 +35,12 @@ namespace EMS.Engine.Model
             Logger?.LogInformation("avg current {averageUsage} and avg charging at {averageCharge}; limitted chargecurrent = {chargeCurrent} ({nrPoints} datapoints (buffer size {bufferSeconds} seconds)",
             avg.averageUsage, avg.averageCharge, chargeCurrent, avg.nrOfDataPoints, MaxBufferSeconds);
 
-            if ((_state.Current == ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStop) ||
-                (_state.Current != ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStart))
+            if ((State.Current == ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStop) ||
+                (State.Current != ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStart))
             {
-                if (_state.Current == ChargingState.Charging)
+                if (State.Current == ChargingState.Charging)
                 {
-                    _state.Pause();
+                    State.Pause();
                     LoggerState.Info($"Charging state pause {chargeCurrent}");
                 }
 
@@ -52,7 +52,7 @@ namespace EMS.Engine.Model
                 if (t.allow)
                 {
                     // charge as fast as possible and as close to the current available capicity as possible
-                    var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
+                    var avgShort = Measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
                     var chargeCurrentShort1 = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
 
                     Logger?.LogInformation("charging {chargeCurrent} -> {chargeCurrentShort}", chargeCurrent, chargeCurrentShort1);

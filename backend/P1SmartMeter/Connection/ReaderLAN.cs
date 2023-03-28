@@ -143,7 +143,6 @@ namespace P1SmartMeter.Connection
         {
             try
             {
-                var socket = eventArgs.ConnectSocket;
                 Logger.Trace($"==> {eventArgs.LastOperation}");
                 switch (eventArgs.LastOperation)
                 {

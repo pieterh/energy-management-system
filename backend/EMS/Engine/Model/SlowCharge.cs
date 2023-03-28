@@ -21,11 +21,11 @@ namespace EMS.Engine.Model
         {
         }
 
-        public override (double l1, double l2, double l3) Get()
+        public override (double l1, double l2, double l3) GetCurrent()
         {
-            if (_measurements.ItemsInBuffer < MinimumDataPoints) return (-1, -1, -1);
+            if (Measurements.ItemsInBuffer < MinimumDataPoints) return (-1, -1, -1);
 
-            var avgShort = _measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
+            var avgShort = Measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
             var chargeCurrentShort1 = Math.Round(LimitCurrent(avgShort.averageCharge, avgShort.averageUsage), 2);
                         
             return ((float)Math.Round(chargeCurrentShort1, 2), 0, 0);

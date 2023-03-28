@@ -23,10 +23,10 @@ namespace EMS.Engine.Model
            
         }
 
-        public override (double l1, double l2, double l3) Get()
+        public override (double l1, double l2, double l3) GetCurrent()
         {
 
-            var avg = _measurements.CalculateAverageUsage();
+            var avg = Measurements.CalculateAverageUsage();
 
             if (avg.NrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
             LoggerCurrent.Info($"avg current {avg.CurrentUsingL1}, {avg.CurrentUsingL2} , {avg.CurrentUsingL3}");
