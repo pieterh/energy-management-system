@@ -3,19 +3,17 @@ using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
 
-using static P1SmartMeter.Connection.IP1Interface;
-
 namespace P1SmartMeter.Connection
 {
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
-    public class ReaderTTY : Reader
+    internal sealed class P1ReaderTTY : P1Reader
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly string _usbPort;
         private SerialPort _serialPort;
 
-        public ReaderTTY(string deviceName)
+        public P1ReaderTTY(string deviceName)
         {
             Logger.Trace($"Availble ports ->");
 

@@ -7,7 +7,7 @@ using FluentAssertions;
 
 using P1SmartMeter.Telegram;
 
-namespace P1SmartMeter.Tests.Telegram
+namespace P1SmartMeter.TelegramTests
 {
     public class TelegramFieldDefinitionTests
     {
@@ -119,6 +119,17 @@ namespace P1SmartMeter.Tests.Telegram
             var result = def.ParseValue(0, rawValue);
             result.GetType().Should().Be(typeof(string), "the type is TelegramFieldType.String");
             result.Should().Be(rawValue, "it should have the same value as input");
+        }
+
+        [Fact]
+        public void ProperlyConvertsTheStringTypeAsAStringTag9()
+        {
+            var def = new TelegramFieldDefinition() { Code = "0-0:96.1.1", Name = "Equipment identifier" };
+            def.Types.Add(TelegramFieldType.OctetString);
+            const string rawValue = "4B384547303034303436333935353037"; // K8EG004046395507
+            var result = def.ParseValue(0, rawValue);
+            result.GetType().Should().Be(typeof(string), "the type is TelegramFieldType.OctetString");
+            result.Should().Be("K8EG004046395507", "it should be converted from hex to ascii");
         }
 
         [Fact]

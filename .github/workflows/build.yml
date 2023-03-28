@@ -8,11 +8,11 @@ on:
       - "backend/**"
       - "docker/**"
       - "frontend/**"
-      - global.json
+      - "global.json"
 jobs:
   build_ems_app:
     name: Build and test
-    runs-on: ubuntu-latest
+    runs-on: windows-latest # Need to run on windows due to roslyn analyzers not available (yet?) on linux
     strategy:
       matrix:
         dotnet-version: [ '7.0.x' ]
@@ -21,11 +21,11 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Setup Node.js environment
-      uses: actions/setup-node@v3
+    - name: Setup default Java 17
+      uses: actions/setup-java@v3
       with:
-        node-version: '16.x'
-        registry-url: 'https://registry.npmjs.org'
+        distribution: 'temurin'
+        java-version: '17'
     - name: Setup .NET ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v3
       with:
@@ -42,12 +42,6 @@ jobs:
       with:
         name: Environment information
         path: ${{ runner.temp }}/environment.txt      
-    - name: Cache SonarQube packages
-      uses: actions/cache@v3
-      with:
-        path: ./sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
     - name: Cache SonarQube scanner
       id: cache-sonar-scanner
       uses: actions/cache@v3
@@ -128,37 +122,41 @@ jobs:
         exit 0
       working-directory: frontend/EMS.BlazorWasm
     - name: Install CycloneDX .NET
+      if: ${{ false }}
       shell: bash
       run: |  
         dotnet tool install CycloneDX --global
     - name: CycloneDX .NET Generate SBOM - backend
+      if: ${{ false }}
       shell: bash
       run: |  
         dotnet CycloneDX backend/ems.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-backend-ems.json
     - name: CycloneDX .NET Generate SBOM - frontend
+      if: ${{ false }}
       shell: bash
       run: |  
         dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
-        ls -la ${{ runner.temp }}/sbom
     - name: Upload SBOM Artifact
       uses: actions/upload-artifact@v3
+      if: ${{ false }}
       with:
         name: SBOM
-        path: ${{ runner.temp }}/sbom/*
+        path: ${{ runner.temp }}\sbom\*
     - name: SBOM submission action
       uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
+      if: ${{ false }}
       with:
-        sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json
+        sbom-files: ${{ runner.temp }}\sbom\sbom-backend-ems.json
         token: ${{ secrets.GH_TOKEN }}
     - name: SonarQube - Begin
-      if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
+      if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}      
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs"          
+      run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs" /d:"sonar.cs.roslyn.ignoreIssues=false"
       working-directory: backend
     - name: Build - backend
-      run: dotnet msbuild /p:Configuration=Release /p:RestorePackages=false
+      run: dotnet msbuild /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
       working-directory: backend
     - name: Test - backend
       run: dotnet test --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
@@ -179,7 +177,6 @@ jobs:
     - name: Publish - backend
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
-        ls -la publish/ems
     - name: Zip Release - backend
       uses: TheDoctor0/zip-release@0.7.1
       with:
@@ -194,7 +191,6 @@ jobs:
     - name: Publish - Blazor WASM frontend
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazerWasm
-        ls -la publish/ems.blazorwasm 
     - name: Zip Release - Blazor WASM frontend
       uses: TheDoctor0/zip-release@0.7.1
       with:
@@ -230,7 +226,6 @@ jobs:
         path: ${{ runner.temp }}/
     - name: docker info
       run: |
-        ls -la ${{ runner.temp }}
         echo "============================================================" >> ${{ runner.temp }}/environment.txt
         echo "--                         docker                         --" >> ${{ runner.temp }}/environment.txt
         echo "-- docker version                                         --" >> ${{ runner.temp }}/environment.txt
@@ -269,7 +264,8 @@ jobs:
         unzip ${{ runner.temp }}/ems.blazorwasm.zip -d dist/ems.blazorwasm
       working-directory: docker
     - name: ls
-      run: |
+      if: ${{ false }}
+      run: |      
         ls -la docker
         ls -la docker/dist
         ls -la docker/dist/ems

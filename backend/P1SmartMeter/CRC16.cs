@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter
 {
-    /**
+    /** 
      * CRC-16-IBM with a reverse polynomial representation (polynomial 0xA001)
      */
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
@@ -20,7 +20,7 @@ namespace P1SmartMeter
                 ushort temp = i;
                 for (byte j = 0; j < 8; ++j)
                 {
-                    if (((value ^ temp) & 0x0001) != 0)                     //NOSONAR
+                    if (((value ^ temp) & 0x0001) != 0)
                     {
                         value = (ushort)((value >> 1) ^ polynomial);
                     }
@@ -36,21 +36,26 @@ namespace P1SmartMeter
 
         public byte[] ComputeChecksumBytes(byte[] bytes)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort crc = ComputeChecksum(bytes);
             return BitConverter.GetBytes(crc);
         }
 
         public ushort ComputeChecksum(byte[] bytes)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             return ComputeChecksum(bytes, bytes.Length);
         }
 
         public ushort ComputeChecksum(byte[] bytes, int length)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+            if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), length, "Should not be a negative value");
+
             ushort crc16 = 0;
             for (int i = 0; i < length; ++i)
             {
-                byte index = (byte)(crc16 ^ bytes[i]);                      //NOSONAR
+                byte index = (byte)(crc16 ^ bytes[i]);
                 crc16 = (ushort)((crc16 >> 8) ^ _lookupTable[index]);
             }
             return crc16;
@@ -65,11 +70,14 @@ namespace P1SmartMeter
 
         public bool ValidateChecksum(byte[] bytes, string checksum)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+            ArgumentNullException.ThrowIfNullOrEmpty(checksum);
             return ValidateChecksum(bytes, bytes.Length, checksum);
         }
 
         public bool ValidateChecksum(byte[] bytes, ushort checksum)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             return ValidateChecksum(bytes, bytes.Length, checksum);
         }
 

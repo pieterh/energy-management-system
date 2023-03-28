@@ -18,7 +18,7 @@ namespace P1SmartMeter
     public class P1SmartMeter : Microsoft.Extensions.Hosting.BackgroundService, ISmartMeter
     {
         private readonly ILogger Logger;
-        private bool _disposed = false;
+        private bool _disposed;
 
         private enum ConnectionType { LAN, TTY };
         private readonly ConnectionType _connectionType;
@@ -27,7 +27,7 @@ namespace P1SmartMeter
 
         private readonly string _usbPort;
 
-        private IP1Interface _reader;
+        private IP1Reader _reader;
         private MessageBuffer _buffer;
         private readonly P1RelayServer _relayServer;
 
@@ -36,7 +36,7 @@ namespace P1SmartMeter
         private SmartMeterMeasurement _measurement;
         protected SmartMeterMeasurement Measurement
         {
-            private get {
+            get {
                 return _measurement;
             }
             set {         
@@ -49,6 +49,7 @@ namespace P1SmartMeter
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
+            ArgumentNullException.ThrowIfNull(instance);
             services.AddSingleton<P1RelayServer>();
 
             BackgroundServiceHelper.CreateAndStart<ISmartMeter, P1SmartMeter>(services, instance.Config);
@@ -59,7 +60,7 @@ namespace P1SmartMeter
         {
             Logger = logger;
             _relayServer = relayServer;
-            Logger.LogInformation("P1SmartMeter({cfg})", config.ToString().Replace(Environment.NewLine, " "));
+            Logger.LogInformation("P1SmartMeter({Cfg})", config.ToString().Replace(Environment.NewLine, " "));
 
             if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)
             {
@@ -83,7 +84,7 @@ namespace P1SmartMeter
 
         protected void Grind(bool disposing)
         {
-            Logger.LogTrace("Dispose({disposing}) _disposed {disposed}", disposing, _disposed);
+            Logger.LogTrace("Dispose({Disposing}) _disposed {Disposed}", disposing, _disposed);
 
             if (_disposed) return;
 
@@ -93,7 +94,7 @@ namespace P1SmartMeter
             }
 
             _disposed = true;
-            Logger.LogTrace("Dispose({disposing}) done => _disposed {disposed}", disposing, _disposed);
+            Logger.LogTrace("Dispose({Disposing}) done => _disposed {Disposed}", disposing, _disposed);
         }
 
         private void DisposeReader()
@@ -121,7 +122,7 @@ namespace P1SmartMeter
                     var l = new List<string>();
                     while (_buffer.TryTake(out string msg))
                     {
-                        Logger.LogDebug("first received complete message. passing it to transform... {len}", msg.Length);
+                        Logger.LogDebug("first received complete message. passing it to transform... {Length}", msg.Length);
                         l.Add(msg);
                     }
 
@@ -140,10 +141,10 @@ namespace P1SmartMeter
 
                 _lastBlock = new ActionBlock<DSMRTelegram>(x =>
                 {
-                    Logger.LogDebug("read transformed message{nl}{telegram}", Environment.NewLine, x);
+                    Logger.LogDebug("read transformed message{NewLine}{Telegram}", Environment.NewLine, x);
                     var m = new Reading.Measurement(x) { Received = DateTimeProvider.Now };
 
-                    Logger.LogDebug("Message {measurement}", m);
+                    Logger.LogDebug("Message {Measurement}", m);
                     Measurement = m;
                 });
 
@@ -189,14 +190,14 @@ namespace P1SmartMeter
             }
         }
 
-        public IP1Interface CreateMeterReader()
+        internal IP1Reader CreateMeterReader()
         {
             switch (_connectionType)
             {
                 case ConnectionType.LAN:
-                    return new ReaderLAN(_host, _port);
+                    return new P1ReaderLAN(_host, _port);
                 case ConnectionType.TTY:
-                    return new ReaderTTY(_usbPort);
+                    return new P1ReaderTTY(_usbPort);
             }
             return null;
         }

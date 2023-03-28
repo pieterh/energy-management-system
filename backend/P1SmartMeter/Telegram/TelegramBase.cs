@@ -20,6 +20,7 @@ namespace P1SmartMeter.Telegram
 
         public TelegramBase(ITelegramDefinition definition, string raw, bool validateCRC = false)
         {
+            ArgumentNullException.ThrowIfNull(definition);
             var fieldDefinitions = definition.GetFieldDefinitions();
 
             if (string.IsNullOrEmpty(raw))
