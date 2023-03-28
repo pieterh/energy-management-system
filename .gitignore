@@ -7,6 +7,7 @@ ems.suo
 **/.vs/
 **/TestResults
 coverage.opencover.xml
-EMS/ems.csproj.user
+**/*.csproj.user
 **/mono_crash.*json
 git.commit.hash.txt
+
