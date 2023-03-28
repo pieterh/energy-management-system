@@ -47,9 +47,9 @@ namespace EMS.WebHost.Controllers
     public class UsersController : ControllerBase
     {
         private ILogger Logger { get; init; }
-        private readonly IJWTService _jwtService;
+        private readonly IJwtService _jwtService;
 
-        public UsersController(ILogger<UsersController> logger, IJWTService jwtService)
+        public UsersController(ILogger<UsersController> logger, IJwtService jwtService)
         {
             Logger = logger;
             _jwtService = jwtService;

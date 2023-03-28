@@ -8,7 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace EMS.WebHost.Helpers
 {
-    public interface IJWTService                                            //NOSONAR
+    public interface IJwtService
     {
         string Generate(Guid userId, string username, string name);
         TokenValidationParameters GetTokenValidationParameters();
@@ -22,7 +22,7 @@ namespace EMS.WebHost.Helpers
         public ushort ClockSkew { get; set; }
     }
 
-    public class JwtTokenService : IJWTService
+    public class JwtTokenService : IJwtService
     {
         // after restart we have a new key and a client needs to login again
         private static readonly RsaSecurityKey key = new(RSA.Create(2048));

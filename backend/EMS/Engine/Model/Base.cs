@@ -11,36 +11,42 @@ namespace EMS.Engine.Model
         protected const double MaxCurrentMain = 25.0f;
         protected const double MaxCurrentChargePoint = 16.0f;
 
-        protected readonly ILogger Logger;
-        protected readonly Measurements _measurements;
-        protected readonly ChargingStateMachine _state;
+        private readonly ILogger _logger;
+        private readonly Measurements _measurements;
+        private readonly ChargingStateMachine _state;
 
         public abstract ushort MinimumDataPoints { get; }
         public abstract ushort MaxBufferSeconds { get; }
 
+        protected ILogger Logger => _logger;
+
+        protected Measurements Measurements => _measurements;
+
+        protected ChargingStateMachine State => _state;
+
         protected Base(ILogger logger, Measurements measurements, ChargingStateMachine state)
         {
-            Logger = logger;
+            _logger = logger;
             _measurements = measurements;
             _state = state;
         }
 
-        public abstract (double l1, double l2, double l3) Get();
+        public abstract (double l1, double l2, double l3) GetCurrent();
 
         protected (bool allow, bool changed) AllowToCharge()
         {
             bool stateHasChanged;
-            if (_state.Current == ChargingState.Charging) return (true, false);
+            if (State.Current == ChargingState.Charging) return (true, false);
 
-            if (_state.Current == ChargingState.ChargingPaused)
+            if (State.Current == ChargingState.ChargingPaused)
             {
-                stateHasChanged = _state.Unpause();
+                stateHasChanged = State.Unpause();
                 if (stateHasChanged)
                     LoggerState.Info($"Charging state unpaused");
             }
             else
             {
-                stateHasChanged = _state.Start();
+                stateHasChanged = State.Start();
                 LoggerState.Info($"Charging state start");
             }
 

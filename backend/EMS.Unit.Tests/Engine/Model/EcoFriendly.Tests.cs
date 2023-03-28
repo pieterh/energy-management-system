@@ -15,8 +15,8 @@ namespace EMS.Tests.Engine.Model
         {
             var mock = new Mock<EcoFriendly>(MockBehavior.Strict, null, new Measurements(10), null) { CallBase = true  } ;
             mock.SetupGet(p => p.MinimumDataPoints).Returns(10);
-            mock.Setup(p => p.Get()).CallBase();
-            mock.Object.Get().Should().Be((-1, -1, -1), "there are no or not enough samples");
+            mock.Setup(p => p.GetCurrent()).CallBase();
+            mock.Object.GetCurrent().Should().Be((-1, -1, -1), "there are no or not enough samples");
         }
 
         [Fact]
@@ -26,13 +26,13 @@ namespace EMS.Tests.Engine.Model
             var mock = new Mock<EcoFriendly>(MockBehavior.Strict, null, m, null) { CallBase = true };
             
             mock.SetupGet(p => p.MinimumDataPoints).Returns(10);
-            mock.Setup(p => p.Get()).CallBase();
+            mock.Setup(p => p.GetCurrent()).CallBase();
             m.BufferSeconds = mock.Object.MinimumDataPoints;
 
             for (int i = 0; i < mock.Object.MinimumDataPoints - 1; i++)
                 m.AddData(10, 0, 0, 10, 0, 0);
 
-            mock.Object.Get().Should().Be((-1, -1, -1), "there are no or not enough samples");
+            mock.Object.GetCurrent().Should().Be((-1, -1, -1), "there are no or not enough samples");
         }
 
         [Fact]
@@ -42,13 +42,13 @@ namespace EMS.Tests.Engine.Model
             ChargingStateMachine state = new();
             var mock = new Mock<EcoFriendly>(MockBehavior.Strict, null, m, state) { CallBase = true };
             mock.SetupGet(p => p.MinimumDataPoints).Returns(10);
-            mock.Setup(p => p.Get()).CallBase();
+            mock.Setup(p => p.GetCurrent()).CallBase();
             m.BufferSeconds = mock.Object.MinimumDataPoints;
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 m.AddData(-12.0, 0.62, 0.40,0, 0, 0);
 
-            mock.Object.Get().Should().Be((10.83f, 0, 0));
+            mock.Object.GetCurrent().Should().Be((10.83f, 0, 0));
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -7,7 +8,8 @@ using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
 {
-    public class ReaderLAN : Reader                                   //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class ReaderLAN : Reader                                   
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -141,7 +143,6 @@ namespace P1SmartMeter.Connection
         {
             try
             {
-                var socket = eventArgs.ConnectSocket;
                 Logger.Trace($"==> {eventArgs.LastOperation}");
                 switch (eventArgs.LastOperation)
                 {

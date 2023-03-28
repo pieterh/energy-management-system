@@ -11,10 +11,12 @@ using EMS.Library.Core;
 using EMS.Library.Adapter.SmartMeter;
 using EMS.Library.TestableDateTime;
 using EMS.DataStore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS
 {
-    public class HEMSCore : Microsoft.Extensions.Hosting.BackgroundService, IHEMSCore, IHostedService    //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class HEMSCore : Microsoft.Extensions.Hosting.BackgroundService, IHEMSCore, IHostedService
     {
 
         private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");

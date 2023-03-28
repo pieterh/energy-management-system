@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter.Telegram.DSMR
 {
-    public class DSMRTelegram : TelegramBase                                //NOSONAR
+    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+    public class DSMRTelegram : TelegramBase
     {
         public DSMRTelegram(string raw, bool validateCRC = false) : base(TelegramDefinition.Instance, raw, validateCRC)
         {
