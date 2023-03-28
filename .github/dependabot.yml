@@ -1,13 +1,13 @@
 version: 2
 updates:
-- package-ecosystem: npm
-  directory: "/frontend/EMS.ReactApp"
+- package-ecosystem: nuget
+  directory: "/backend"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
   target-branch: "develop"
 - package-ecosystem: nuget
-  directory: "/backend"
+  directory: "/shared"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
