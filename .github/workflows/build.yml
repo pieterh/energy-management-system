@@ -149,7 +149,7 @@ jobs:
       uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
       with:
         sbom-files: ${{ runner.temp }}/sbom/sbom-backend-ems.json
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GH_TOKEN }}
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
