@@ -4,12 +4,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
-using static P1SmartMeter.Connection.IP1Interface;
 
 namespace P1SmartMeter.Connection
 {
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
-    public class ReaderLAN : Reader                                   
+    internal sealed class P1ReaderLAN : P1Reader
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -22,7 +21,7 @@ namespace P1SmartMeter.Connection
         private NetworkStream _stream;
         private SocketAsyncEventArgs _receiveEventArgs;
 
-        public ReaderLAN(string host, int port)
+        public P1ReaderLAN(string host, int port)
         {
             _host = host;
             _port = port;

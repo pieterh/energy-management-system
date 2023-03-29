@@ -5,7 +5,7 @@ using FluentAssertions;
 
 using P1SmartMeter.Telegram.DSMR;
 
-namespace P1SmartMeter.Tests.Telegram
+namespace P1SmartMeter.TelegramTests
 {
     public class DSMRTests
     {

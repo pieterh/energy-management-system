@@ -52,21 +52,23 @@ namespace P1SmartMeter.Telegram.DSMR
         public const string MBUSClient4Ident = "0-4:96.1.0";
         public const string MBUSClient4Measurement = "0-4:24.2.1";
 
-        public static MBusClientFields GetMBusClientFields(int index){
-            switch (index){
+        public static MBusClientFields GetMBusClientFields(int index)
+        {
+            switch (index)
+            {
                 case 1: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 2: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 3: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
                 case 4: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
-                default: throw new ArgumentException("Value must between 1 and 4",  nameof(index));
+                default: throw new ArgumentException("Value must between 1 and 4", nameof(index));
             }
         }
 
-        private TelegramDefinition()                                        //NOSONAR
+        private TelegramDefinition()
         {
             DefineField("1-3:0.2.8", "Version information", TelegramFieldType.String);
             DefineField(Timestamp, "Timestamp", TelegramFieldType.Timestamp);
-            DefineField("0-0:96.1.1", "Equipment identifier", TelegramFieldType.String);
+            DefineField("0-0:96.1.1", "Equipment identifier", TelegramFieldType.OctetString);
             DefineField(Electricity1ToClient, "Electricity Meter 1 - from grid");
             DefineField(Electricity2ToClient, "Electricity Meter 2 - from grid");
             DefineField(Electricity1FromClient, "Electricity Generated 1 - to grid");
@@ -83,7 +85,7 @@ namespace P1SmartMeter.Telegram.DSMR
             DefineField(PowerSwellsL1, "Num voltage swells L1", TelegramFieldType.Numeric);
             DefineField(PowerSwellsL2, "Num voltage swells L2", TelegramFieldType.Numeric);
             DefineField(PowerSwellsL3, "Num voltage swells L3", TelegramFieldType.Numeric);
-            DefineField(TextMessage, "Text message", TelegramFieldType.String);
+            DefineField(TextMessage, "Text message", TelegramFieldType.OctetString);
             DefineField(VoltageL1, "Voltage L1");
             DefineField(VoltageL2, "Voltage L2");
             DefineField(VoltageL3, "Voltage L3");
@@ -111,7 +113,7 @@ namespace P1SmartMeter.Telegram.DSMR
 
             DefineField(MBUSClient4Type, "M-Bus client 4 - device type", TelegramFieldType.Numeric);
             DefineField(MBUSClient4Ident, "M-Bus client 4 - identifier", TelegramFieldType.String);
-            DefineField(MBUSClient4Measurement, "M-Bus client 4 - measurement", TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnitAsDouble);            
+            DefineField(MBUSClient4Measurement, "M-Bus client 4 - measurement", TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnitAsDouble);
         }
         public static TelegramDefinition Instance => new();
 
@@ -120,14 +122,45 @@ namespace P1SmartMeter.Telegram.DSMR
             return $"0-{x}:24.2.1";
         }
     }
-    public struct MBusClientFields {
-        public string Type {get; }
-        public string Ident {get; }
-        public string Measurement {get; }
-        public MBusClientFields(string t, string i, string m){
+    public struct MBusClientFields : IEquatable<MBusClientFields>
+    {
+        public string Type { get; }
+        public string Ident { get; }
+        public string Measurement { get; }
+        public MBusClientFields(string t, string i, string m)
+        {
             Type = t;
-            Ident =i;
+            Ident = i;
             Measurement = m;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is not MBusClientFields) return false;
+            var other = (MBusClientFields)obj;
+            return Equals(other);
+        }
+
+        public bool Equals(MBusClientFields other)
+        {
+            return this.Type.Equals(other.Type, StringComparison.Ordinal) &&
+                   this.Ident.Equals(other.Ident, StringComparison.Ordinal) &&
+                   this.Measurement.Equals(other.Measurement, StringComparison.Ordinal);
+        }
+
+        public override int GetHashCode()
+        {
+            return String.Concat(Type, Ident, Measurement).GetHashCode(StringComparison.Ordinal);
+        }
+
+        public static bool operator ==(MBusClientFields left, MBusClientFields right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(MBusClientFields left, MBusClientFields right)
+        {
+            return !(left == right);
         }
     }
 }

@@ -3,13 +3,13 @@ using Microsoft.Extensions.Hosting;
 
 namespace P1SmartMeter.Connection
 {
-    public interface IP1Interface: IHostedService, IDisposable                              //NOSONAR
+    internal interface IP1Reader : IHostedService, IDisposable
     {
         event EventHandler<DataArrivedEventArgs> DataArrived;
+    }
 
-        public class DataArrivedEventArgs : EventArgs
-        {
-            public string Data { get; set; }
-        }
+    internal sealed class DataArrivedEventArgs : EventArgs
+    {
+        public string Data { get; set; }
     }
 }

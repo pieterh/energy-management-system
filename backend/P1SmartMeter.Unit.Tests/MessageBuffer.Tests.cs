@@ -1,19 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Xunit;
 using Moq;
-using Moq.Protected;
 using FluentAssertions;
 
 using P1SmartMeter;
 
-namespace P1SmartMeter.Tests
+namespace P1SmartMeter.MessageBufferTests
 {
     public class MessageBufferTests
     {

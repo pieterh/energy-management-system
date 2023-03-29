@@ -6,28 +6,29 @@ namespace P1SmartMeter.Reading
 {
     public class Measurement : SmartMeterMeasurement
     {
-        public Measurement(DSMRTelegram t)
+        public Measurement(DSMRTelegram telegram)
         {
-            Timestamp = t.Timestamp;
-            TariffIndicator = t.TariffIndicator;
+            ArgumentNullException.ThrowIfNull(telegram);
+            Timestamp = telegram.Timestamp;
+            TariffIndicator = telegram.TariffIndicator;
 
-            var powerL1 = ConvertPower(t.PowerUsedL1, t.PowerReturnedL1);
-            var powerL2 = ConvertPower(t.PowerUsedL2, t.PowerReturnedL2);
-            var powerL3 = ConvertPower(t.PowerUsedL3, t.PowerReturnedL3);
+            var powerL1 = ConvertPower(telegram.PowerUsedL1, telegram.PowerReturnedL1);
+            var powerL2 = ConvertPower(telegram.PowerUsedL2, telegram.PowerReturnedL2);
+            var powerL3 = ConvertPower(telegram.PowerUsedL3, telegram.PowerReturnedL3);
 
             // calculate the current based on power and voltage to get a better accuracy
-            CurrentL1 = CalculateCurrent(powerL1, t.VoltageL1);
-            CurrentL2 = CalculateCurrent(powerL2, t.VoltageL2);
-            CurrentL3 = CalculateCurrent(powerL3, t.VoltageL3);
+            CurrentL1 = CalculateCurrent(powerL1, telegram.VoltageL1);
+            CurrentL2 = CalculateCurrent(powerL2, telegram.VoltageL2);
+            CurrentL3 = CalculateCurrent(powerL3, telegram.VoltageL3);
 
-            VoltageL1 = t.VoltageL1;
-            VoltageL2 = t.VoltageL2;
-            VoltageL3 = t.VoltageL3;
+            VoltageL1 = telegram.VoltageL1;
+            VoltageL2 = telegram.VoltageL2;
+            VoltageL3 = telegram.VoltageL3;
 
-            Electricity1FromGrid = t.Electricity1FromGrid;
-            Electricity1ToGrid = t.Electricity1ToGrid;
-            Electricity2FromGrid = t.Electricity2FromGrid;
-            Electricity2ToGrid = t.Electricity2ToGrid;
+            Electricity1FromGrid = telegram.Electricity1FromGrid;
+            Electricity1ToGrid = telegram.Electricity1ToGrid;
+            Electricity2FromGrid = telegram.Electricity2FromGrid;
+            Electricity2ToGrid = telegram.Electricity2ToGrid;
         }
 
         private static double? ConvertPower(double? powerUsed, double? powerReturned)

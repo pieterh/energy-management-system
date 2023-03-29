@@ -6,7 +6,6 @@ namespace P1SmartMeter.Telegram
     {
         private readonly TelegramFieldDefinition _definition;
 
-
         public IList<object> Values { get; } = new List<object>();
         public string SingleValue => string.Join("; ", Values);
         public TelegramFieldDefinition Definition => _definition;

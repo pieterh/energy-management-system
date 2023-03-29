@@ -1,10 +1,10 @@
 ﻿using System;
 using EMS.Library;
-using static P1SmartMeter.Connection.IP1Interface;
+using static P1SmartMeter.Connection.IP1Reader;
 
 namespace P1SmartMeter.Connection
 {
-    public abstract class Reader : BackgroundService, IP1Interface
+    internal abstract class P1Reader : BackgroundService, IP1Reader
     {
         public event EventHandler<DataArrivedEventArgs> DataArrived;
 

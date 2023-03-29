@@ -7,14 +7,13 @@ using System.Text.RegularExpressions;
 namespace P1SmartMeter.Telegram
 {
     public partial class TelegramFieldDefinition
-    {      
+    {
         [GeneratedRegex(@"^([\d\.]*)\*?(.*)$", RegexOptions.None, 100)]
         private static partial Regex NumericWithUnitParser();
 
-
         public string Code { get; set; }
         public string Name { get; set; }
-        public IList<TelegramFieldType> Types { get; set; } = new List<TelegramFieldType>();
+        public IList<TelegramFieldType> Types { get; init; } = new List<TelegramFieldType>();
 
         public TelegramFieldDefinition() { }
 
@@ -24,7 +23,7 @@ namespace P1SmartMeter.Telegram
             Name = name;
             Types = types;
         }
-        
+
         public static TelegramFieldDefinition Invalid => new()
         {
             Code = "invalid",
@@ -54,69 +53,70 @@ namespace P1SmartMeter.Telegram
 
         public object ParseValue(int index, string rawValue)
         {
+            ArgumentNullException.ThrowIfNull(rawValue);
+
             var type = TelegramFieldType.Plain;
             if (index < Types.Count)
             {
                 type = Types[index];
             }
 
-            try
+            switch (type)
             {
-                switch (type)
-                {
-                    case TelegramFieldType.Numeric:
-                        if (rawValue.Contains('.'))
+                case TelegramFieldType.Numeric:
+                    if (rawValue.Contains('.', StringComparison.Ordinal))
+                    {
+                        return double.Parse(rawValue, CultureInfo.InvariantCulture);
+                    }
+
+                    return int.Parse(rawValue, CultureInfo.InvariantCulture);
+
+                case TelegramFieldType.NumericWithUnit:
+                case TelegramFieldType.NumericWithUnitAsDouble:
+                    // found some examples where the unit of measurement is
+                    // 1) behind the value seperated with a star '*'
+                    // 2) behind the value without seperator
+                    // 3) without the unit of measurement in the case that the meter didn't had a reading (all zero's)
+                    // 4) the reading was all zero's and there was no decimal point
+                    // We make it a bit more robust by only taking the digits and dots
+
+                    var match = NumericWithUnitParser().Match(rawValue);
+                    var numericValue = match.Groups[1].Value;
+                    var unit = match.Groups[2].Value;
+                    if (numericValue.Contains('.', StringComparison.Ordinal))
+                    {
+                        var number = double.Parse(numericValue, CultureInfo.InvariantCulture);
+                        return (number, unit);
+                    }
+                    else
+                    {
+                        var number = int.Parse(numericValue, CultureInfo.InvariantCulture);
+                        object o;
+                        if (type == TelegramFieldType.NumericWithUnitAsDouble)
                         {
-                            return double.Parse(rawValue, CultureInfo.InvariantCulture);
-                        }
-
-                        return int.Parse(rawValue, CultureInfo.InvariantCulture);
-
-                    case TelegramFieldType.NumericWithUnit:
-                    case TelegramFieldType.NumericWithUnitAsDouble:
-                        // found some examples where the unit of measurement is
-                        // 1) behind the value seperated with a star '*'
-                        // 2) behind the value without seperator
-                        // 3) without the unit of measurement in the case that the meter didn't had a reading (all zero's)
-                        // 4) the reading was all zero's and there was no decimal point
-                        // We make it a bit more robust by only taking the digits and dots
-
-                        var match = NumericWithUnitParser().Match(rawValue);
-                        var numericValue= match.Groups[1].Value;
-                        var unit= match.Groups[2].Value;
-                        if (numericValue.Contains('.'))
-                        {
-                            var number = double.Parse(numericValue, CultureInfo.InvariantCulture);
-                            return (number, unit);
+                            o = new ValueTuple<double, string>((double)number, unit);
                         }
                         else
                         {
-                            var number = int.Parse(numericValue, CultureInfo.InvariantCulture);
-                            object o;
-                            if (type == TelegramFieldType.NumericWithUnitAsDouble ) {
-                                o = new ValueTuple<double, string>((double)number, unit);
-                            }else{
-                                o = new ValueTuple<int, string>(number, unit);
-                            }
-                            return o;
-                        }                        
+                            o = new ValueTuple<int, string>(number, unit);
+                        }
+                        return o;
+                    }
 
-                    case TelegramFieldType.String:
-                        return GetStringFromHex(rawValue);
+                case TelegramFieldType.OctetString:
+                    return GetStringFromHex(rawValue);
 
-                    case TelegramFieldType.Timestamp:
-                        var ts = "20" + rawValue.Substring(0, 2) + "-" + rawValue.Substring(2, 2) + "-"
-                                 + rawValue.Substring(4, 2) + "T" + rawValue.Substring(6, 2) + ":"
-                                 + rawValue.Substring(8, 2) + ":" + rawValue.Substring(10, 2);
-                        return DateTime.Parse(ts);
+                case TelegramFieldType.String:
+                    return rawValue;
 
-                    default: // plain
-                        return rawValue;
-                }
-            }
-            catch
-            {
-                return rawValue;
+                case TelegramFieldType.Timestamp:
+                    var ts = "20" + rawValue.Substring(0, 2) + "-" + rawValue.Substring(2, 2) + "-"
+                             + rawValue.Substring(4, 2) + "T" + rawValue.Substring(6, 2) + ":"
+                             + rawValue.Substring(8, 2) + ":" + rawValue.Substring(10, 2);
+                    return DateTime.Parse(ts);
+
+                default: // plain
+                    return rawValue;
             }
         }
 
