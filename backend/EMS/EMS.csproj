@@ -28,7 +28,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.2.2" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.2" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.3" />
     <PackageReference Include="System.Text.Json" Version="7.0.2" />
     <PackageReference Include="JsonSchema.Net" Version="4.0.1" />
     <PackageReference Include="Microsoft.Json.Schema.Validation" Version="2.3.0" />
