@@ -122,29 +122,29 @@ jobs:
         exit 0
       working-directory: frontend/EMS.BlazorWasm
     - name: Install CycloneDX .NET
-      if: ${{ env.generate-sbom }}
+      if: ${{ env.generate-sbom == true }}
       shell: bash
       run: |  
         dotnet tool install CycloneDX --global
     - name: CycloneDX .NET Generate SBOM - backend
-      if: ${{ env.generate-sbom }}
+      if: ${{ env.generate-sbom == true }}
       shell: bash
       run: |  
         dotnet CycloneDX backend/ems.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-backend-ems.json
     - name: CycloneDX .NET Generate SBOM - frontend
-      if: ${{ env.generate-sbom }}
+      if: ${{ env.generate-sbom == true }}
       shell: bash
       run: |  
         dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
     - name: Upload SBOM Artifact
       uses: actions/upload-artifact@v3
-      if: ${{ env.generate-sbom }}
+      if: ${{ env.generate-sbom == true }}
       with:
         name: SBOM
         path: ${{ runner.temp }}\sbom\*
     - name: SBOM submission action
       uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
-      if: ${{ env.generate-sbom }}
+      if: ${{ env.generate-sbom == true }}
       with:
         sbom-files: ${{ runner.temp }}\sbom\sbom-backend-ems.json
         token: ${{ secrets.GH_TOKEN }}
