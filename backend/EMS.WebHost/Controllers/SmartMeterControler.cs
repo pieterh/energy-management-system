@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using EMS.Library;
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
-using EMS.Library.Adapter.SmartMeter;
+using EMS.Library.Adapter.SmartMeterAdapter;
 
 namespace EMS.WebHosts
 {
@@ -18,9 +18,9 @@ namespace EMS.WebHosts
     public class SmartMeterController : ControllerBase                                    //NOSONAR
     {
         private ILogger Logger { get; init; }
-        private ISmartMeter SmartMeter { get; init; }
+        private ISmartMeterAdapter SmartMeter { get; init; }
 
-        public SmartMeterController(ILogger<HEMSController> logger, ISmartMeter smartMeter)
+        public SmartMeterController(ILogger<HEMSController> logger, ISmartMeterAdapter smartMeter)
         {
             Logger = logger;
             SmartMeter = smartMeter;

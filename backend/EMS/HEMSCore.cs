@@ -8,7 +8,7 @@ using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.Engine;
 using EMS.Library.Core;
-using EMS.Library.Adapter.SmartMeter;
+using EMS.Library.Adapter.SmartMeterAdapter;
 using EMS.Library.TestableDateTime;
 using EMS.DataStore;
 using System.Diagnostics.CodeAnalysis;
@@ -24,7 +24,7 @@ namespace EMS
         private readonly Compute _compute;
 
         private readonly ILogger Logger;
-        private readonly ISmartMeter _smartMeter;
+        private readonly ISmartMeterAdapter _smartMeter;
         private readonly IChargePoint _chargePoint;
 
         private const int _interval = 10000; //ms
@@ -36,7 +36,7 @@ namespace EMS
             set => _compute.Mode = value;
         }
 
-        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeter smartMeter, IChargePoint chargePoint)
+        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint)
         {
             Logger = logger;
 
@@ -53,7 +53,7 @@ namespace EMS
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("1. StartAsync has been called.");
-            _smartMeter.MeasurementAvailable += SmartMeter_MeasurementAvailable;
+            _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
             _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
             _compute.StateUpdate += Compute_StateUpdate;
 
@@ -120,7 +120,7 @@ namespace EMS
         {
             Logger.LogInformation("3. OnStopping has been called.");
 
-            _smartMeter.MeasurementAvailable -= SmartMeter_MeasurementAvailable;
+            _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
             _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
             _compute.StateUpdate -= Compute_StateUpdate;
         }
@@ -138,16 +138,16 @@ namespace EMS
             Logger.LogInformation("5. OnStopped has been called.");
         }
 
-        private void SmartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
+        private void SmartMeter_MeasurementAvailable(object sender, SmartMeterMeasurementAvailableEventArgs e)
         {
-            Logger.LogInformation("- {measurement}", e.Measurement);
+            Logger.LogInformation("- {Measurement}", e.Measurement);
 
             _compute.AddMeasurement(e.Measurement, _chargePoint.LastSocketMeasurement);
         }
 
-        private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
+        private void ChargePoint_ChargingStateUpdate(object sender, ChargingStateEventArgs e)
         {
-            Logger.LogInformation("- {stateMessage}, {ended}, {delivered}, €{cost} ",
+            Logger.LogInformation("- {StateMessage}, {Ended}, {Delivered}, €{Cost} ",
                 e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered, e.Cost);
 
 

@@ -31,8 +31,8 @@ namespace AlfenNG9xx
         public SocketMeasurementBase LastSocketMeasurement { get; private set; }
         public ChargeSessionInfoBase ChargeSessionInfo { get { return _chargingSession.ChargeSessionInfo; } }
 
-        public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
-        public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
+        public event EventHandler<ChargingStatusUpdateEventArgs> ChargingStatusUpdate;
+        public event EventHandler<ChargingStateEventArgs> ChargingStateUpdate;
 
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
@@ -145,7 +145,7 @@ namespace AlfenNG9xx
             var chargingStateChanged = LastSocketMeasurement?.Mode3State != sm.Mode3State;
 
             LastSocketMeasurement = sm;
-            StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
+            ChargingStatusUpdate?.Invoke(this, new ChargingStatusUpdateEventArgs(sm));
             if (chargingStateChanged)
             {
                 var sessionEnded = _chargingSession.ChargeSessionInfo.SessionEnded;
@@ -157,7 +157,7 @@ namespace AlfenNG9xx
                 {
                     Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff.TariffUsage);
                 }
-                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
+                ChargingStateUpdate?.Invoke(this, new ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
             }
         }
 

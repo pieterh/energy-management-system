@@ -17,9 +17,9 @@ namespace EMS.Library.Adapter.EVSE
 
     public enum Phases
     {
+        Unknown = 0,
         One = 1,
-        Three = 3,
-        Unknown = -1
+        Three = 3        
     }
 
     public class SocketMeasurementBase : ICurrentMeasurement

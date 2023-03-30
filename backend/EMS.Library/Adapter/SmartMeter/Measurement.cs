@@ -1,7 +1,7 @@
 ﻿using System;
 using EMS.Library.Adapter;
 using EMS.Library.TestableDateTime;
-namespace EMS.Library.Adapter.SmartMeter
+namespace EMS.Library.Adapter.SmartMeterAdapter
 {
     public class SmartMeterMeasurementBase: ICurrentMeasurement
     {

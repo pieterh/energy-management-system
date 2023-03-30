@@ -3,19 +3,21 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using EMS.Library;
-using EMS.Library.Adapter.SmartMeter;
-using EMS.Library.Configuration;
-using EMS.Library.TestableDateTime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using EMS.Library;
+using EMS.Library.Adapter.SmartMeterAdapter;
+using EMS.Library.Configuration;
+using EMS.Library.TestableDateTime;
+
 using P1SmartMeter.Connection;
 using P1SmartMeter.Telegram.DSMR;
 
 namespace P1SmartMeter
 {
-    public class P1SmartMeter : Microsoft.Extensions.Hosting.BackgroundService, ISmartMeter
+    public class SmartMeter : Microsoft.Extensions.Hosting.BackgroundService, ISmartMeterAdapter
     {
         private readonly ILogger Logger;
         private bool _disposed;
@@ -36,31 +38,38 @@ namespace P1SmartMeter
         private SmartMeterMeasurement _measurement;
         protected SmartMeterMeasurement Measurement
         {
-            get {
+            get
+            {
                 return _measurement;
             }
-            set {         
+            set
+            {
                 _measurement = value;
-                MeasurementAvailable?.Invoke(this, new ISmartMeter.MeasurementAvailableEventArgs() { Measurement = value });
+                SmartMeterMeasurementAvailable?.Invoke(this, new SmartMeterMeasurementAvailableEventArgs() { Measurement = value });
             }
         }
 
-        public event EventHandler<ISmartMeter.MeasurementAvailableEventArgs> MeasurementAvailable;
+        public event EventHandler<SmartMeterMeasurementAvailableEventArgs> SmartMeterMeasurementAvailable;
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
+            ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(instance);
             services.AddSingleton<P1RelayServer>();
 
-            BackgroundServiceHelper.CreateAndStart<ISmartMeter, P1SmartMeter>(services, instance.Config);
+            BackgroundServiceHelper.CreateAndStart<ISmartMeterAdapter, SmartMeter>(services, instance.Config);
         }
 
 
-        public P1SmartMeter(ILogger<P1SmartMeter> logger, Config config, P1RelayServer relayServer)
+        public SmartMeter(ILogger<SmartMeter> logger, Config config, P1RelayServer relayServer)
         {
+            ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(relayServer);
+
             Logger = logger;
             _relayServer = relayServer;
-            Logger.LogInformation("P1SmartMeter({Cfg})", config.ToString().Replace(Environment.NewLine, " "));
+            Logger.LogInformation("SmartMeter({Cfg})", config.ToString().Replace(Environment.NewLine, " ", StringComparison.Ordinal));
 
             if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)
             {
@@ -181,10 +190,12 @@ namespace P1SmartMeter
                 {
                     await _reader.StopAsync(stoppingToken).ConfigureAwait(false);
                 }
-            }catch(TaskCanceledException)
+            }
+            catch (TaskCanceledException)
             {
                 Logger.LogInformation("Canceled");
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.LogError(ex, "Unhandled exceptio");
             }

@@ -15,7 +15,7 @@
       "name": "P1 Smartmeter",
       "driver": {
         "assembly": "P1SmartMeter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-        "type": "P1SmartMeter.P1SmartMeter"
+        "type": "P1SmartMeter.SmartMeter"
       }
     },
     {
@@ -42,7 +42,7 @@
     {
       "id": "3af78bca-5a28-40ac-9c9a-d23ae2d3b700",
       "name": "SmartMeter - Iskra AM550",
-      "enabled": false,
+      "enabled": true,
       "adapterid": "aab7376c-261a-4049-8c50-0e45e1d957c1",
       "config": {
         "type": "LAN",
@@ -53,7 +53,7 @@
     {
       "id": "3af78bca-5a28-40ac-9c9a-d23ae2d3b700",
       "name": "SmartMeter - fake",
-      "enabled": true,
+      "enabled": false,
       "adapterid": "aab7376c-261a-4049-8c50-0e45e1d957c1",
       "config": {
         "type": "LAN",

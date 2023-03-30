@@ -1,16 +1,18 @@
 ﻿using System;
 using Microsoft.Extensions.Hosting;
 
-namespace EMS.Library.Adapter.SmartMeter
+namespace EMS.Library.Adapter.SmartMeterAdapter
 {
-    public interface ISmartMeter : IAdapter, IHostedService
+    public class SmartMeterMeasurementAvailableEventArgs : EventArgs
+    {
+        public required SmartMeterMeasurement Measurement { get; init; }
+    }
+
+    public interface ISmartMeterAdapter : IAdapter, IHostedService
     {
         public SmartMeterMeasurementBase LastMeasurement { get; }
-        public class MeasurementAvailableEventArgs : EventArgs
-        {
-            public required SmartMeterMeasurement Measurement { get; init; }
-        }
 
-        public event EventHandler<MeasurementAvailableEventArgs> MeasurementAvailable;
+
+        public event EventHandler<SmartMeterMeasurementAvailableEventArgs> SmartMeterMeasurementAvailable;
     }
 }
