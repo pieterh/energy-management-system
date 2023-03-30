@@ -119,6 +119,7 @@ namespace EMS.Tests
 
         protected static void AddSamplesLoadSinglePhase1(Compute c, ICurrentMeasurement charge)
         {
+            ArgumentNullException.ThrowIfNull(c);
             c.AddMeasurement(new CurrentMeasurement(3, 1, 0), charge);
             c.AddMeasurement(new CurrentMeasurement(3, 1, 1), charge);
             c.AddMeasurement(new CurrentMeasurement(3, 1, 1), charge);
@@ -151,6 +152,7 @@ namespace EMS.Tests
 
         protected static void AddSamplesLoadSinglePhase2(Compute c, ICurrentMeasurement charge)
         {
+            ArgumentNullException.ThrowIfNull(c);
             c.AddMeasurement(new CurrentMeasurement(17, 1, 5), charge);
             c.AddMeasurement(new CurrentMeasurement(18, 1, 5), charge);
             c.AddMeasurement(new CurrentMeasurement(18, 1, 5), charge);
@@ -183,12 +185,14 @@ namespace EMS.Tests
 
         protected static void AddSamplesLoad(Compute c, ICurrentMeasurement charge)
         {
+            ArgumentNullException.ThrowIfNull(c);
             for (int i = 0; i < c.MinimumDataPoints; i++)
                 c.AddMeasurement(new CurrentMeasurement(19, 11, 11), charge);
         }
 
         protected static void AddSamplesOverload(Compute c, ICurrentMeasurement charge)
         {
+            ArgumentNullException.ThrowIfNull(c);
             for (int i = 0; i < c.MinimumDataPoints; i++)
                 c.AddMeasurement(new CurrentMeasurement(19, 11, 39), charge);
         }

@@ -161,6 +161,7 @@ namespace EMS.WebHosts
     {
         public static ProductInfoModel Factory(ProductInformation pi)
         {
+            ArgumentNullException.ThrowIfNull(pi);
             return new ProductInfoModel()
             {
                 Name = pi.Name,
@@ -186,6 +187,7 @@ namespace EMS.WebHosts
     {
         public static StationStatusInfoModel Factory(StationStatus ss)
         {
+            ArgumentNullException.ThrowIfNull(ss);
             return new StationStatusInfoModel()
             {
                 ActiveMaxCurrent = ss.ActiveMaxCurrent,
@@ -195,9 +197,7 @@ namespace EMS.WebHosts
             };
         }
 
-        //[JsonConverter(typeof(FloatConverterP1))]
         public float ActiveMaxCurrent { get; set; } 
-        //[JsonConverter(typeof(FloatConverterP1))]
         public float Temperature { get; set; } 
         public string OCCPState { get; set; } 
         public uint NrOfSockets { get; set; } 

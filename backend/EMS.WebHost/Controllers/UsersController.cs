@@ -40,7 +40,7 @@ namespace EMS.WebHost.Controllers
         public string Username { get; set; }
         public string Name { get; set; }
     }
-     
+
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/[controller]")]
@@ -62,6 +62,7 @@ namespace EMS.WebHost.Controllers
 
         public IActionResult Authenticate([FromBody] LoginModel model)
         {
+            ArgumentNullException.ThrowIfNull(model);
             var user = PerformAuth(model);
             if (user != null)
             {
@@ -80,14 +81,15 @@ namespace EMS.WebHost.Controllers
                 return Unauthorized();
             }
         }
-        
+
         [HttpGet("ping")]
-        public IActionResult Ping() {
+        public IActionResult Ping()
+        {
             var id = User.Claims.FirstOrDefault<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;            
-            foreach(var c in User.Claims)
+            var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;
+            foreach (var c in User.Claims)
             {
-                Logger.LogDebug("{type} - {value}", c.Type, c.Value);
+                Logger.LogDebug("{Type} - {Value}", c.Type, c.Value);
             }
             var user = new UserModel
             {
@@ -101,8 +103,8 @@ namespace EMS.WebHost.Controllers
 
         private static UserModel PerformAuth(LoginModel model)
         {
-            var user = (model.Username.Equals("admin") &&
-                    model.Password.Equals("admin")) ? new UserModel
+            var user = (model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase) &&
+                    model.Password.Equals("admin", StringComparison.Ordinal)) ? new UserModel
                     {
                         Id = Guid.NewGuid(),
                         Username = "admin",

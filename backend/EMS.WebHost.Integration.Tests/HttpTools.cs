@@ -7,9 +7,9 @@ namespace EMS.WebHost.Integration.Tests
     public enum Methods { POST, PUT, DELETE }
     internal static class HttpTools
 	{
-       
+#if DEBUG
         private const string _dashes = "----------------------------";
-
+#endif
         public static async Task<bool> MethodNotAllowed(Uri baseUri, Methods method, string path)
         {
             HttpResponseMessage response;

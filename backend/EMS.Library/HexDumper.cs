@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -6,15 +7,18 @@ namespace EMS.Library
 {
     public static class HexDumper
     {
+        private static readonly CultureInfo culture = CultureInfo.GetCultureInfo("en-US");
+
         public static string ConvertToHexDump(string str)
         {
+            ArgumentNullException.ThrowIfNull(str);
             var bytes = new byte[str.Length];
             Buffer.BlockCopy(str.ToArray(), 0, bytes, 0, bytes.Length);
             return ConvertToHexDump(bytes);
         }
         public static string ConvertToHexDump(ushort[] shorts)
         {
-
+            ArgumentNullException.ThrowIfNull(shorts);
             var bytes = new byte[shorts.Length * sizeof(short)];
             Buffer.BlockCopy(shorts, 0, bytes, 0, bytes.Length);
             return ConvertToHexDump(bytes);
@@ -49,6 +53,7 @@ namespace EMS.Library
         }
         public static string ConvertToHexDump(byte[] bytes)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             var result = new StringBuilder();
             for (int i = 0; i < bytes.Length; i += 16)
             {
@@ -67,9 +72,9 @@ namespace EMS.Library
         private static string ConvertBytesToHex(byte[] bytes)
         {
             string hexDump = BitConverter.ToString(bytes);
-            hexDump = hexDump.Replace("-", " ");
+            hexDump = hexDump.Replace("-", " ", StringComparison.Ordinal);
 
-            return hexDump.ToLower();
+            return hexDump.ToLower(culture);
         }
 
         private static string ConvertBytesToString(byte[] bytes)

@@ -1,10 +1,12 @@
 ﻿using System;
 using Xunit;
+using FluentAssertions;
 
 using AlfenNG9xx.Model;
 using EMS.Library.Adapter.EVSE;
 using EMS.Library.TestableDateTime;
 using EMS.Library.Adapter.PriceProvider;
+
 
 namespace AlfenNG9xx.Tests
 {
@@ -143,6 +145,36 @@ namespace AlfenNG9xx.Tests
                 fakeDate = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.E, tariff);       // 30 seconden op E  (disconnected)
                 Assert.Equal(5020, t.ChargeSessionInfo.EnergyDelivered);
                 Assert.True(t.ChargeSessionInfo.SessionEnded);
+            }
+        }
+
+        [Fact]
+        public void NoTariffAvailWhenCharging()
+        {
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var tariff = new Tariff(fakeDate, 0.23m, 0.08m);
+
+            using (new DateTimeProviderContext(fakeDate))
+            {
+                var t = new ChargingSession();
+                var sm = new SocketMeasurement
+                {
+                    Mode3State = Mode3State.E,
+                    RealEnergyDeliveredSum = 1000
+                };
+
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 0, Mode3State.E, tariff);       // 30 seconden op E  (disconnected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 0, Mode3State.B1, tariff);      // 30 seconden op B1 (connected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 0, Mode3State.B2, tariff);      // 30 seconden op B2 (connected)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 40, 25000, Mode3State.C2, tariff);  // 40 seconden op C2 (charging)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 25000, Mode3State.C2, null);    // 30 seconden op C2 (charging) (no tariff available)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 20, 25000, Mode3State.C2, null);    // 20 seconden op C2 (charging) (no tariff available)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 10, 25000, Mode3State.C2, tariff);  // 10 seconden op C2 (charging) (tariff available)
+                fakeDate = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.E, tariff);      // 30 seconden op E  (disconnected)
+
+                Assert.Equal(100000, t.ChargeSessionInfo.EnergyDelivered);
+                Assert.True(t.ChargeSessionInfo.SessionEnded);
+                t.ChargeSessionInfo.Costs.Count.Should().Be(2); // two different tariffs
             }
         }
 

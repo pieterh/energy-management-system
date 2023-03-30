@@ -15,7 +15,7 @@ using EMS.Engine.Model;
 
 namespace EMS.Tests
 {
-    class CurrentMeasurement : ICurrentMeasurement
+    sealed class CurrentMeasurement : ICurrentMeasurement
     {
         public double? CurrentL1 { get; set; }
         public double? CurrentL2 { get; set; }

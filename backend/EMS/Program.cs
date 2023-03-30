@@ -34,7 +34,7 @@ namespace EMS
 {
     static class Program
     {
-        public record Options
+        public sealed record Options
         {
             [Option("config", Required = true, HelpText = "Filename of config.")]
             public string ConfigFile { get; set; }
@@ -63,10 +63,11 @@ namespace EMS
                     {
                         options = o;
                     })
-                    .WithNotParsed(errs => {
+                    .WithNotParsed(errs =>
+                    {
                         throw new ArgumentException("Something wrong with your arguments! ;-)");
                     });
-         
+
 
                 ConfigureLogging(options);
                 Logger.Info("============================================================");
@@ -80,11 +81,11 @@ namespace EMS
             }
             catch (ArgumentException) { /* Somehow we need to catch, otherwise the finally doesn't seem to run */ }
             finally
-            {                
+            {
                 Logger.Info("========================= DONE ==============================");
                 // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
-                NLog.LogManager.Shutdown();                
-                _logconsole.Dispose();                
+                NLog.LogManager.Shutdown();
+                _logconsole.Dispose();
             }
         }
 
@@ -99,7 +100,7 @@ namespace EMS
             if (NLog.LogManager.Configuration == null ||
                 !NLog.LogManager.GetCurrentClassLogger().IsFatalEnabled || !NLog.LogManager.GetCurrentClassLogger().IsErrorEnabled ||
                 overrideExisting)
-            {                
+            {
                 var config = new NLog.Config.LoggingConfiguration();
                 config.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, _logconsole);
                 NLog.LogManager.Configuration = config; // Sensitive
@@ -124,8 +125,9 @@ namespace EMS
                     // set basic logging
                     EnforceLogging(true);
                     Logger.Fatal("No logging was configured. Default to basic logging to console.");
-                }                
-            }catch(FileNotFoundException)
+                }
+            }
+            catch (FileNotFoundException)
             {
                 Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
                 EnforceLogging(true);
@@ -133,8 +135,8 @@ namespace EMS
         }
 
         static IHost CreateHost(Options options)
-        {           
-            var t = Host.CreateDefaultBuilder()                
+        {
+            var t = Host.CreateDefaultBuilder()
                 .ConfigureLogging((ILoggingBuilder logBuilder) =>
                 {
                     logBuilder.ClearProviders();
@@ -152,7 +154,7 @@ namespace EMS
                            .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
                     }
                     else
-                        Logger.Error("There was an error with the configuration file");                    
+                        Logger.Error("There was an error with the configuration file");
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
@@ -164,18 +166,20 @@ namespace EMS
                     a.Database.Migrate();
 
                     services
-                        .AddDbContext<DataProtectionKeyContext>(o => {
-                                o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
-                                o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                        .AddDbContext<DataProtectionKeyContext>(o =>
+                        {
+                            o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
+                            o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                         })
                         .AddDataProtection()
-                        .AddKeyManagementOptions((opt) => {
+                        .AddKeyManagementOptions((opt) =>
+                        {
                             opt.XmlEncryptor = new NullXmlEncryptor();
-                            })
+                        })
                         .PersistKeysToDbContext<DataProtectionKeyContext>();
 
                     services.AddHttpClient();
-                    
+
                     ConfigureInstances(builderContext, services);
 
                     BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
@@ -184,7 +188,7 @@ namespace EMS
                 {
                     webBuilder.UseKestrel((builderContext, kestrelOptions) =>
                     {
-                        
+
                         kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();
                         builderContext.Configuration.GetSection("web").Bind(wc);
@@ -199,7 +203,7 @@ namespace EMS
                     });
                     webBuilder.UseStartup<Startup>();
                 }).Build();
-            
+
             return t;
         }
 

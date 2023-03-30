@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Xunit;
+using FluentAssertions;
 using EMS.Library;
 
 namespace AlfenNG9xx.Tests
@@ -14,10 +15,12 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x4c, 0x41, 0x2d, 0x46, 0x30, 0x30, 0x30, 0x30, 0x30, 0x33, 0x00, 0x37, 0x00, 0x00, 0x00, 0x00 }, "ALF-0000307")]
         public void ConvertRegisterArrayToStringObject(byte[] bytes, string expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             string result = Converters.ConvertRegistersToString(ushortArray);
-            Assert.True(expectedResult.Equals(result));
+            Assert.Equal(expectedResult, result);
         }
 
         [Theory]
@@ -26,10 +29,12 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x6c, 0x41, 0x65, 0x66, 0x20, 0x6e, 0x56, 0x4e, 0x00, 0x00 }, 2, 5, "Alfen NV")]
         public void ConvertRegisterArrayToStringObjectUsingOffset(byte[] bytes, int offset, int nrOfRegisters, string expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
+
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             string result = Converters.ConvertRegistersToString(ushortArray, offset, nrOfRegisters);
-            Assert.True(expectedResult.Equals(result));
+            Assert.Equal(expectedResult, result);
         }
 
         [Theory]
@@ -37,6 +42,8 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x01, 0x00, 0x77, 0x77 }, 1)]
         public void ConvertRegisterArrayToShort(byte[] bytes, UInt16 expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersShort(ushortArray);
@@ -48,6 +55,8 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x88, 0x88, 0x01, 0x00, 0x77, 0x77 }, 1, 1)]
         public void ConvertRegisterArrayToShortUsingOffset(byte[] bytes, int offset, UInt16 expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersShort(ushortArray, offset);
@@ -65,6 +74,8 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x33, 0xFF, 0x11, 0x22 }, 0xFF332211)]
         public void ConvertRegisterArrayToUInt32(byte[] bytes, UInt32 expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
+
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersUInt32(ushortArray);
@@ -76,6 +87,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x88, 0x88, 0x33, 0x44, 0x11, 0x22, 0x77, 0x77 }, 1, 0x44332211)]
         public void ConvertRegisterArrayToUInt32UsingOffset(byte[] bytes, int offset, UInt32 expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersUInt32(ushortArray, offset);
@@ -93,6 +105,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x77, 0x88, 0x55, 0x66, 0x33, 0x44, 0x11, 0x22 }, 0x8877665544332211)]
         public void ConvertRegisterArrayToUInt64(byte[] bytes, UInt64 expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersLong(ushortArray);
@@ -104,6 +117,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0xAA, 0xAA, 0x77, 0x88, 0x55, 0x66, 0x33, 0x44, 0x11, 0x22, 0xCC, 0xCC }, 1, 0x8877665544332211)]
         public void ConvertRegisterArrayToUInt64UsingOffset(byte[] bytes, int offset, UInt64 expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersLong(ushortArray, offset);
@@ -122,6 +136,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x40, 0x46, 0x66, 0xe6 }, 12345.6f)]
         public void ConvertRegisterArrayToFloat(byte[] bytes, float expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersFloat(ushortArray);
@@ -133,6 +148,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x88, 0x88, 0x33, 0x44, 0x11, 0x22, 0x77, 0x77 }, 1, 716.5323f)]
         public void ConvertRegisterArrayToFloatUsingOffset(byte[] bytes, int offset, float expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersFloat(ushortArray, offset);
@@ -154,6 +170,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0x67, 0x41, 0x29, 0x8c, 0xf7, 0xdf, 0xee, 0xee }, 12345678.999015298d)]
         public void ConvertRegisterArrayToDouble(byte[] bytes, double expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersDouble(ushortArray);
@@ -165,6 +182,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(new byte[] { 0xff, 0xff, 0x77, 0x88, 0x55, 0x66, 0x33, 0x44, 0x11, 0x22, 0xff, 0xff }, 1, -7.086876636573014E-268d)]
         public void ConvertRegisterArrayToDoubleUsingOffset(byte[] bytes, int offset, double expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(bytes);
             ushort[] ushortArray = new ushort[bytes.Length / 2];
             Buffer.BlockCopy(bytes, 0, ushortArray, 0, bytes.Length);
             var result = Converters.ConvertRegistersDouble(ushortArray, offset);
@@ -182,6 +200,7 @@ namespace AlfenNG9xx.Tests
         [InlineData(716.5323f, new byte[] { 0x33, 0x44, 0x11, 0x22 })]
         public void ConvertFloatToRegister(float f, byte[] expectedResult)
         {
+            ArgumentNullException.ThrowIfNull(expectedResult);
             var result = Converters.ConvertFloatToRegisters(f);
 
             byte[] bytesArray = new byte[sizeof(ushort) * 2];

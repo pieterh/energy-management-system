@@ -20,6 +20,7 @@ namespace AlfenNG9xx
         /// <returns>Converted String</returns>
         public static string ConvertRegistersToString(ushort[] registers)
         {
+            ArgumentNullException.ThrowIfNull(registers);
             return ConvertRegistersToString(registers, 0, registers.Length);
         }
 
@@ -32,6 +33,7 @@ namespace AlfenNG9xx
         /// <returns>Converted String</returns>
         public static string ConvertRegistersToString(ushort[] registers, int offset, int nrOfRegisters)
         {
+            ArgumentNullException.ThrowIfNull(registers);
             byte[] result = new byte[nrOfRegisters * 2];
 
             for (int i = 0; i < nrOfRegisters; i++)
@@ -58,8 +60,9 @@ namespace AlfenNG9xx
         }
 
         public static UInt16 ConvertRegistersShort(ushort[] registers, int offset)
-        {            
-            if  (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
+        {
+            ArgumentNullException.ThrowIfNull(registers);
+            if (registers.Length - offset <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
 
             byte[] registerBytes = BitConverter.GetBytes(registers[offset]);
             byte[] bytes = {
@@ -76,6 +79,7 @@ namespace AlfenNG9xx
 
         public static UInt32 ConvertRegistersUInt32(ushort[] registers, int offset)
         {
+            ArgumentNullException.ThrowIfNull(registers);
             if (registers.Length - offset - 1 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
 
             byte[] bytes = ConvertBigToLittleEndian32bit(registers[0 + offset], registers[1 + offset]);
@@ -89,6 +93,7 @@ namespace AlfenNG9xx
 
         public static UInt64 ConvertRegistersLong(ushort[] registers, int offset)
         {
+            ArgumentNullException.ThrowIfNull(registers);
             if (registers.Length - offset - 2 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
 
             byte[] bytes = ConvertBigToLittleEndian64bit(registers[0 + offset], registers[1 + offset], registers[2 + offset], registers[3 + offset]);
@@ -102,6 +107,7 @@ namespace AlfenNG9xx
 
         public static float ConvertRegistersFloat(ushort[] registers, int offset)
         {
+            ArgumentNullException.ThrowIfNull(registers);
             if (registers.Length - offset - 1 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
 
             byte[] bytes = ConvertBigToLittleEndian32bit(registers[0 + offset], registers[1 + offset]);
@@ -110,7 +116,7 @@ namespace AlfenNG9xx
 
         public static ushort[] ConvertFloatToRegisters(float f)
         {
-            float[] floats = new float[] {f};
+            float[] floats = new float[] { f };
             byte[] bytes = new byte[4];
             Buffer.BlockCopy(floats, 0, bytes, 0, bytes.Length);
             ushort[] result = ConvertLittleToBigEndian32bit(bytes);
@@ -124,6 +130,7 @@ namespace AlfenNG9xx
 
         public static double ConvertRegistersDouble(ushort[] registers, int offset)
         {
+            ArgumentNullException.ThrowIfNull(registers);
             if (registers.Length - offset - 2 <= 0) throw new ArgumentOutOfRangeException(nameof(registers));
             byte[] bytes = ConvertBigToLittleEndian64bit(registers[0 + offset], registers[1 + offset], registers[2 + offset], registers[3 + offset]);
             return BitConverter.ToDouble(bytes, 0);
@@ -144,8 +151,8 @@ namespace AlfenNG9xx
         private static ushort[] ConvertLittleToBigEndian32bit(byte[] bytes)
         {
             var result = new ushort[2];
-            byte[] abBytes = new byte[] {bytes[2], bytes[3]};
-            byte[] cdBytes = new byte[] {bytes[0], bytes[1]};
+            byte[] abBytes = new byte[] { bytes[2], bytes[3] };
+            byte[] cdBytes = new byte[] { bytes[0], bytes[1] };
             Buffer.BlockCopy(abBytes, 0, result, 0, abBytes.Length);
             Buffer.BlockCopy(cdBytes, 0, result, 2, cdBytes.Length);
             return result;

@@ -31,13 +31,15 @@ namespace EMS
 
         public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
 
-        public ChargingMode ChargingMode {
+        public ChargingMode ChargingMode
+        {
             get => _compute.Mode;
             set => _compute.Mode = value;
         }
 
         public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint)
         {
+            ArgumentNullException.ThrowIfNull(appLifetime);
             Logger = logger;
 
             _smartMeter = smartMeter;
@@ -71,18 +73,18 @@ namespace EMS
                 using (var db = new HEMSContext())
                 {
 
-                    Logger.LogInformation("Database path: {path}.", HEMSContext.DbPath);
+                    Logger.LogInformation("Database path: {Path}.", HEMSContext.DbPath);
 
                     var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
                     foreach (var item in items)
                     {
-                        Logger.LogInformation("Transaction: {trans}", item.ToString());
+                        Logger.LogInformation("Transaction: {Trans}", item.ToString());
                         db.Entry(item)
                             .Collection(b => b.CostDetails)
                             .Load();
                         foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp))
                         {
-                            Logger.LogInformation("Transaction detail: {detail}", detail.ToString());
+                            Logger.LogInformation("Transaction detail: {Detail}", detail.ToString());
                         }
                     }
                 }
@@ -102,10 +104,12 @@ namespace EMS
 
                     await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
                 }
-            }catch(TaskCanceledException)
+            }
+            catch (TaskCanceledException)
             {
                 Logger.LogInformation("Canceled");
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.LogError(ex, "Unhandled exception");
             }
@@ -156,8 +160,9 @@ namespace EMS
 
             if (e.SessionEnded)
             {
-                using (var db = new HEMSContext()){
-                
+                using (var db = new HEMSContext())
+                {
+
                     var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
 
                     var transaction = new ChargingTransaction
@@ -184,7 +189,7 @@ namespace EMS
                         db.Add(detail);
 
                         LoggerChargingcost.Debug(detail.ToString());
-                        
+
                         transaction.CostDetails.Add(detail);
                     }
 
@@ -194,7 +199,7 @@ namespace EMS
             }
         }
 
-        private void Compute_StateUpdate(object sender, Compute.StateEventArgs e)
+        private void Compute_StateUpdate(object sender, StateUpdateEventArgs e)
         {
             LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
         }

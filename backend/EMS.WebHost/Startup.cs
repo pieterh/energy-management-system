@@ -25,6 +25,8 @@ namespace EMS.WebHost
 
     public class Startup
     {
+        private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _configuration;
 
@@ -33,23 +35,19 @@ namespace EMS.WebHost
 
         public IWebHostEnvironment Env => _env;
         public IConfiguration Configuration => _configuration;
-        static readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-        static Startup()
+        public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
+            _env = env;
+            _configuration = configuration;
+
             // don't map any claims.. we don't need old style xml schema claims...
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
         }
 
-        public Startup( IWebHostEnvironment env, IConfiguration configuration)
-        {
-            _env = env;
-            _configuration = configuration;            
-        }
-
         public void ConfigureServices(IServiceCollection services)
         {
-            WebConfig wc = new ();
+            WebConfig wc = new();
             Configuration.GetSection("web").Bind(wc);
             WebConfig = wc;
 
@@ -57,11 +55,12 @@ namespace EMS.WebHost
             // and we also need a reference to the service later
             // hence we did add it as a dummy arg to configure....
             // nog te doen: fix this weird dependency
-            IJwtService jwtCreator = null;            
-            services.AddSingleton<IJwtService>((x) => {
+            IJwtService jwtCreator = null;
+            services.AddSingleton<IJwtService>((x) =>
+            {
                 jwtCreator = ActivatorUtilities.CreateInstance<JwtTokenService>(x);
                 return jwtCreator;
-            });            
+            });
 
             services.AddControllers();
 
@@ -78,13 +77,14 @@ namespace EMS.WebHost
                 options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
             })
             .AddJwtBearer(options =>
-            {                
+            {
                 options.TokenValidationParameters = jwtCreator.GetTokenValidationParameters();
                 options.SaveToken = true;
             });
 
 #if DEBUG
-            services.AddCors(options => {
+            services.AddCors(options =>
+            {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
                       builder =>
                       {
@@ -95,7 +95,7 @@ namespace EMS.WebHost
                                               )
                           .AllowCredentials()
                           .AllowAnyHeader()
-                          .AllowAnyMethod(); 
+                          .AllowAnyMethod();
                       });
             });
 #endif
@@ -108,7 +108,7 @@ namespace EMS.WebHost
         }
 
         public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJwtService t /*see comment above*/)
-        {  
+        {
             Logger = logger;
             if (Env.IsDevelopment())
             {
@@ -123,20 +123,20 @@ namespace EMS.WebHost
                         context.Response.StatusCode = 500;
                         context.Response.ContentType = "text/html";
 
-                        await context.Response.WriteAsync("<html lang=\"en\"><body>\r\n");
-                        await context.Response.WriteAsync("ERROR!<br><br>\r\n");
+                        await context.Response.WriteAsync("<html lang=\"en\"><body>\r\n").ConfigureAwait(false);
+                        await context.Response.WriteAsync("ERROR!<br><br>\r\n").ConfigureAwait(false);
 
                         var exceptionHandlerPathFeature =
                             context.Features.Get<IExceptionHandlerPathFeature>();
 
                         if (exceptionHandlerPathFeature?.Error is FileNotFoundException)
                         {
-                            await context.Response.WriteAsync("File error thrown!<br><br>\r\n");
+                            await context.Response.WriteAsync("File error thrown!<br><br>\r\n").ConfigureAwait(false);
                         }
 
-                        await context.Response.WriteAsync("<a href=\"/\">Home</a><br>\r\n");
-                        await context.Response.WriteAsync("</body></html>\r\n");
-                        await context.Response.WriteAsync(new string(' ', 512));
+                        await context.Response.WriteAsync("<a href=\"/\">Home</a><br>\r\n").ConfigureAwait(false);
+                        await context.Response.WriteAsync("</body></html>\r\n").ConfigureAwait(false);
+                        await context.Response.WriteAsync(new string(' ', 512)).ConfigureAwait(false);
                     });
                 });
                 app.UseHsts();
@@ -170,10 +170,11 @@ namespace EMS.WebHost
             {
                 c.SwaggerEndpoint("v1/swagger.json", "HEMS API V1");
             });
-            app.Use((context, next) => {
-                Logger.LogInformation("{path}", context.Request.Path);
+            app.Use((context, next) =>
+            {
+                Logger.LogInformation("{Path}", context.Request.Path);
                 return next.Invoke();
             });
-        } 
+        }
     }
 }

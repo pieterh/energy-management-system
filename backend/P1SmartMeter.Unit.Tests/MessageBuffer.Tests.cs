@@ -27,6 +27,7 @@ namespace P1SmartMeter.MessageBufferTests
         private const string tc12 = "12 - Partial message 1 that includes end-marker, followed by the rest in multiple chunks";
         private const string tc13 = "13 - Overflowing buffer with random data";
         private const string tc14 = "14 - Overflowing buffer with new complete message";
+        private const string tc15 = "15 - Currupt data followed by two complete fake messages";
 
         private Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
         public MessageBufferTests()
@@ -141,6 +142,13 @@ namespace P1SmartMeter.MessageBufferTests
                     new TestItem() { Data = string.Concat("/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!148A\r\n", MsgToString(message_1), MsgToString(message_1)) , ExpectMessage = true, ExpectError = true }
                 }
             );
+            dataSet.Add(tc15, new TestItem[]
+                {
+                    new TestItem() { Data = string.Concat("AA/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!B243\r\n", "/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!B243\r\n") , ExpectMessage = true, ExpectError = true },
+                    new TestItem() { Data = string.Empty , ExpectMessage = true, ExpectError = false },
+                    new TestItem() { Data = string.Empty , ExpectMessage = false, ExpectError = false }
+                }
+            );
         }
 
         [Theory]
@@ -158,6 +166,7 @@ namespace P1SmartMeter.MessageBufferTests
         [InlineData(tc12)]
         [InlineData(tc13)]
         [InlineData(tc14)]
+        [InlineData(tc15)]
         public void Add(string testCase)
         {
             var items = dataSet[testCase];

@@ -17,13 +17,15 @@ namespace EMS.WebHost.Middleware
 
         public Task Invoke(HttpContext context)
         {
+            ArgumentNullException.ThrowIfNull(context);
+
             // handle the response headers
             // after the response is created
             // and before it is send back
             context.Response.OnStarting((o) => {                
                 if (o is HttpContext ctx)
                 {
-                    if (ctx.Response.ContentType != null && ctx.Response.ContentType.StartsWith("text/html;"))
+                    if (ctx.Response.ContentType != null && ctx.Response.ContentType.StartsWith("text/html;", StringComparison.Ordinal))
                     {
                         context.Response.Headers.Add("X-Xss-Protection", "1; mode=block");
                     }

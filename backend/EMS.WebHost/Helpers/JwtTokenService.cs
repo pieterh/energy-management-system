@@ -30,6 +30,7 @@ namespace EMS.WebHost.Helpers
 
         public JwtTokenService(IConfiguration configurations)
         {
+            ArgumentNullException.ThrowIfNull(configurations);
             JwtConfig j = new();
             configurations.GetSection("web:jwt").Bind(j);
             Settings = j;            

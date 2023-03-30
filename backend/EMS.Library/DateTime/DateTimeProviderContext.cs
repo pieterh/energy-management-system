@@ -7,7 +7,7 @@ namespace EMS.Library.TestableDateTime
 {
     public class DateTimeProviderContext : IDisposable
     {
-        private bool _disposed = false;
+        private bool _disposed;
 
         internal DateTime ContextDateTimeNow;
         private static readonly ThreadLocal<Stack> ThreadScopeStack = new(() => new Stack());

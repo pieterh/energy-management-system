@@ -84,18 +84,7 @@ namespace EMS
             }
         }
 
-        public class StateEventArgs : EventArgs
-        {
-            public ChargeControlInfo Info { get; set; }
-
-            public StateEventArgs(ChargeControlInfo nfo)
-            {
-                Info = nfo;
-            }
-        }
-
-        public event EventHandler<StateEventArgs> StateUpdate;
-
+        public event EventHandler<StateUpdateEventArgs> StateUpdate;
 
         public Compute(ILogger logger, ChargingMode mode)
         {
@@ -123,7 +112,17 @@ namespace EMS
 
         private void RaiseStateUpdate(ChargeControlInfo nfo)
         {
-            StateUpdate?.Invoke(this, new StateEventArgs(nfo));
+            StateUpdate?.Invoke(this, new StateUpdateEventArgs(nfo));
+        }
+    }
+
+    public class StateUpdateEventArgs : EventArgs
+    {
+        public ChargeControlInfo Info { get; set; }
+
+        public StateUpdateEventArgs(ChargeControlInfo nfo)
+        {
+            Info = nfo;
         }
     }
 }

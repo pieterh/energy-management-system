@@ -10,6 +10,7 @@ public class TariffTests
     [MemberData(nameof(TestDataGenerator.Correct), MemberType = typeof(TestDataGenerator))]
     public void FindsCorrectTariff(Tariff[] tariff, DateTime dateTime, int idx)
     {
+        ArgumentNullException.ThrowIfNull(tariff);
         Tariff? t = EPEXSPOT.FindTariff(tariff, dateTime);
         Assert.NotNull(t);
         Assert.Equal(tariff[idx].Timestamp, t?.Timestamp);
@@ -42,7 +43,7 @@ public class TariffTests
     }
 }
 
-public class TestDataGenerator
+public static class TestDataGenerator
 {
     public static IEnumerable<object[]> NotAvailable()
     {
@@ -100,4 +101,3 @@ public class TestDataGenerator
         };
     }
 }
-
