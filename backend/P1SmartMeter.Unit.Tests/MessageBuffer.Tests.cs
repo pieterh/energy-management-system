@@ -20,11 +20,13 @@ namespace P1SmartMeter.MessageBufferTests
         private const string tc06 = "06 - Last part message 1, followed by complete message 2";
         private const string tc07 = "07 - First part message 1, followed by complete message 2";
         private const string tc08 = "08 - First part message 1, followed by complete message 2 in mulitple chunks";
-        private const string tc08b = "08b - First part message 1, followed by complete message 2 in mulitple chunks";
+        private const string tc09 = "09 - First part message 1, followed by complete message 2 in mulitple chunks";
 
-        private const string tc09 = "09 - Corrupt message 1, followed by complete message 2";
-        private const string tc10 = "10 - Partial message 1 that includes end-marker and crc is in second chunk";
-        private const string tc11 = "11 - Partial message 1 that includes end-marker, followed by the rest in multiple chunks";
+        private const string tc10 = "10 - Corrupt message 1, followed by complete message 2";
+        private const string tc11 = "11 - Partial message 1 that includes end-marker and crc is in second chunk";
+        private const string tc12 = "12 - Partial message 1 that includes end-marker, followed by the rest in multiple chunks";
+        private const string tc13 = "13 - Overflowing buffer with random data";
+        private const string tc14 = "14 - Overflowing buffer with new complete message";
 
         private Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
         public MessageBufferTests()
@@ -87,16 +89,16 @@ namespace P1SmartMeter.MessageBufferTests
                 }
             );
 
-            dataSet.Add(tc08b, new TestItem[]
+            dataSet.Add(tc09, new TestItem[]
                 {
-                                new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
-                                new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
-                                new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
-                                new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
                 }
             );
 
-            dataSet.Add(tc09, new TestItem[]
+            dataSet.Add(tc10, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - 25) , ExpectMessage = false, ExpectError = true } ,
@@ -104,13 +106,13 @@ namespace P1SmartMeter.MessageBufferTests
                     new TestItem() { Data = MsgToString(message_2).Substring(10) , ExpectMessage = true, ExpectError = false }
                 }
             );
-            dataSet.Add(tc10, new TestItem[]
+            dataSet.Add(tc11, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (4+2)) , ExpectMessage = true, ExpectError = false } ,
                 }
             );
-            dataSet.Add(tc11, new TestItem[]
+            dataSet.Add(tc12, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (6), 1) , ExpectMessage = false, ExpectError = false } ,
@@ -121,6 +123,24 @@ namespace P1SmartMeter.MessageBufferTests
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (1), 1) , ExpectMessage = true, ExpectError = false }
                 }
             );
+            dataSet.Add(tc13, new TestItem[]
+                {
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(10, 5) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = new string('X', MessageBuffer.BufferCapacity / 3) , ExpectMessage = false, ExpectError = false },
+                    new TestItem() { Data = new string('Y', MessageBuffer.BufferCapacity / 3) , ExpectMessage = false, ExpectError = false },
+                    new TestItem() { Data = new string('Z', MessageBuffer.BufferCapacity / 3) , ExpectMessage = false, ExpectError = true },
+                    new TestItem() { Data = MsgToString(message_1) , ExpectMessage = true, ExpectError = false }
+                }
+            );
+            dataSet.Add(tc14, new TestItem[]
+                {
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(10, 5) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = new string('A', MessageBuffer.BufferCapacity - 40) , ExpectMessage = false, ExpectError = false },
+                    new TestItem() { Data = string.Concat("/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!148A\r\n", MsgToString(message_1), MsgToString(message_1)) , ExpectMessage = true, ExpectError = true }
+                }
+            );
         }
 
         [Theory]
@@ -129,13 +149,15 @@ namespace P1SmartMeter.MessageBufferTests
         [InlineData(tc03)]
         [InlineData(tc04)]
         [InlineData(tc05)]
-        [InlineData(tc06)]        
+        [InlineData(tc06)]
         [InlineData(tc07)]
         [InlineData(tc08)]
-        [InlineData(tc08b)]
         [InlineData(tc09)]
         [InlineData(tc10)]
         [InlineData(tc11)]
+        [InlineData(tc12)]
+        [InlineData(tc13)]
+        [InlineData(tc14)]
         public void Add(string testCase)
         {
             var items = dataSet[testCase];
@@ -173,7 +195,7 @@ namespace P1SmartMeter.MessageBufferTests
             };
 
             var msg = MsgToString(message_1);
-            while(mock.Object.BufferUsed + msg.Length < MessageBuffer.BufferCapacity)
+            while (mock.Object.BufferUsed + msg.Length < MessageBuffer.BufferCapacity)
             {
                 mock.Object.Add(msg);
             }
@@ -226,7 +248,7 @@ namespace P1SmartMeter.MessageBufferTests
             mock.Object.TryTake(out string msg).Should().Be(true);
             msg.Should().BeEquivalentTo(MsgToString(message_2), "Since the first message is dropped");
             string lastMsg = string.Empty;
-            while(mock.Object.TryTake(out msg))
+            while (mock.Object.TryTake(out msg))
             {
                 lastMsg = msg;
             }

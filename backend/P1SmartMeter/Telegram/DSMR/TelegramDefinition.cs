@@ -6,7 +6,7 @@ namespace P1SmartMeter.Telegram.DSMR
     {
         // some important fields
         public const string VersionInformation = "1-3:0.2.8";
-        public const string Timestamp = "0-0:1.0.0";        
+        public const string Timestamp = "0-0:1.0.0";
         public const string EquipmentIdentifier = "0-0:96.1.1";
 
         public const string Electricity1ToClient = "1-0:1.8.1";
@@ -55,17 +55,7 @@ namespace P1SmartMeter.Telegram.DSMR
         public const string MBUSClient4Ident = "0-4:96.1.0";
         public const string MBUSClient4Measurement = "0-4:24.2.1";
 
-        public static MBusClientFields GetMBusClientFields(int index)
-        {
-            switch (index)
-            {
-                case 1: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
-                case 2: return new MBusClientFields(MBUSClient2Type, MBUSClient2Ident, MBUSClient2Measurement);
-                case 3: return new MBusClientFields(MBUSClient3Type, MBUSClient3Ident, MBUSClient3Measurement);
-                case 4: return new MBusClientFields(MBUSClient4Type, MBUSClient4Ident, MBUSClient4Measurement);
-                default: throw new ArgumentException("Value must between 1 and 4", nameof(index));
-            }
-        }
+        public static TelegramDefinition Instance => new();
 
         protected TelegramDefinition()
         {
@@ -118,11 +108,17 @@ namespace P1SmartMeter.Telegram.DSMR
             DefineField(MBUSClient4Ident, "M-Bus client 4 - identifier", TelegramFieldType.OctetString);
             DefineField(MBUSClient4Measurement, "M-Bus client 4 - measurement", TelegramFieldType.Timestamp, TelegramFieldType.NumericWithUnitAsDouble);
         }
-        public static TelegramDefinition Instance => new();
 
-        public static string DeviceXLastReading(int x)
+        public static MBusClientFields GetMBusClientFields(int index)
         {
-            return $"0-{x}:24.2.1";
+            switch (index)
+            {
+                case 1: return new MBusClientFields(MBUSClient1Type, MBUSClient1Ident, MBUSClient1Measurement);
+                case 2: return new MBusClientFields(MBUSClient2Type, MBUSClient2Ident, MBUSClient2Measurement);
+                case 3: return new MBusClientFields(MBUSClient3Type, MBUSClient3Ident, MBUSClient3Measurement);
+                case 4: return new MBusClientFields(MBUSClient4Type, MBUSClient4Ident, MBUSClient4Measurement);
+                default: throw new ArgumentException("Value must between 1 and 4", nameof(index));
+            }
         }
     }
 }
