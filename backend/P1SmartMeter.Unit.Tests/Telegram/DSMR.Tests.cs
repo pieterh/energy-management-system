@@ -126,6 +126,19 @@ namespace P1SmartMeter.TelegramTests
         }
 
         [Fact]
+        public void ParsesExampleTelegramFromeMUCS()
+        {
+            var t = new DSMRTelegram(MsgToString(telegram_4b), true);
+            t.Should().NotBeNull();
+            t.MBusDevice1.Should().NotBeNull();
+            t.MBusDevice1.DeviceType.Should().Be(MBusDevice.DeviceTypes.Gas);
+            t.MBusDevice2.Should().NotBeNull();
+            t.MBusDevice2.DeviceType.Should().Be(MBusDevice.DeviceTypes.Water);
+            t.MBusDevice3.Should().BeNull();
+            t.MBusDevice4.Should().BeNull();
+        }
+
+        [Fact]
         public void ParsesExampleTelegramFromInternet1()
         {
             var t = new DSMRTelegram(MsgToString(telegram_5), true);
@@ -311,6 +324,48 @@ namespace P1SmartMeter.TelegramTests
             @"0-1:96.1.0(3232323241424344313233343536373839)",
             @"0-1:24.2.1(101209112500W)(12785.123*m3)",
             @"!EF2F"
+        };
+
+        // This example telegram is taken from "e-MUCS_P1_Ed_1_7_1.pdf" page 16
+        // 3-phase meter
+        // P1 telegram example with a Gas meter on CH1 and a Water meter on CH2.
+        private static string[] telegram_4b = {
+            @"/FLU5\253769484_A",
+            @"0-0:96.1.4(50217)",
+            @"0-0:96.1.1(3153414733313031303231363035)",
+            @"0-0:1.0.0(200512135409S)",
+            @"1-0:1.8.1(000000.034*kWh)",
+            @"1-0:1.8.2(000015.758*kWh)",
+            @"1-0:2.8.1(000000.000*kWh)",
+            @"1-0:2.8.2(000000.011*kWh)",
+            @"1-0:1.4.0(02.351*kW)",
+            @"1-0:1.6.0(200509134558S)(02.589*kW)",
+            @"0-0:98.1.0(3)(1-0:1.6.0)(1-0:1.6.0)(200501000000S)(200423192538S)(03.695*kW)(200401000000S)(200305122139S)(05.980*kW)(200301000000S)(200210035421W)(04.318*kW)",
+            @"1-0:2.7.0(00.000*kW)",
+            @"1-0:21.7.0(00.000*kW)",
+            @"1-0:41.7.0(00.000*kW)",
+            @"1-0:61.7.0(00.000*kW)",
+            @"1-0:22.7.0(00.000*kW)",
+            @"1-0:42.7.0(00.000*kW)",
+            @"1-0:62.7.0(00.000*kW)",
+            @"1-0:32.7.0(234.7*V)",
+            @"1-0:52.7.0(234.7*V)",
+            @"1-0:72.7.0(234.7*V)",
+            @"1-0:31.7.0(000.00*A)",
+            @"1-0:51.7.0(000.00*A)",
+            @"1-0:71.7.0(000.00*A)",
+            @"0-0:96.3.10(1)",                              // Breaker state
+            @"0-0:17.0.0(999.9*kW)",                        // Limiter threshold (999.9 = deactivated)
+            @"1-0:31.4.0(999*A)",                           // Fuse supervision threshold (L1) (999 = deactivated)
+            @"0-0:96.13.0()",                               // Text message (for future use (empty))
+            @"0-1:24.1.0(003)",                             // gas
+            @"0-1:96.1.1(37464C4F32313139303333373333)",    // equip ident
+            @"0-1:24.4.0(1)",                               // valve state
+            @"0-1:24.2.3(200512134558S)(00112.384*m3)",     // 'not temperature corrected' gas
+            @"0-2:24.1.0(007)",                             // water
+            @"0-2:96.1.1(3853414731323334353637383930)",    // equip ident
+            @"0-2:24.2.1(200512134558S)(00872.234*m3)",     // last 5-minute water meter reading
+            @"!XXX"
         };
 
         // telegram found on internet with some interresting items

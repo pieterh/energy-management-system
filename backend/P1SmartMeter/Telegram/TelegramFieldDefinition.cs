@@ -64,11 +64,6 @@ namespace P1SmartMeter.Telegram
             switch (type)
             {
                 case TelegramFieldType.Numeric:
-                    if (rawValue.Contains('.', StringComparison.Ordinal))
-                    {
-                        return double.Parse(rawValue, CultureInfo.InvariantCulture);
-                    }
-
                     return int.Parse(rawValue, CultureInfo.InvariantCulture);
 
                 case TelegramFieldType.NumericWithUnit:

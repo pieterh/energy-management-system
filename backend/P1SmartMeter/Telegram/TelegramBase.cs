@@ -9,7 +9,7 @@ namespace P1SmartMeter.Telegram
 {
     public partial class TelegramBase
     {
-         [GeneratedRegex(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$", RegexOptions.None, 100)]
+        [GeneratedRegex(@"^(?<key>\d-\d:\d{1,2}\.\d{1,2}\.\d{1,2})(?:\((?<value>[^)]*)\))+$", RegexOptions.None, 100)]
         private static partial Regex KeyValueParser();
 
         public IList<TelegramField> Fields { get; } = new List<TelegramField>();
@@ -27,7 +27,8 @@ namespace P1SmartMeter.Telegram
                 return;
             }
 
-            if (validateCRC){
+            if (validateCRC)
+            {
                 byte[] bytes = Encoding.ASCII.GetBytes(raw);
                 Crc16Recalculated = CRC16.ComputeChecksumAsString(bytes, bytes.Length);
             }
@@ -40,7 +41,7 @@ namespace P1SmartMeter.Telegram
             foreach (var line in lines)
             {
                 var m = KeyValueParser().Match(line);
-                
+
                 if (!m.Success)
                 {
                     switch (line[0])

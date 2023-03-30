@@ -52,9 +52,9 @@ namespace P1SmartMeter.Telegram.DSMR
             VoltageL2 = GetValue<(double, string)?>(TelegramDefinition.VoltageL2)?.Item1;
             VoltageL3 = GetValue<(double, string)?>(TelegramDefinition.VoltageL3)?.Item1;
 
-            CurrentL1 = GetValue<(int, string)?>(TelegramDefinition.CurrentL1)?.Item1;
-            CurrentL2 = GetValue<(int, string)?>(TelegramDefinition.CurrentL2)?.Item1;
-            CurrentL3 = GetValue<(int, string)?>(TelegramDefinition.CurrentL3)?.Item1;
+            CurrentL1 = GetValue<(double, string)?>(TelegramDefinition.CurrentL1)?.Item1;
+            CurrentL2 = GetValue<(double, string)?>(TelegramDefinition.CurrentL2)?.Item1;
+            CurrentL3 = GetValue<(double, string)?>(TelegramDefinition.CurrentL3)?.Item1;
 
             MBusDevice1 = HandleMBusDevice(1);
             MBusDevice2 = HandleMBusDevice(2);
@@ -62,9 +62,14 @@ namespace P1SmartMeter.Telegram.DSMR
             MBusDevice4 = HandleMBusDevice(4);
         }
 
-        private MBusDevice HandleMBusDevice(int i)
+        protected virtual MBusClientFields GetMBusClientFields(int index)
         {
-            var fields = TelegramDefinition.GetMBusClientFields(i);
+            return TelegramDefinition.GetMBusClientFields(index);
+        }
+
+        private MBusDevice HandleMBusDevice(int index)
+        {
+            var fields = GetMBusClientFields(index);
 
             var mbusClient = GetValue<int?>(fields.Type);
             if (mbusClient == null)
@@ -72,8 +77,15 @@ namespace P1SmartMeter.Telegram.DSMR
 
             var ident = GetValue<string>(fields.Ident);
             var measurementInfo = GetValues(fields.Measurement);
-            var timestamp = (DateTime)measurementInfo[0];
-            var measurement = (System.ValueTuple<double, System.String>)measurementInfo[1];
+
+            DateTime timestamp = default;
+            System.ValueTuple<double, System.String> measurement = (0, string.Empty);
+
+            if (measurementInfo?.Count == 2)
+            {
+                timestamp = (DateTime)measurementInfo[0];
+                measurement = (System.ValueTuple<double, System.String>)measurementInfo[1];
+            }
 
             var retval = new MBusDevice((MBusDevice.DeviceTypes)mbusClient, ident, timestamp, measurement.Item1, measurement.Item2);
             return retval;
@@ -120,9 +132,9 @@ namespace P1SmartMeter.Telegram.DSMR
         public double? VoltageL2 { get; }
         public double? VoltageL3 { get; }
 
-        public int? CurrentL1 { get; }
-        public int? CurrentL2 { get; }
-        public int? CurrentL3 { get; }
+        public double? CurrentL1 { get; }
+        public double? CurrentL2 { get; }
+        public double? CurrentL3 { get; }
 
         public MBusDevice MBusDevice1 { get; }
         public MBusDevice MBusDevice2 { get; }

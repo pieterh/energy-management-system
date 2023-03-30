@@ -67,7 +67,7 @@ namespace P1SmartMeter.Telegram.DSMR
             }
         }
 
-        private TelegramDefinition()
+        protected TelegramDefinition()
         {
             DefineField(VersionInformation, "Version information", TelegramFieldType.String);
             DefineField(Timestamp, "Timestamp", TelegramFieldType.Timestamp);
@@ -92,9 +92,9 @@ namespace P1SmartMeter.Telegram.DSMR
             DefineField(VoltageL1, "Voltage L1");
             DefineField(VoltageL2, "Voltage L2");
             DefineField(VoltageL3, "Voltage L3");
-            DefineField(CurrentL1, "Current L1");
-            DefineField(CurrentL2, "Current L2");
-            DefineField(CurrentL3, "Current L3");
+            DefineField(CurrentL1, "Current L1", TelegramFieldType.NumericWithUnitAsDouble);
+            DefineField(CurrentL2, "Current L2", TelegramFieldType.NumericWithUnitAsDouble);
+            DefineField(CurrentL3, "Current L3", TelegramFieldType.NumericWithUnitAsDouble);
             DefineField(PowerUsedL1, "Power Used L1", TelegramFieldType.NumericWithUnit);
             DefineField(PowerUsedL2, "Power Used L2", TelegramFieldType.NumericWithUnit);
             DefineField(PowerUsedL3, "Power Used L3", TelegramFieldType.NumericWithUnit);
@@ -123,47 +123,6 @@ namespace P1SmartMeter.Telegram.DSMR
         public static string DeviceXLastReading(int x)
         {
             return $"0-{x}:24.2.1";
-        }
-    }
-    public struct MBusClientFields : IEquatable<MBusClientFields>
-    {
-        public string Type { get; }
-        public string Ident { get; }
-        public string Measurement { get; }
-        public MBusClientFields(string t, string i, string m)
-        {
-            Type = t;
-            Ident = i;
-            Measurement = m;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is not MBusClientFields) return false;
-            var other = (MBusClientFields)obj;
-            return Equals(other);
-        }
-
-        public bool Equals(MBusClientFields other)
-        {
-            return this.Type.Equals(other.Type, StringComparison.Ordinal) &&
-                   this.Ident.Equals(other.Ident, StringComparison.Ordinal) &&
-                   this.Measurement.Equals(other.Measurement, StringComparison.Ordinal);
-        }
-
-        public override int GetHashCode()
-        {
-            return String.Concat(Type, Ident, Measurement).GetHashCode(StringComparison.Ordinal);
-        }
-
-        public static bool operator ==(MBusClientFields left, MBusClientFields right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(MBusClientFields left, MBusClientFields right)
-        {
-            return !(left == right);
         }
     }
 }
