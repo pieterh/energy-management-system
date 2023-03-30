@@ -145,7 +145,7 @@ namespace P1SmartMeter
             }
 
             var msgChecksum = Encoding.ASCII.GetString(checksumbytes);
-            var calculatedChecksum = crc16.ComputeChecksumAsString(mbytes, mbytes.Length - 6);
+            var calculatedChecksum = CRC16.ComputeChecksumAsString(mbytes, mbytes.Length - 6);
 
             if (string.Equals(msgChecksum, calculatedChecksum, StringComparison.OrdinalIgnoreCase))
             {

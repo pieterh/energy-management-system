@@ -1,5 +1,6 @@
 ﻿using Xunit;
 using FluentAssertions;
+using System.Text;
 
 namespace P1SmartMeter.CRC16Tests
 {
@@ -8,88 +9,77 @@ namespace P1SmartMeter.CRC16Tests
         [Fact(DisplayName = "ComputeChecksumBytes(byte[] bytes) will throw ArgumentNullException")]
         public void ComputeChecksumBytesNull()
         {
-            var c = new CRC16();
-            Action act = () => c.ComputeChecksumBytes(null);
+            Action act = () => CRC16.ComputeChecksumBytes(null);
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ComputeChecksum(byte[] bytes) will throw ArgumentNullException")]
         public void ComputeChecksumNull1()
         {
-            var c = new CRC16();
-            Action act = () => c.ComputeChecksum(null);
+            Action act = () => CRC16.ComputeChecksum(null);
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ComputeChecksum(byte[] bytes, int length) will throw ArgumentNullException")]
         public void ComputeChecksumNull2()
         {
-            var c = new CRC16();
-            Action act = () => c.ComputeChecksum(null, -1);
+            Action act = () => CRC16.ComputeChecksum(null, -1);
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ComputeChecksum(byte[] bytes, int length) will throw ArgumentOutOfRangeException")]
         public void ComputeChecksumLength()
         {
-            var c = new CRC16();
-            Action act = () => c.ComputeChecksum(new byte[] { 0x00 }, -1);
+            Action act = () => CRC16.ComputeChecksum(new byte[] { 0x00 }, -1);
             _ = act.Should().Throw<ArgumentOutOfRangeException>();
         }
 
         [Fact(DisplayName = "ComputeChecksumAsString(byte[] bytes, int length) will throw ArgumentNullException")]
         public void ComputeChecksumAsStringNull()
         {
-            var c = new CRC16();
-            Action act = () => c.ComputeChecksumAsString(null, 1);
+            Action act = () => CRC16.ComputeChecksumAsString(null, 1);
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ComputeChecksumAsString(byte[] bytes, int length) will throw ArgumentOutOfRangeException")]
         public void ComputeChecksumAsStringLength()
         {
-            var c = new CRC16();
-            Action act = () => c.ComputeChecksumAsString(new byte[] { 0x00 }, -1);
+            Action act = () => CRC16.ComputeChecksumAsString(new byte[] { 0x00 }, -1);
             _ = act.Should().Throw<ArgumentOutOfRangeException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentNullException")]
         public void ValidateChecksumNull1()
         {
-            var c = new CRC16();
-            Action act = () => c.ValidateChecksum(null, "123");
+            Action act = () => CRC16.ValidateChecksum(null, "123");
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentNullException")]
         public void ValidateChecksumNull2()
         {
-            var c = new CRC16();
-            Action act = () => c.ValidateChecksum(new byte[] { 0x00 }, null);
+            Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, null);
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, ushort checksum) will throw ArgumentNullException")]
         public void ValidateChecksumNull3()
         {
-            var c = new CRC16();
-            Action act = () => c.ValidateChecksum(null, 0x1234);
+            Action act = () => CRC16.ValidateChecksum(null, 0x1234);
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, int length, string checksum) will throw ArgumentOutOfRangeException")]
         public void ValidateChecksumNull4()
         {
-            var c = new CRC16();
-            Action act = () => c.ValidateChecksum(new byte[] { 0x00 }, -1, "123");
+            Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, -1, "123");
             _ = act.Should().Throw<ArgumentOutOfRangeException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, int length, ushort checksum) will throw ArgumentOutOfRangeException")]
         public void ValidateChecksumNull5()
         {
-            var c = new CRC16();
-            Action act = () => c.ValidateChecksum(new byte[] { 0x00 }, -1, 0x1234);
+            Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, -1, 0x1234);
             _ = act.Should().Throw<ArgumentOutOfRangeException>();
         }
     }
@@ -104,9 +94,7 @@ namespace P1SmartMeter.CRC16Tests
         [InlineData(new byte[] { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 }, 0x1111, false)]
         public void CheckCRC16Short(byte[] items, ushort crc16, bool isValid)
         {
-            var c = new CRC16();
-
-            Assert.Equal(c.ValidateChecksum(items, crc16), isValid);
+            Assert.Equal(CRC16.ValidateChecksum(items, crc16), isValid);
         }
 
         [Theory(DisplayName = "Validates byte array with a given crc16 as a string value")]
@@ -114,9 +102,7 @@ namespace P1SmartMeter.CRC16Tests
         [InlineData(new byte[] { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 }, "1111", false)]
         public void CheckCRC16String(byte[] items, string crc16, bool isValid)
         {
-            var c = new CRC16();
-
-            Assert.Equal(c.ValidateChecksum(items, crc16), isValid);
+            Assert.Equal(CRC16.ValidateChecksum(items, crc16), isValid);
         }
 
         [Theory(DisplayName = "Computes a crc16 for a byte array")]
@@ -125,10 +111,18 @@ namespace P1SmartMeter.CRC16Tests
         public void CheckCRC16Bytes(byte[] items, byte[] crc16, bool isValid)
         {
             if (crc16 == null) throw new ArgumentNullException(nameof(crc16));
-            var c = new CRC16();
-            var cal = c.ComputeChecksumBytes(items);
+            var cal = CRC16.ComputeChecksumBytes(items);
             Assert.Equal((cal[0] == crc16[0]) && (cal[1] == crc16[1]), isValid);
         }
 
+        [Theory(DisplayName = "Validates string with a given crc16 as a short value")]
+        [InlineData("""123456789""", 0xBB3D, true)]
+        [InlineData("""ABCDEFGHIJKLMNOPQRSTUVWXYZ""", 0x18E7, true)]
+        [InlineData("""abcdefghijklmnopqrstuvwxyz""", 0x9C1D, true)]
+        public void CheckCRC16String2(string str, ushort crc16, bool isValid)
+        {
+            var items = Encoding.UTF8.GetBytes(str);
+            Assert.Equal(CRC16.ValidateChecksum(items, crc16), isValid);
+        }
     }
 }

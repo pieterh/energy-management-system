@@ -14,6 +14,8 @@ namespace P1SmartMeter.TelegramTests
         {
             var t = new DSMRTelegram(MsgToString(message_1));
             t.Should().NotBeNull();
+            t.VersionInformation.Should().Be("50");
+            t.EquipmentIdentifier.Should().Be("E0054007476941719");
             t.TariffIndicator.Should().Be(1);
             t.TextMessage.Should().BeEmpty();
             t.ActualPowerUse.Should().Be(0);
@@ -114,13 +116,17 @@ namespace P1SmartMeter.TelegramTests
             t.PowerReturnedL3.Should().Be(06.666);
             t.MBusDevice1.Should().NotBeNull();
             t.MBusDevice1.DeviceType.Should().Be(MBusDevice.DeviceTypes.Gas);
+            t.MBusDevice1.Identifier.Should().Be("2222ABCD123456789");
             t.MBusDevice1.Measurement.Should().Be(12785.123);
             t.MBusDevice1.UnitOfMeasurement.Should().Be("m3");
+            t.MBusDevice2.Should().BeNull();
+            t.MBusDevice3.Should().BeNull();
+            t.MBusDevice4.Should().BeNull();
             t.Crc16.Should().Be("EF2F");
         }
 
         [Fact]
-        public void ParsesExampleTelegramFromInternet()
+        public void ParsesExampleTelegramFromInternet1()
         {
             var t = new DSMRTelegram(MsgToString(telegram_5), true);
             t.Should().NotBeNull();
@@ -134,6 +140,21 @@ namespace P1SmartMeter.TelegramTests
         //    t.Should().NotBeNull();
         //    t.MBusDevice1.Should().NotBeNull();
         //}
+
+        [Fact]
+        public void ParsesExampleTelegramFromInternet2()
+        {
+            var t = new DSMRTelegram(MsgToString(telegram_7), true);
+            t.Should().NotBeNull();
+            t.VersionInformation.Should().Be("42");
+
+            t.MBusDevice1.Should().NotBeNull();
+            t.MBusDevice1.DeviceType.Should().Be(MBusDevice.DeviceTypes.Gas);
+            t.MBusDevice1.Identifier.Should().Be("G0025003346378516");
+            t.MBusDevice2.Should().BeNull();
+            t.MBusDevice3.Should().BeNull();
+            t.MBusDevice4.Should().BeNull();
+        }
 
         private static string MsgToString(string[] message)
         {
@@ -360,5 +381,45 @@ namespace P1SmartMeter.TelegramTests
             @"0-2:24.2.1(200512134558S)(00872.234*m3)",
             @"!XXXX"
         };*/
+
+        // telegram found on internet 4.2
+        private static string[] telegram_7 = {
+            @"/KFM5KAIFA-METER",
+            @"",
+            @"1-3:0.2.8(42)",
+            @"0-0:1.0.0(180605091333S)",
+            @"0-0:96.1.1(4530303236303030303133343837363135)",
+            @"1-0:1.8.1(001790.476*kWh)",
+            @"1-0:1.8.2(002320.188*kWh)",
+            @"1-0:2.8.1(000000.000*kWh)",
+            @"1-0:2.8.2(000000.000*kWh)",
+            @"0-0:96.14.0(0002)",
+            @"1-0:1.7.0(00.258*kW)",
+            @"1-0:2.7.0(00.000*kW)",
+            @"0-0:96.7.21(00010)",
+            @"0-0:96.7.9(00004)",
+            @"1-0:99.97.0(1)(0-0:96.7.19)(000101000011W)(2147483647*s)",
+            @"1-0:32.32.0(00000)",
+            @"1-0:52.32.0(00000)",
+            @"1-0:72.32.0(00000)",
+            @"1-0:32.36.0(00000)",
+            @"1-0:52.36.0(00000)",
+            @"1-0:72.36.0(00000)",
+            @"0-0:96.13.1()",
+            @"0-0:96.13.0()",
+            @"1-0:31.7.0(000*A)",
+            @"1-0:51.7.0(000*A)",
+            @"1-0:71.7.0(000*A)",
+            @"1-0:21.7.0(00.125*kW)",
+            @"1-0:22.7.0(00.000*kW)",
+            @"1-0:41.7.0(00.124*kW)",
+            @"1-0:42.7.0(00.000*kW)",
+            @"1-0:61.7.0(00.009*kW)",
+            @"1-0:62.7.0(00.000*kW)",
+            @"0-1:24.1.0(003)",
+            @"0-1:96.1.0(4730303235303033333436333738353136)",
+            @"0-1:24.2.1(180605090000S)(05225.708*m3)",
+            @"!F7F2"
+        };
     }
 }

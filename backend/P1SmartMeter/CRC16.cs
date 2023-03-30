@@ -4,15 +4,16 @@ using System.Diagnostics.CodeAnalysis;
 namespace P1SmartMeter
 {
     /** 
-     * CRC-16-IBM with a reverse polynomial representation (polynomial 0xA001)
+     * CRC-16-IBM / CRC-16-ANSI with a reverse polynomial representation (polynomial 0xA001)
+     * https://en.wikipedia.org/wiki/Cyclic_redundancy_check
      */
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
-    public class CRC16
+    public sealed class CRC16
     {
         private const ushort polynomial = 0xA001;
-        private readonly ushort[] _lookupTable = new ushort[256];
+        private static readonly ushort[] _lookupTable = new ushort[256];
 
-        public CRC16()
+        static CRC16()
         {
             for (ushort i = 0; i < _lookupTable.Length; ++i)
             {
@@ -34,20 +35,20 @@ namespace P1SmartMeter
             }
         }
 
-        public byte[] ComputeChecksumBytes(byte[] bytes)
+        public static byte[] ComputeChecksumBytes(byte[] bytes)
         {
             ArgumentNullException.ThrowIfNull(bytes);
             ushort crc = ComputeChecksum(bytes);
             return BitConverter.GetBytes(crc);
         }
 
-        public ushort ComputeChecksum(byte[] bytes)
+        public static ushort ComputeChecksum(byte[] bytes)
         {
             ArgumentNullException.ThrowIfNull(bytes);
             return ComputeChecksum(bytes, bytes.Length);
         }
 
-        public ushort ComputeChecksum(byte[] bytes, int length)
+        public static ushort ComputeChecksum(byte[] bytes, int length)
         {
             ArgumentNullException.ThrowIfNull(bytes);
             if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), length, "Should not be a negative value");
@@ -61,33 +62,33 @@ namespace P1SmartMeter
             return crc16;
         }
 
-        public string ComputeChecksumAsString(byte[] bytes, int length)
+        public static string ComputeChecksumAsString(byte[] bytes, int length)
         {
             var computedchecksum = ComputeChecksum(bytes, length);
             string hexValue = string.Format("{0:X4}", computedchecksum);
             return hexValue;
         }
 
-        public bool ValidateChecksum(byte[] bytes, string checksum)
+        public static bool ValidateChecksum(byte[] bytes, string checksum)
         {
             ArgumentNullException.ThrowIfNull(bytes);
             ArgumentNullException.ThrowIfNullOrEmpty(checksum);
             return ValidateChecksum(bytes, bytes.Length, checksum);
         }
 
-        public bool ValidateChecksum(byte[] bytes, ushort checksum)
+        public static bool ValidateChecksum(byte[] bytes, ushort checksum)
         {
             ArgumentNullException.ThrowIfNull(bytes);
             return ValidateChecksum(bytes, bytes.Length, checksum);
         }
 
-        public bool ValidateChecksum(byte[] bytes, int length, string checksum)
+        public static bool ValidateChecksum(byte[] bytes, int length, string checksum)
         {
             string hexValue = ComputeChecksumAsString(bytes, length);
             return hexValue.Equals(checksum, StringComparison.OrdinalIgnoreCase);
         }
 
-        public bool ValidateChecksum(byte[] bytes, int length, ushort checksum)
+        public static bool ValidateChecksum(byte[] bytes, int length, ushort checksum)
         {
             var computedchecksum = ComputeChecksum(bytes, length);
             return computedchecksum == checksum;
