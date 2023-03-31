@@ -35,8 +35,8 @@ namespace P1SmartMeter
 
         public SmartMeterMeasurementBase LastMeasurement { get => Measurement; }
 
-        private SmartMeterMeasurement _measurement;
-        protected SmartMeterMeasurement Measurement
+        private SmartMeterMeasurementBase _measurement;
+        protected SmartMeterMeasurementBase Measurement
         {
             get
             {

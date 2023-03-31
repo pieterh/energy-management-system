@@ -4,7 +4,7 @@ using P1SmartMeter.Telegram.DSMR;
 
 namespace P1SmartMeter.Reading
 {
-    public class Measurement : SmartMeterMeasurement
+    public record Measurement : SmartMeterMeasurementBase
     {
         public Measurement(DSMRTelegram telegram)
         {
