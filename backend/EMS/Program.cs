@@ -29,6 +29,8 @@ using EMS.WebHost;
 using EMS.DataStore;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using EMS.Library.dotNET;
 
 namespace EMS
 {
@@ -72,9 +74,14 @@ namespace EMS
                 ConfigureLogging(options);
                 Logger.Info("============================================================");
                 AssemblyInfo.Init();
-
                 ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
                 Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "git.commit.hash.txt").Trim('\n', '\r')}");
+                Logger.Info("============================================================");
+                DotNetInfo.Info(Logger);              
+                Logger.Info("============================================================");
+                Logger.Info("Garbage Collector Configuration");
+                DotNetInfo.GCInfo(Logger);
+                Logger.Info("============================================================");
 
                 using var host = CreateHost(options);
                 host.Run();

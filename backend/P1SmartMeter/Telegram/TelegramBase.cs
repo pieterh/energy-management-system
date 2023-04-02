@@ -29,8 +29,8 @@ namespace P1SmartMeter.Telegram
 
             if (validateCRC)
             {
-                byte[] bytes = Encoding.ASCII.GetBytes(raw);
-                Crc16Recalculated = CRC16.ComputeChecksumAsString(bytes, bytes.Length);
+                ReadOnlySpan<byte> bytes = Encoding.ASCII.GetBytes(raw);
+                Crc16Recalculated = CRC16.ComputeChecksumAsString(bytes);
             }
 
             var lines = raw.Split(

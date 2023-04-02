@@ -44,9 +44,9 @@ namespace P1SmartMeter
             return lookupTable;
         }
 
-        private static ushort ComputeChecksum(ushort crc16, byte[] bytes, int length)
+        private static ushort ComputeChecksum(ushort crc16, ReadOnlySpan<byte> bytes)
         {
-            for (int i = 0; i < length; ++i)
+            for (int i = 0; i < bytes.Length; ++i)
             {
                 byte index = (byte)(crc16 ^ bytes[i]);
                 crc16 = (ushort)((crc16 >> 8) ^ _lookupTable[index]);
@@ -54,57 +54,51 @@ namespace P1SmartMeter
             return (ushort)(crc16 ^ FinalXOR);
         }
 
-        public static ushort ComputeChecksum(byte[] bytes, int length)
-        {
-            ArgumentNullException.ThrowIfNull(bytes);
-            if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), length, "Should not be a negative value");
-
-            return ComputeChecksum(InitialValue, bytes, length);
+        private static ushort ComputeChecksum(ushort crc16, ReadOnlySpan<char> chars)
+        {           
+            for (int i = 0; i < chars.Length; ++i)
+            {
+                byte index = (byte)(crc16 ^ chars[i]);
+                crc16 = (ushort)((crc16 >> 8) ^ _lookupTable[index]);
+            }
+            return (ushort)(crc16 ^ FinalXOR);
         }
 
-        public static ushort ComputeChecksum(byte[] bytes)
+        public static ushort ComputeChecksum(ReadOnlySpan<byte> bytes)
         {
-            ArgumentNullException.ThrowIfNull(bytes);
-            return ComputeChecksum(InitialValue, bytes, bytes.Length);
+            return ComputeChecksum(InitialValue, bytes);
         }
 
-        public static byte[] ComputeChecksumBytes(byte[] bytes)
-        {
-            ArgumentNullException.ThrowIfNull(bytes);
-            ushort crc = ComputeChecksum(bytes, bytes.Length);
+        public static byte[] ComputeChecksumBytes(ReadOnlySpan<byte> bytes)
+        {            
+            ushort crc = ComputeChecksum(bytes);
             return BitConverter.GetBytes(crc);
         }
 
-        public static string ComputeChecksumAsString(byte[] bytes, int length)
+        public static string ComputeChecksumAsString(ReadOnlySpan<byte> bytes)
         {
-            var computedchecksum = ComputeChecksum(bytes, length);
+            var computedchecksum = ComputeChecksum(bytes);
+            string hexValue = string.Format("{0:X4}", computedchecksum);
+            return hexValue;
+        }
+        public static string ComputeChecksumAsString(ReadOnlySpan<char> chars)
+        {
+            var computedchecksum = ComputeChecksum(InitialValue, chars);
             string hexValue = string.Format("{0:X4}", computedchecksum);
             return hexValue;
         }
 
-        public static bool ValidateChecksum(byte[] bytes, int length, ushort checksum)
+        public static bool ValidateChecksum(ReadOnlySpan<byte> bytes, ushort checksum)
         {
-            var computedchecksum = ComputeChecksum(bytes, length);
+            var computedchecksum = ComputeChecksum(bytes);
             return computedchecksum == checksum;
         }
 
-        public static bool ValidateChecksum(byte[] bytes, int length, string checksum)
+        public static bool ValidateChecksum(ReadOnlySpan<byte> bytes, string checksum)
         {
-            string hexValue = ComputeChecksumAsString(bytes, length);
-            return hexValue.Equals(checksum, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public static bool ValidateChecksum(byte[] bytes, string checksum)
-        {
-            ArgumentNullException.ThrowIfNull(bytes);
             ArgumentNullException.ThrowIfNullOrEmpty(checksum);
-            return ValidateChecksum(bytes, bytes.Length, checksum);
-        }
-
-        public static bool ValidateChecksum(byte[] bytes, ushort checksum)
-        {
-            ArgumentNullException.ThrowIfNull(bytes);
-            return ValidateChecksum(bytes, bytes.Length, checksum);
+            string hexValue = ComputeChecksumAsString(bytes);
+            return hexValue.Equals(checksum, StringComparison.OrdinalIgnoreCase);
         }
 
         /*
@@ -113,18 +107,10 @@ namespace P1SmartMeter
          */
         public ushort CurrentValue { get; private set; }
         public void Restart() { CurrentValue = InitialValue; }
-        public ushort Continue(byte[] bytes, int length)
+        public ushort Continue(ReadOnlySpan<byte> bytes)
         {
-            ArgumentNullException.ThrowIfNull(bytes);
-            if (length < 0) throw new ArgumentOutOfRangeException(nameof(length), length, "Should not be a negative value");
-            CurrentValue = ComputeChecksum(CurrentValue, bytes, length);
+            CurrentValue = ComputeChecksum(CurrentValue, bytes);
             return CurrentValue;
-        }
-
-        public ushort Continue(byte[] bytes)
-        {
-            ArgumentNullException.ThrowIfNull(bytes);
-            return Continue(bytes, bytes.Length);
         }
     }
 }

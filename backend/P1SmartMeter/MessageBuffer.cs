@@ -9,27 +9,33 @@ namespace P1SmartMeter
         private static readonly NLog.Logger LoggerP1Stream = NLog.LogManager.GetLogger("p1stream");
         private static readonly NLog.Logger LoggerP1Messages = NLog.LogManager.GetLogger("p1messages");
 
-        public const int BufferCapacity = 2560;
+        private const char StartChar = '/';
+        private const char EndChar = '!';
 
-        public event EventHandler<DataErrorEventArgs> DataError;
+        public const int BufferCapacity = 3072;
 
-        private readonly byte[] _buffer = new byte[BufferCapacity];
-        private int _position;
+        public event EventHandler<DataErrorEventArgs> DataError = delegate { };
 
-        public int BufferUsed { get => _position; private set => _position = value; }
-        public bool IsEmpty { get => _position == 0; }
+        private readonly char[] _buffer = new char[BufferCapacity];
+        private int _tailPosition;
 
-        public int Add(string data)
+        public int BufferUsed { get => _tailPosition; private set => _tailPosition = value; }
+        public bool IsEmpty { get => _tailPosition == 0; }
+
+        public int Add(ReadOnlySpan<char> span)
         {
-
-            var sb = new StringBuilder(data);
-            while (sb.Length > 0)
+            while (span.Length > 0)
             {
-                var chrs = sb.Length < 512 ? sb.Length : 512;
-                AddInternal(sb.ToString().Substring(0, chrs));
-                sb.Remove(0, chrs);
+                var chrs = span.Length < 1024 ? span.Length : 1024; // should normaly be enough for one complete message, looping for in the case there is more data
+                AddInternal(span.Slice(0, chrs));
+                span = span.Slice(chrs);
             }
-            return _position;
+            return _tailPosition;
+        }
+
+        public bool TryTake(out string msg)
+        {
+            return RetrieveMessageFromBuffer(out msg);
         }
 
         /// <summary>
@@ -38,40 +44,34 @@ namespace P1SmartMeter
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        protected int AddInternal(string data)
+        protected int AddInternal(ReadOnlySpan<char> data)
         {
-            ArgumentNullException.ThrowIfNull(data);
+            if (LoggerP1Stream.IsTraceEnabled)
+            {
+                LoggerP1Stream.Trace("---------- start ----------{NewLine}{Data}", Environment.NewLine, new String(data));
+                LoggerP1Stream.Trace("---------- end   ----------");
+            }
 
-            LoggerP1Stream.Trace($"---------- start ----------{Environment.NewLine}{data}");
-            LoggerP1Stream.Trace($"---------- end   ----------");
-
-
-            if (data.Length == 0) return _position;
+            if (data.Length == 0) return _tailPosition;
             if (data.Length > BufferCapacity) throw new ArgumentOutOfRangeException(nameof(data));
 
-            Encoding ascii = Encoding.ASCII;
-
-            while (BufferCapacity - _position < data.Length)
+            while (BufferCapacity - _tailPosition < data.Length)
             {
                 if (!TryTake(out _))
                 {
-                    _position = 0;
+                    _tailPosition = 0;
                 }
                 OnDataError(new DataErrorEventArgs() { Message = "buffer overflow, data purged from buffer" });
             }
 
-            Buffer.BlockCopy(ascii.GetBytes(data), 0, _buffer, _position, data.Length);
-            _position += data.Length;
+            // add the data to the current tail position in the buffer
+            var bspan = _buffer.AsSpan();
+            data.CopyTo(bspan.Slice(_tailPosition));
+            _tailPosition += data.Length;
 
-            Logger.Debug($"bytes in buffer after adding {_position}, ");
             RemovePartialMessage();
 
-            return _position;
-        }
-
-        public bool TryTake(out string msg)
-        {
-            return RetrieveMessageFromBuffer(out msg);
+            return _tailPosition;
         }
 
         private bool RetrieveMessageFromBuffer(out string msg)
@@ -80,7 +80,7 @@ namespace P1SmartMeter
             bool bufferChanged;
             do
             {
-                if (_position == 0) return false;
+                if (_tailPosition == 0) return false;
                 RemovePartialMessage();
 
                 bufferChanged = false;
@@ -98,98 +98,109 @@ namespace P1SmartMeter
         private int FindEndOfMessage()
         {
             int s = 0;
-            while (_buffer[s] != '!' && (s == 0 || (_buffer[s] != '/' && s > 0)) && s < _position)
+
+            // it can either end with the EndChar or the StartChar of a new message
+            while (_buffer[s] != EndChar && ((_buffer[s] != StartChar && s > 0) || s == 0) && s < _tailPosition)
                 s++;
 
+            // Normal End
             // <!><#><#><#><#><CR><LF> -> 7 bytes
-            if (_buffer[s] == '!' && s + 7 <= _position)
+            if (_buffer[s] == EndChar && s + 7 <= _tailPosition)
                 return s + 7;
-            if (_buffer[s] == '/' && s > 0 && s < _position)
+
+            // End with the start of a new message
+            if (_buffer[s] == StartChar && s > 0 && s < _tailPosition)
                 return s;
 
+            // no end found 
             return -1;
         }
 
         private string HandleMessageInBuffer(int msgLength)
         {
-            var mbytes = new byte[msgLength];
-            var checksumbytes = new byte[4];
-            Buffer.BlockCopy(_buffer, 0, mbytes, 0, msgLength);             // get message
-            Buffer.BlockCopy(_buffer, msgLength - 6, checksumbytes, 0, 4);   // get checksum
+            var msg = new String(_buffer.AsSpan(0, msgLength));             // get message
 
-            if (_position > msgLength)
+            Span<char> checksumbytes = stackalloc char[4];                  // get checksum
+            checksumbytes[0] = _buffer[msgLength - 6];                      
+            checksumbytes[1] = _buffer[msgLength - 5];
+            checksumbytes[2] = _buffer[msgLength - 4];
+            checksumbytes[3] = _buffer[msgLength - 3];
+
+            if (_tailPosition > msgLength)
             {
-                Buffer.BlockCopy(_buffer, msgLength, _buffer, 0, _position - msgLength);
-                _position -= msgLength;
+                // There is more data in the buffer to process. Move it to the beginning of the buffer
+                _buffer.AsSpan(msgLength, _tailPosition - msgLength).CopyTo(_buffer.AsSpan());
+                _tailPosition -= msgLength;
                 RemovePartialMessage();
             }
             else
             {
                 // buffer is now empty
-                _position = 0;
+                _tailPosition = 0;
             }
 
-            var msgChecksum = Encoding.ASCII.GetString(checksumbytes);
-            var calculatedChecksum = CRC16.ComputeChecksumAsString(mbytes, mbytes.Length - 6);
-            string msg = null;
+            var calculatedChecksum = CRC16.ComputeChecksumAsString(msg.AsSpan().Slice(0, msg.Length - 6));
+            string retvalMsg = null;
 
-            if (string.Equals(msgChecksum, calculatedChecksum, StringComparison.OrdinalIgnoreCase))
+            if (calculatedChecksum.AsSpan().CompareTo(checksumbytes, StringComparison.OrdinalIgnoreCase) == 0)
             {
-                msg = Encoding.ASCII.GetString(mbytes);
-
-                LoggerP1Messages.Trace($"---------- start ----------{Environment.NewLine}{msg}");
-                LoggerP1Messages.Trace($"---------- end   ----------");
+                retvalMsg = msg;
+                if (LoggerP1Messages.IsTraceEnabled)
+                {
+                    LoggerP1Messages.Trace($"---------- start ----------{Environment.NewLine}{msg}");
+                    LoggerP1Messages.Trace($"---------- end   ----------");
+                }
             }
             else
             {
-                var logmsg = Encoding.ASCII.GetString(mbytes);
-                LoggerP1Messages.Error($"---------- start ---------- crc {msgChecksum} != {calculatedChecksum}{Environment.NewLine}{logmsg}");
-                LoggerP1Messages.Error($"---------- end   ----------");
+                if (LoggerP1Messages.IsErrorEnabled)
+                {
+                    LoggerP1Messages.Error($"---------- start ---------- crc {checksumbytes} != {calculatedChecksum.AsSpan()}{Environment.NewLine}{retvalMsg}");
+                    LoggerP1Messages.Error($"---------- end   ----------");
+                }
                 // crc error
-                OnDataError(new DataErrorEventArgs() { Message = $"crc {msgChecksum} != {calculatedChecksum}" });
+                OnDataError(new DataErrorEventArgs() { Message = $"crc error. Expected 0x{checksumbytes} and calculated 0x{calculatedChecksum.AsSpan()}", Data = msg });
             }
 
-            return msg;
+            return retvalMsg;
         }
 
         private void RemovePartialMessage()
         {
             // check if buffer is empty
-            if (_position == 0) return;
+            if (_tailPosition == 0) return;
 
             int start = 0;
-            while (_buffer[start] != '/' && start < _position)
+            while (_buffer[start] != StartChar && start < _tailPosition)
                 start++;
 
-            if ((_buffer[start] == '/' && start > 0))
+            if (_buffer[start] == StartChar && start > 0)
             {
-                // discarding data
-                Logger.Debug(@"discarding {start} bytes");
-                Buffer.BlockCopy(_buffer, start, _buffer, 0, _position - start);
-                _position -= start;
-                Logger.Debug($"bytes in buffer {_position}, ");
-                OnDataError(new DataErrorEventArgs() { Message = "partial" });
+                if (Logger.IsDebugEnabled) Logger.Debug("discarding {Start} bytes", start);
+                var discardedData = new String(_buffer.AsSpan(0, _tailPosition));
+
+                _buffer.AsSpan(start, _tailPosition - start).CopyTo(_buffer.AsSpan());
+                _tailPosition -= start;
+                if (Logger.IsDebugEnabled) Logger.Debug("bytes in buffer {Position}, ", _tailPosition);
+                OnDataError(new DataErrorEventArgs() { Message = "partial message removed from buffer", Data = discardedData });
             }
-            else if (start == _position)
+            else if (start == _tailPosition)
             {
-                Logger.Debug(@"discarding all bytes");
-                var tmp = new byte[_position];
-                Buffer.BlockCopy(_buffer, 0, tmp, 0, _position);
-                OnDataError(new DataErrorEventArgs() { Message = "partial", Data = Encoding.ASCII.GetString(tmp) });
-                _position = 0;
+                if (Logger.IsDebugEnabled) Logger.Debug("discarding all bytes");
+                var discardedData = new String(_buffer.AsSpan(0, _tailPosition));
+                _tailPosition = 0;
+                OnDataError(new DataErrorEventArgs() { Message = "partial message removed from buffer", Data = discardedData });
             }
         }
 
-        protected void OnDataError(DataErrorEventArgs e)
+        private void OnDataError(DataErrorEventArgs e)
         {
             ArgumentNullException.ThrowIfNull(e);
-            Logger.Error($"data error {e.Message}");
+            Logger.Error("Data error {Message}", e.Message);
             if (!string.IsNullOrWhiteSpace(e.Data))
-                Logger.Error($"{Environment.NewLine}{e.Data}");
+                Logger.Error("{NewLine}{Data}{NewLine}", Environment.NewLine, e.Data, Environment.NewLine);
 
-            EventHandler<DataErrorEventArgs> handler = DataError;
-
-            handler?.Invoke(this, e);
+            DataError.Invoke(this, e);
         }
     }
 

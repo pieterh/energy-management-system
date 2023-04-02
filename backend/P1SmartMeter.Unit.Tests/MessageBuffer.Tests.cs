@@ -84,9 +84,9 @@ namespace P1SmartMeter.MessageBufferTests
             dataSet.Add(tc08, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, 30) , ExpectMessage = false, ExpectError = false } ,
-                    new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
-                    new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
-                    new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage = false, ExpectError = true } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage = true, ExpectError = false } ,
                 }
             );
 
@@ -193,6 +193,25 @@ namespace P1SmartMeter.MessageBufferTests
         }
 
         [Fact]
+        public void SingleMessageAddAndRetrieve()
+        {
+            var mock = new Mock<MessageBuffer>();
+            var errorRaised = false;
+
+            mock.Object.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            var msgSnd = MsgToString(message_1);
+            mock.Object.Add(msgSnd);
+            mock.Object.TryTake(out var retrievedMsg).Should().BeTrue("Since we just added one complete message");
+
+            retrievedMsg.Should().BeEquivalentTo(msgSnd, "We expecting the same as we put in");
+            errorRaised.Should().BeFalse("We expecting no errors while handling this message");
+        }
+
+        [Fact]
         public void SingleBufferOverflow()
         {
             var mock = new Mock<MessageBuffer>();
@@ -275,15 +294,15 @@ namespace P1SmartMeter.MessageBufferTests
             {
                 errorRaised = true;
             };
+
             var sb = new StringBuilder();
             sb.Append(MsgToString(message_1));  // first message to stringbuilder
-            var msg2 = MsgToString(message_2);  // add a bunch of message 2 to the stringbuilder
+            var msg2 = MsgToString(message_2);  // add a bunch of message 2 to the stringbuilder           
             for (int i = 0; i < 10; i++)
             {
                 sb.Append(msg2);
             }
             sb.Append(MsgToString(message_3));  // and message three to stringbuilder
-
             mock.Object.Add(sb.ToString()); // add to the buffer
 
             errorRaised.Should().Be(true, "Because the buffer has overflowed");
@@ -297,6 +316,68 @@ namespace P1SmartMeter.MessageBufferTests
             }
             lastMsg.Should().BeEquivalentTo(MsgToString(message_3), "Last message should be number three");
             mock.Object.IsEmpty.Should().BeTrue("Because we did add only complete messages and have retrieved all off them that did fit in the buffer");
+        }
+
+        [Fact]
+        public void CanHandleDataErrorsWithoutSubscribers()
+        {
+            MessageBuffer mb = new();
+            mb.Add("");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+        }
+
+        [Fact]
+        public void CanHandleDataErrorsWithASubscriber()
+        {
+            MessageBuffer mb = new();
+            bool errorRaised = false;
+            mb.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            mb.Add("123");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            errorRaised.Should().Be(true);
+        }
+
+        [Fact]
+        public void CanHandleDataCRCMissing()
+        {
+            MessageBuffer mb = new();
+            bool errorRaised = false;
+            mb.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            mb.Add("/123!");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            errorRaised.Should().Be(false);
+        }
+
+        [Fact]
+        public void CanHandleDataCRCPartial()
+        {
+            MessageBuffer mb = new();
+            bool errorRaised = false;
+            mb.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            mb.Add("/123!");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("1D");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("AE");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("\r");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("\n");
+            mb.TryTake(out _).Should().BeTrue("There is now a 'complete' message in the buffer");
+            mb.BufferUsed.Should().Be(0, "We added and removed one complete message");
+            errorRaised.Should().Be(false, "There should be no errors handling this 'complete' message");
         }
 
         private static string MsgToString(string[] message)

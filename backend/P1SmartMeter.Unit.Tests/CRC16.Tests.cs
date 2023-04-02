@@ -9,53 +9,32 @@ namespace P1SmartMeter.CRC16Tests
 {
     public class ValidateArguments
     {
-        [Fact(DisplayName = "ComputeChecksumBytes(byte[] bytes) will throw ArgumentNullException")]
+        [Fact(DisplayName = "ComputeChecksumBytes(byte[] bytes) will NOT throw ArgumentNullException")]
         public void ComputeChecksumBytesNull()
         {
             Action act = () => CRC16.ComputeChecksumBytes(null);
-            _ = act.Should().Throw<ArgumentNullException>();
+            _ = act.Should().NotThrow<ArgumentNullException>();
         }
 
-        [Fact(DisplayName = "ComputeChecksum(byte[] bytes) will throw ArgumentNullException")]
+        [Fact(DisplayName = "ComputeChecksum(ReadOnlySpan<byte> bytes) will NOT throw ArgumentNullException")]
         public void ComputeChecksumNull1()
         {
             Action act = () => CRC16.ComputeChecksum(null);
-            _ = act.Should().Throw<ArgumentNullException>();
+            var t = act.Should().NotThrow<ArgumentNullException>();            
         }
 
-        [Fact(DisplayName = "ComputeChecksum(byte[] bytes, int length) will throw ArgumentNullException")]
+        [Fact(DisplayName = "ComputeChecksum(ReadOnlySpan<byte> bytes) will NOT throw ArgumentNullException")]
         public void ComputeChecksumNull2()
         {
-            Action act = () => CRC16.ComputeChecksum(null, -1);
-            _ = act.Should().Throw<ArgumentNullException>();
+            Action act = () => CRC16.ComputeChecksum(null);
+            _ = act.Should().NotThrow<ArgumentNullException>();
         }
 
-        [Fact(DisplayName = "ComputeChecksum(byte[] bytes, int length) will throw ArgumentOutOfRangeException")]
-        public void ComputeChecksumLength()
-        {
-            Action act = () => CRC16.ComputeChecksum(new byte[] { 0x00 }, -1);
-            _ = act.Should().Throw<ArgumentOutOfRangeException>();
-        }
-
-        [Fact(DisplayName = "ComputeChecksumAsString(byte[] bytes, int length) will throw ArgumentNullException")]
-        public void ComputeChecksumAsStringNull()
-        {
-            Action act = () => CRC16.ComputeChecksumAsString(null, 1);
-            _ = act.Should().Throw<ArgumentNullException>();
-        }
-
-        [Fact(DisplayName = "ComputeChecksumAsString(byte[] bytes, int length) will throw ArgumentOutOfRangeException")]
-        public void ComputeChecksumAsStringLength()
-        {
-            Action act = () => CRC16.ComputeChecksumAsString(new byte[] { 0x00 }, -1);
-            _ = act.Should().Throw<ArgumentOutOfRangeException>();
-        }
-
-        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentNullException")]
+        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will NOT throw ArgumentNullException")]
         public void ValidateChecksumNull1()
         {
             Action act = () => CRC16.ValidateChecksum(null, "123");
-            _ = act.Should().Throw<ArgumentNullException>();
+            _ = act.Should().NotThrow<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentNullException")]
@@ -65,47 +44,19 @@ namespace P1SmartMeter.CRC16Tests
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
-        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, ushort checksum) will throw ArgumentNullException")]
+        [Fact(DisplayName = "ValidateChecksum(ReadOnlySpan<byte>, ushort checksum) will NOT throw ArgumentNullException")]
         public void ValidateChecksumNull3()
         {
             Action act = () => CRC16.ValidateChecksum(null, 0x1234);
-            _ = act.Should().Throw<ArgumentNullException>();
+            _ = act.Should().NotThrow<ArgumentNullException>();
         }
 
-        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, int length, string checksum) will throw ArgumentOutOfRangeException")]
-        public void ValidateChecksumNull4()
-        {
-            Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, -1, "123");
-            _ = act.Should().Throw<ArgumentOutOfRangeException>();
-        }
-
-        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, int length, ushort checksum) will throw ArgumentOutOfRangeException")]
-        public void ValidateChecksumNull5()
-        {
-            Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, -1, 0x1234);
-            _ = act.Should().Throw<ArgumentOutOfRangeException>();
-        }
-
-        [Fact(DisplayName = "Continue(byte[] bytes, int length) will throw ArgumentNullException")]
-        public void ContinueArgumentNullException1()
-        {
-            CRC16 crc = new();
-            Action act = () => crc.Continue(null);
-            _ = act.Should().Throw<ArgumentNullException>();
-        }
-        [Fact(DisplayName = "Continue(byte[] bytes, int length) will throw ArgumentNullException")]
+        [Fact(DisplayName = "Continue(ReadOnlySpan<byte> bytes) will NOT throw ArgumentNullException")]
         public void ContinueArgumentNullException2()
         {
             CRC16 crc = new();
-            Action act = () => crc.Continue(null, 1);
-            _ = act.Should().Throw<ArgumentNullException>();
-        }
-        [Fact(DisplayName = "Continue(byte[] bytes, int length) will throw ArgumentOutOfRangeException")]
-        public void ContinueArgumentOutOfRangeException1()
-        {
-            CRC16 crc = new();
-            Action act = () => crc.Continue(new byte[] { 0x00 }, -1);
-            _ = act.Should().Throw<ArgumentOutOfRangeException>();
+            Action act = () => crc.Continue(null);
+            _ = act.Should().NotThrow<ArgumentNullException>();
         }
     }
 
@@ -211,20 +162,12 @@ namespace P1SmartMeter.CRC16Tests
         }
 
         [Fact]
-        public void UsesCorrectLengthFromLongerByteArray()
-        {
-            CRC16 crc = new();
-            crc.CurrentValue.Should().Be(CRC16.InitialValue);
-            crc.Continue(new byte[] { 0xAA, 0xBB, 0xCC, 0xDD }, 2).Should().Be(0xD33E);
-            crc.CurrentValue.Should().Be(0xD33E);
-        }
-
-        [Fact]
         public void UsesCorrectLength()
         {
             CRC16 crc = new();
             crc.CurrentValue.Should().Be(CRC16.InitialValue);
-            crc.Continue(new byte[] { 0xAA, 0xBB, 0xCC, 0xDD }, 4).Should().Be(0xA4C4);
+            crc.Continue(new byte[] { 0xAA, 0xBB, 0xCC, 0xDD }).Should().Be(0xA4C4);
+            crc.CurrentValue.Should().Be(0xA4C4);
         }
 
         [Fact]
@@ -238,20 +181,22 @@ namespace P1SmartMeter.CRC16Tests
         }
 
         [Fact]
-        public void ThrowsExceptionWhenIncorrectLengthUsed()
+        public void ProperlyIdentifiesNullAsEmptyArray1()
         {
             CRC16 crc = new();
             crc.CurrentValue.Should().Be(CRC16.InitialValue);
-            Action act = () => crc.Continue(new byte[] { 0xAA, 0xBB, 0xCC, 0xDD }, 5);
-            act.Should().Throw<IndexOutOfRangeException>();
+            crc.Continue(null).Should().Be(0x0000);
+            crc.CurrentValue.Should().Be(0x0000);
+            crc.CurrentValue.Should().Be(CRC16.InitialValue);
         }
 
         [Fact]
-        public void UsesCorrectLengthFromCompleteArray()
+        public void ProperlyIdentifiesNullAsEmptyArray2()
         {
             CRC16 crc = new();
             crc.CurrentValue.Should().Be(CRC16.InitialValue);
             crc.Continue(new byte[] { 0xAA, 0xBB, 0xCC, 0xDD }).Should().Be(0xA4C4);
+            crc.Continue(null).Should().Be(0xA4C4);
             crc.CurrentValue.Should().Be(0xA4C4);
         }
     }

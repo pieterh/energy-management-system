@@ -41,6 +41,7 @@ namespace EMS.Library.Assembly
             return (
                  !name.StartsWith("Microsoft", StringComparison.Ordinal)  &&
                  !name.StartsWith("System", StringComparison.Ordinal) &&
+                 !name.StartsWith("netstandard", StringComparison.Ordinal) &&
                  !name.StartsWith("Anonymously Hosted DynamicMethods", StringComparison.Ordinal)
             );
         }
