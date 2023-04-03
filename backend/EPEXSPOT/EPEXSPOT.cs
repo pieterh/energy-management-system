@@ -90,8 +90,7 @@ namespace EPEXSPOT
                     {
                         Logger.Error("Exception: " + e.Message);
                         Logger.Error("Unhandled, we try later again");
-                        Logger.Error("Disposing connection");
-                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
+                        await Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
                 Logger.Info($"Canceled");
@@ -100,6 +99,15 @@ namespace EPEXSPOT
             {
                 Logger.Error(ex, "Unhandled exception");
             }
+        }
+
+        private static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
+        {
+            try
+            {
+                await Task.Delay(millisecondsDelay, stoppingToken).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException) { }
         }
 
         private void HandleWork()

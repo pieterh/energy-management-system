@@ -118,12 +118,19 @@ namespace AlfenNG9xx
                     {
                         Logger.Error("Partial Modbus packaged received, we try later again");
                     }
+                    catch (Exception e) when (e.Message.StartsWith("Timeout connecting", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Logger.Error("{Message}", e.Message);
+                        Logger.Error("Disposing connection and we try again later");
+                        DisposeModbusMaster();
+                        await Delay(2500, stoppingToken).ConfigureAwait(false);
+                    }                    
                     catch (Exception e)
                     {
                         Logger.Error(e, "Unhandled, we try later again\n");
                         Logger.Error("Disposing connection");
                         DisposeModbusMaster();
-                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
+                        await Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
 
@@ -132,6 +139,15 @@ namespace AlfenNG9xx
             {
                 Logger.Error(ex, "Alfen NG9xx - Unhandled exception");
             }
+        }
+
+        private static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
+        {
+            try
+            {
+                await Task.Delay(millisecondsDelay, stoppingToken).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException) { }
         }
 
         private void HandleWork()

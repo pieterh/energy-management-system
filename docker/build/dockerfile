@@ -19,6 +19,7 @@ ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000/tcp
 
 COPY $BACKEND/ /app/ems/
+COPY build/EMS.runtimeconfig.json /app/ems/EMS.runtimeconfig.json
 RUN rm /app/ems/NLog.config
 RUN rm /app/ems/config.json
 RUN ls -la /app/ems
