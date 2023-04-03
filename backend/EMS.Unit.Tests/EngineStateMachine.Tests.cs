@@ -11,10 +11,10 @@ namespace EMS.Tests
 {
     public class EngineStateMachine
     {
-        private int MIN_DELAY;
-        private int DELAY;
-        private int DELAY_SMALL;
-        private ChargingStateMachine _stateMachine;
+        private readonly int MIN_DELAY;
+        private readonly int DELAY;
+        private readonly int DELAY_SMALL;
+        private readonly ChargingStateMachine _stateMachine;
 
         public EngineStateMachine()
         {

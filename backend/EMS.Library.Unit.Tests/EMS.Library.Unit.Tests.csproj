@@ -4,7 +4,7 @@
 		<IsPackable>false</IsPackable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<AssemblyName>EMS.Library.Tests</AssemblyName>
+		<AssemblyName>EMS.Library.Unit.Tests</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="FluentAssertions" Version="6.10.0" />
@@ -25,6 +25,10 @@
 		<PackageReference Include="Moq" Version="4.18.4" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />

@@ -1,7 +1,15 @@
 ﻿using System;
 using BenchmarkDotNet.Running;
 
-//BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(new string[] { "-d" });
+namespace P1SmartMeter.Benchmark.Tests;
 
-var summary = BenchmarkRunner.Run(typeof(Program).Assembly, null, new string[] { "--filter", "*Multiple*"});
-
+public static class Program
+{
+    public static void Main()
+    {
+#pragma warning disable CA1852
+#pragma warning disable CS8625
+#pragma warning disable S1481
+        var summary = BenchmarkRunner.Run(typeof(Program).Assembly, null, new string[] { "--filter", "*Multiple*" });
+    }
+}

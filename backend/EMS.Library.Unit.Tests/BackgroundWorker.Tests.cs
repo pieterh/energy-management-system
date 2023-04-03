@@ -9,9 +9,11 @@ using Moq;
 using Moq.Protected;
 using EMS.Library;
 using FluentAssertions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BackgroundWorker
 {
+    [SuppressMessage("","S125")]
     public class BackgroundWorkerTests
     {
         [Fact]
@@ -32,6 +34,7 @@ namespace BackgroundWorker
         }
 
         [Fact]
+        [SuppressMessage("","S3966")]
         public void CreateAndDoubleDispose()
         {
             var mock = new Mock<EMS.Library.BackgroundWorker>

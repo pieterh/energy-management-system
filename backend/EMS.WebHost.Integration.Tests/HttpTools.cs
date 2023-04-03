@@ -1,6 +1,7 @@
 ﻿using System;
 using EMS.WebHost.Controllers;
 using System.Net.Http.Json;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.WebHost.Integration.Tests
 {
@@ -8,8 +9,11 @@ namespace EMS.WebHost.Integration.Tests
     internal static class HttpTools
 	{
 #if DEBUG
+        
         private const string _dashes = "----------------------------";
+        [SuppressMessage("", "CA1303")]
 #endif
+
         public static async Task<bool> MethodNotAllowed(Uri baseUri, Methods method, string path)
         {
             HttpResponseMessage response;
@@ -38,7 +42,7 @@ namespace EMS.WebHost.Integration.Tests
                 default:
                     return true;
             }
-            
+
 #if DEBUG
             Console.WriteLine(_dashes);
             Console.WriteLine(response.StatusCode);

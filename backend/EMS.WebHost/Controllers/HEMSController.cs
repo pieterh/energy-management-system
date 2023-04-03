@@ -37,14 +37,17 @@ namespace EMS.WebHosts
         [Produces("application/json")]
         public ActionResult<SessionInfoModel> GetHemsInfo()
         {
-            var info = new HemsInfoModel();
             var t = Hems.ChargeControlInfo;
-            info.Mode = t.Mode.ToString();
-            info.State = t.State.ToString();
-            info.LastStateChange = t.LastStateChange;
-            info.CurrentAvailableL1Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
-            info.CurrentAvailableL2Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
-            info.CurrentAvailableL3Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A");
+
+            var info = new HemsInfoModel() {
+                Mode = t.Mode.ToString(),
+                State = t.State.ToString(),
+                LastStateChange = t.LastStateChange,
+                CurrentAvailableL1Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A"),
+                CurrentAvailableL2Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A"),
+                CurrentAvailableL3Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A")
+            };
+            
             var measurements = new List<Measurement>();
 
             foreach (var m in t.Measurements)
@@ -61,7 +64,7 @@ namespace EMS.WebHosts
                 });
             }
 
-            return new JsonResult(new HemsInfoResponse() { Info = info, Measurements = measurements });
+            return new JsonResult(new HemsInfoResponse() { Status = 200, StatusText = "OK",  Info = info, Measurements = measurements });
         }
 
         [Route("api/[controller]/sessions")]
@@ -92,7 +95,7 @@ namespace EMS.WebHosts
                 }
             }
 
-            return new JsonResult(new HemsLastSessionsResponse() { Sessions = sessions });
+            return new JsonResult(new HemsLastSessionsResponse() { Status = 200, StatusText = "OK", Sessions = sessions });
         }
 
         private static string PrepareDouble(double f, int digits, string unitOfMeasurement)
@@ -105,18 +108,18 @@ namespace EMS.WebHosts
 
     public class HemsInfoResponse : Response
     {
-        public HemsInfoModel Info { get; set; }
-        public IEnumerable<Measurement> Measurements { get; set; }
+        public required HemsInfoModel Info { get; init; }
+        public required IEnumerable<Measurement> Measurements { get; init; }
     }
 
     public class HemsInfoModel
     {
-        public string Mode { get; set; }
-        public string State { get; set; }
-        public DateTime LastStateChange { get; set; }
-        public string CurrentAvailableL1Formatted { get; set; }
-        public string CurrentAvailableL2Formatted { get; set; }
-        public string CurrentAvailableL3Formatted { get; set; }
+        public required string Mode { get; init; }
+        public required string State { get; init; }
+        public required DateTime LastStateChange { get; init; }
+        public required string CurrentAvailableL1Formatted { get; init; }
+        public required string CurrentAvailableL2Formatted { get; init; }
+        public required string CurrentAvailableL3Formatted { get; init; }
     }
 
     public class Measurement
@@ -134,14 +137,14 @@ namespace EMS.WebHosts
 
     public class HemsLastSessionsResponse : Response
     {
-        public IEnumerable<Session> Sessions { get; set; }
+        public required IEnumerable<Session> Sessions { get; init; }
     }
 
     public class Session
     {
-        public DateTime Timestamp { get; set; }
-        public decimal EnergyDelivered { get; set; }
-        public decimal Cost { get; set; }
-        public decimal Price { get; set; }
+        public required DateTime Timestamp { get; init; }
+        public required decimal EnergyDelivered { get; init; }
+        public required decimal Cost { get; init; }
+        public required decimal Price { get; init; }
     }
 }

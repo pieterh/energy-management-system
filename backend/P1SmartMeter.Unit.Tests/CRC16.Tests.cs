@@ -4,6 +4,7 @@ using Xunit;
 using FluentAssertions;
 
 using NLog.Filters;
+using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter.CRC16Tests
 {
@@ -17,17 +18,10 @@ namespace P1SmartMeter.CRC16Tests
         }
 
         [Fact(DisplayName = "ComputeChecksum(ReadOnlySpan<byte> bytes) will NOT throw ArgumentNullException")]
-        public void ComputeChecksumNull1()
+        public void ComputeChecksumNull()
         {
             Action act = () => CRC16.ComputeChecksum(null);
-            var t = act.Should().NotThrow<ArgumentNullException>();            
-        }
-
-        [Fact(DisplayName = "ComputeChecksum(ReadOnlySpan<byte> bytes) will NOT throw ArgumentNullException")]
-        public void ComputeChecksumNull2()
-        {
-            Action act = () => CRC16.ComputeChecksum(null);
-            _ = act.Should().NotThrow<ArgumentNullException>();
+            _ = act.Should().NotThrow<ArgumentNullException>();            
         }
 
         [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will NOT throw ArgumentNullException")]
@@ -37,15 +31,24 @@ namespace P1SmartMeter.CRC16Tests
             _ = act.Should().NotThrow<ArgumentNullException>();
         }
 
-        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentNullException")]
+        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentException when empty string is passed")]
         public void ValidateChecksumNull2()
         {
+            Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, string.Empty);
+            _ = act.Should().Throw<ArgumentException>();
+        }
+
+        [Fact(DisplayName = "ValidateChecksum(byte[] bytes, string checksum) will throw ArgumentNullException")]        
+        public void ValidateChecksumNull3()
+        {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             Action act = () => CRC16.ValidateChecksum(new byte[] { 0x00 }, null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             _ = act.Should().Throw<ArgumentNullException>();
         }
 
         [Fact(DisplayName = "ValidateChecksum(ReadOnlySpan<byte>, ushort checksum) will NOT throw ArgumentNullException")]
-        public void ValidateChecksumNull3()
+        public void ValidateChecksumNull4()
         {
             Action act = () => CRC16.ValidateChecksum(null, 0x1234);
             _ = act.Should().NotThrow<ArgumentNullException>();

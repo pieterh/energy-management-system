@@ -19,34 +19,30 @@ namespace EMS.Library.JSon
         }
 
         public static JsonSchema GetSchema(System.Reflection.Assembly assembly, string schemaFile)
-        {           
+        {
             var mySchema = JsonSchema.FromText(ResourceHelper.ReadAsString(assembly, schemaFile));
             return mySchema;
         }
 
-        public static void ShowEvaluationDetails(IReadOnlyList<EvaluationResults> results) {
-            if (results == null) throw new ArgumentNullException(nameof(results));
-#if DEBUG
-            Console.WriteLine(results.Count);
-#endif
+        public static void ShowEvaluationDetails(IReadOnlyList<EvaluationResults> results)
+        {
+            ArgumentNullException.ThrowIfNull(results);
+
             results.Where((x) => !x.IsValid)
                 .AsParallel()
                 .ForAll((invalid) =>
                     {
                         if (invalid.Details.Count > 0)
                             ShowEvaluationDetails(invalid.Details);
-                        else
+                        if (invalid.HasErrors && invalid.Errors != null)
                         {
-                            Logger.Error(invalid.SchemaLocation);
-                            if (invalid.HasErrors && invalid.Errors != null)
+                            Logger.Error(invalid.InstanceLocation);
+                            foreach (var error in invalid.Errors)
                             {
-                                foreach (var error in invalid.Errors)
-                                {
-                                    Logger.Error(error.Value);
-                                }
+                                Logger.Error(error.Value);
                             }
-                        }
-                    } );
+                        }                       
+                    });
         }
     }
 }

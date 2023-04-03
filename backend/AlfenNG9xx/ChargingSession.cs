@@ -15,18 +15,13 @@ namespace AlfenNG9xx
         private DateTime _chargingStart;
         private bool _isCharging;
 
-        private Tariff _currentTariff;
+        private Tariff? _currentTariff;
         private double _meterReadingStartTariff;
 
 
-        public ChargeSessionInfoBase ChargeSessionInfo { get; private set; }
+        public ChargeSessionInfoBase ChargeSessionInfo { get; private set; } = DefaultSessionInfo();
 
-        public ChargingSession()
-        {
-            ChargeSessionInfo = DefaultSessionInfo();
-        }
-
-        public void UpdateSession(SocketMeasurement newMeasurement, Tariff newTariff)
+        public void UpdateSession(SocketMeasurement newMeasurement, Tariff? newTariff)
         {
             if (newMeasurement == null) return;
 

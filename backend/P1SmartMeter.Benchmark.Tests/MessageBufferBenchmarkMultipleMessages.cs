@@ -1,19 +1,13 @@
-﻿using System.Text;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using FluentAssertions;
-using BenchmarkDotNet.Configs;
-
-namespace P1SmartMeter.Benchmark.Tests;
+﻿namespace P1SmartMeter.Benchmark.Tests;
 
 [MemoryDiagnoser]
 [Config(typeof(Config))]
 [SimpleJob(RuntimeMoniker.Net70)]
-//[SimpleJob(RuntimeMoniker.NativeAot70)]
 public class MessageBufferBenchmarkMultipleMessages
 {
-    private class Config : ManualConfig
+    [SuppressMessage("", "CA1812")]
+    [SuppressMessage("", "S125")]
+    private sealed class Config : ManualConfig
     {
         public Config()
         {
@@ -34,9 +28,9 @@ public class MessageBufferBenchmarkMultipleMessages
         mb.Add(message_1);
         mb.Add("/ISK5\\2M550T-1013\n\r1-3:0.2.8(50)<noise>");
         mb.Add(message_1);
-        var a = mb.TryTake(out _);
-        var b = mb.TryTake(out _);
-        var c = mb.TryTake(out _);
+        _ = mb.TryTake(out _);
+        _ = mb.TryTake(out _);
+        _ = mb.TryTake(out _);
         mb.IsEmpty.Should().BeTrue();
     }
 
@@ -50,9 +44,9 @@ public class MessageBufferBenchmarkMultipleMessages
         mb.Add(message_1);
         mb.Add("/ISK5\\2M550T-1013\n\r1-3:0.2.8(50)<noise>");
         mb.Add(message_1);
-        var a = mb.TryTake(out _);
-        var b = mb.TryTake(out _);
-        var c = mb.TryTake(out _);
+        _ = mb.TryTake(out _);
+        _ = mb.TryTake(out _);
+        _ = mb.TryTake(out _);
         mb.IsEmpty.Should().BeTrue();
     }
 

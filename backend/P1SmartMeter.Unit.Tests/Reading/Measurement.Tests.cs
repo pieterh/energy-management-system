@@ -13,7 +13,9 @@ namespace P1SmartMeter.ReadingTests
         [Fact]
         public void ChecksForNull()
         {
-            Action act = () => { var m = new Measurement(null); };
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+            Action act = () => { _ = new Measurement(null); };
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             act.Should().Throw<ArgumentNullException>();
         }
 

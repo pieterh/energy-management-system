@@ -20,6 +20,7 @@ namespace AlfenNG9xx.Tests
     public class AlfenTests
     {
         [Fact]
+        [SuppressMessage("","S1215")]
         public void DisposesProperly()
         {
             byte[] piBytes = {
@@ -55,6 +56,7 @@ namespace AlfenNG9xx.Tests
             Assert.True(mock.Object.isDisposed);
         }
         [Fact]
+        [SuppressMessage("","S1215")]
         public void DisposesCanSafelyCalledTwice()
         {
             byte[] piBytes = {
@@ -119,6 +121,8 @@ namespace AlfenNG9xx.Tests
 
             var pi = mock.Object.ReadProductIdentification();
 
+            pi.Should().NotBeNull();
+            if (pi == null) Assert.True(false);
             Assert.Equal("ALF-0000300", pi.Name);
             Assert.Equal("Alfen NV", pi.Manufacturer);
             Assert.Equal(1, pi.TableVersion);

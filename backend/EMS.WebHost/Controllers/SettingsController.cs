@@ -36,12 +36,12 @@ namespace EMS.WebHosts
         [Produces("application/json")]
         public ActionResult<bool> Post([FromBody] SettingsModel model)
         {
-            return true; throw new NotImplementedException();
+            return true;
         }
     }
 
     public class SettingsModel
     {
-        public string theme { get; set; }
+        public required string theme { get; init; }
     }
 }

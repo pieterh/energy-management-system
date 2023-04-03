@@ -13,7 +13,7 @@ namespace EMS.Library.dotNET
             logger.Info("System version (CLR's version): {SystemVersion}", RuntimeEnvironment.GetSystemVersion());
             // The following is a bit more detailed then the information from the API -> RuntimeInformation.FrameworkDescription
             logger.Info("CoreCLR Build: {Build}", ((AssemblyInformationalVersionAttribute[])typeof(object).Assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false))[0].InformationalVersion);
-            // The following is a bit more detailed then the information from the API -> Environment.Version;
+            // The following is a bit more detailed then the information from the API -> Environment.Version
             logger.Info("CoreFX Build: {Build}", ((AssemblyInformationalVersionAttribute[])typeof(Uri).Assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false))[0].InformationalVersion);
 
             logger.Info("OSArchitecture: {OSArchitecture}", RuntimeInformation.OSArchitecture);

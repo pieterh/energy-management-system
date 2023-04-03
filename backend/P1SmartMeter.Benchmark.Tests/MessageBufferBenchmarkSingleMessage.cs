@@ -1,18 +1,15 @@
-﻿using System.Text;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
-namespace P1SmartMeter.Benchmark.Tests;
+﻿namespace P1SmartMeter.Benchmark.Tests;
 
 [MemoryDiagnoser]
 [Config(typeof(Config))]
 [SimpleJob(RuntimeMoniker.Net70)]
 public class MessageBufferBenchmarkSingleMessage
 {
-    private class Config : ManualConfig
+    [SuppressMessage("", "CA1812")]
+    [SuppressMessage("", "S125")]
+    private sealed class Config : ManualConfig
     {
+        [SuppressMessage("", "S1144")]
         public Config()
         {
             AddJob(Job.MediumRun.WithGcServer(true).WithGcForce(true).WithId("ServerForce"));
@@ -22,20 +19,24 @@ public class MessageBufferBenchmarkSingleMessage
         }
     }
 
+    [Fact]
     [Benchmark(Description = "Single - baseline", Baseline = true)]
     public void Test1()
     {
         var mb = new MessageBufferBaseline();
         mb.Add(message_1);
         mb.TryTake(out _);
+        mb.IsEmpty.Should().BeTrue();
     }
 
+    [Fact]
     [Benchmark(Description = "Single - optimized")]
     public void Test2()
     {
         var mb = new MessageBuffer();
         mb.Add(message_1);
         mb.TryTake(out _);
+        mb.IsEmpty.Should().BeTrue();
     }
 
     private static string MsgToString(params string[] message)

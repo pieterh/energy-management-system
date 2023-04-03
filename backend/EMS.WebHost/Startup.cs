@@ -13,13 +13,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 using EMS.WebHost.Helpers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.WebHost
 {
     public record WebConfig
     {
         public ushort Port { get; set; }
-        public JwtConfig Jwt { get; set; }
+        public JwtConfig? Jwt { get; set; }
         public bool https { get; set; }
     }
 
@@ -30,19 +31,23 @@ namespace EMS.WebHost
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _configuration;
 
-        public WebConfig WebConfig { get; set; }
-        private ILogger Logger { get; set; }
+        public WebConfig? WebConfig { get; set; }
+        private ILogger? Logger { get; set; }
 
         public IWebHostEnvironment Env => _env;
         public IConfiguration Configuration => _configuration;
+
+        [SuppressMessage("Code Analysis", "CA1810")]
+        static Startup()
+        {
+            // don't map any claims.. we don't need old style xml schema claims...
+            JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+        }
 
         public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
             _env = env;
             _configuration = configuration;
-
-            // don't map any claims.. we don't need old style xml schema claims...
-            JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -51,16 +56,7 @@ namespace EMS.WebHost
             Configuration.GetSection("web").Bind(wc);
             WebConfig = wc;
 
-            // not nice to create the service here
-            // and we also need a reference to the service later
-            // hence we did add it as a dummy arg to configure....
-            // nog te doen: fix this weird dependency
-            IJwtService jwtCreator = null;
-            services.AddSingleton<IJwtService>((x) =>
-            {
-                jwtCreator = ActivatorUtilities.CreateInstance<JwtTokenService>(x);
-                return jwtCreator;
-            });
+            services.AddSingleton<IJwtService, JwtTokenService>();
 
             services.AddControllers();
 
@@ -76,9 +72,13 @@ namespace EMS.WebHost
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
+            .AddJwtBearer();
+
+            services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
-                options.TokenValidationParameters = jwtCreator.GetTokenValidationParameters();
+                JwtConfig j = new();
+                Configuration.GetSection("web:jwt").Bind(j);
+                options.TokenValidationParameters = JwtTokenService.CreateTokenValidationParameters(Configuration);
                 options.SaveToken = true;
             });
 
@@ -107,7 +107,7 @@ namespace EMS.WebHost
             });
         }
 
-        public void Configure(ILogger<Startup> logger, IApplicationBuilder app, IJwtService t /*see comment above*/)
+        public void Configure(ILogger<Startup> logger, IApplicationBuilder app)
         {
             Logger = logger;
             if (Env.IsDevelopment())

@@ -32,13 +32,14 @@ namespace P1SmartMeter.Telegram.DSMR
 
             PowerFailures = GetValue<int?>(TelegramDefinition.PowerFailures);
             PowerFailuresLong = GetValue<int?>(TelegramDefinition.PowerFailuresLong);
-            PowerFailureEventLog = new List<PowerFailureEvent>();
+            var powerFailureEventLog = new List<PowerFailureEvent>();
             var t = GetValues(TelegramDefinition.PowerFailureEventLog);
             var nr = GetValue<int>(TelegramDefinition.PowerFailureEventLog);
             for (int i = 2; i < 2 + (nr * 2); i += 2)
             {
-                PowerFailureEventLog.Add(new PowerFailureEvent((DateTime)t[i], ((ValueTuple<int, string>)t[i + 1]).Item1));
+                powerFailureEventLog.Add(new PowerFailureEvent((DateTime)t[i], ((ValueTuple<int, string>)t[i + 1]).Item1));
             }
+            PowerFailureEventLog = powerFailureEventLog.AsReadOnly();
             PowerSagsL1 = GetValue<int?>(TelegramDefinition.PowerSagsL1);
             PowerSagsL2 = GetValue<int?>(TelegramDefinition.PowerSagsL2);
             PowerSagsL3 = GetValue<int?>(TelegramDefinition.PowerSagsL3);
@@ -73,9 +74,12 @@ namespace P1SmartMeter.Telegram.DSMR
 
             var mbusClient = GetValue<int?>(fields.Type);
             if (mbusClient == null)
-                return null;
+                return MBusDevice.NotPresent;
 
             var ident = GetValue<string>(fields.Ident);
+            if (string.IsNullOrWhiteSpace(ident))
+                return MBusDevice.NotPresent;
+
             var measurementInfo = GetValues(fields.Measurement);
 
             DateTime timestamp = default;
@@ -87,22 +91,22 @@ namespace P1SmartMeter.Telegram.DSMR
                 measurement = (System.ValueTuple<double, System.String>)measurementInfo[1];
             }
 
-            var retval = new MBusDevice((MBusDevice.DeviceTypes)mbusClient, ident, timestamp, measurement.Item1, measurement.Item2);
+            var retval =  new MBusDevice((MBusDevice.DeviceTypes)mbusClient, ident, timestamp, measurement.Item1, measurement.Item2);
             return retval;
         }
 
-        public string VersionInformation { get; }
+        public string? VersionInformation { get; }
         public DateTime? Timestamp { get; }
-        public string EquipmentIdentifier { get; }
+        public string? EquipmentIdentifier { get; }
 
-        public string TextMessage { get; }
+        public string? TextMessage { get; }
 
         public double? ActualPowerUse { get; }
         public double? ActualPowerReturn { get; }
 
         public int? PowerFailures { get; }
         public int? PowerFailuresLong { get; }
-        public IList<PowerFailureEvent> PowerFailureEventLog { get; }
+        public IReadOnlyList<PowerFailureEvent> PowerFailureEventLog { get; }
         public int? PowerSagsL1 { get; }
         public int? PowerSagsL2 { get; }
         public int? PowerSagsL3 { get; }
@@ -162,7 +166,8 @@ namespace P1SmartMeter.Telegram.DSMR
     // device types are taken from "OMS-Spec_Vol2_Primary_v421", page 17, table 2
     public record MBusDevice
     {
-        public MBusDevice() { }
+        public static MBusDevice NotPresent => new MBusDevice(DeviceTypes.None, String.Empty, DateTime.UnixEpoch, 0, string.Empty );
+
         public MBusDevice(DeviceTypes type, string identifier, DateTime measurementTimestamp, double measurement, string units)
         {
             DeviceType = type;

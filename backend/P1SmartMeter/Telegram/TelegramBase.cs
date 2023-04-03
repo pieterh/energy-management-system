@@ -13,24 +13,25 @@ namespace P1SmartMeter.Telegram
         private static partial Regex KeyValueParser();
 
         public IList<TelegramField> Fields { get; } = new List<TelegramField>();
-        public string Header { get; private set; }
-        public string Crc16 { get; private set; }
-        public string Crc16Recalculated { get; private set; }
+        public string Header { get; init; } = string.Empty;
+        public string Crc16 { get; init; } = string.Empty;
+        public string Crc16Recalculated { get; init; } = string.Empty;
 
         public TelegramBase(ITelegramDefinition definition, string raw, bool validateCRC = false)
         {
             ArgumentNullException.ThrowIfNull(definition);
-            var fieldDefinitions = definition.GetFieldDefinitions();
+            if (string.IsNullOrWhiteSpace(raw)) return;
 
-            if (string.IsNullOrEmpty(raw))
-            {
-                return;
-            }
+            var fieldDefinitions = definition.GetFieldDefinitions();
 
             if (validateCRC)
             {
                 ReadOnlySpan<byte> bytes = Encoding.ASCII.GetBytes(raw);
                 Crc16Recalculated = CRC16.ComputeChecksumAsString(bytes);
+            }
+            else
+            {
+                Crc16Recalculated = string.Empty;
             }
 
             var lines = raw.Split(
@@ -83,10 +84,10 @@ namespace P1SmartMeter.Telegram
             return field == null ? Array.Empty<object>() : field.Values;
         }
 
-        protected T GetValue<T>(string fieldCode)
+        protected T? GetValue<T>(string fieldCode)
         {
             var values = GetValues(fieldCode);
-            return values == null || values.Count == 0 ? default(T) : (T)values.FirstOrDefault();
+            return values == null || values.Count == 0 ? default(T) : (T)values.First();
         }
 
         public override string ToString()

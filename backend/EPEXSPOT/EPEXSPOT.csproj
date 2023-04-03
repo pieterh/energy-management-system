@@ -1,31 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Microsoft.Extensions.Hosting" />
-    <None Remove="Microsoft.Extensions.Http" />
-    <None Remove="schemas\" />
-    <None Remove="schemas\getapxtariffs.schema.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" />
-    <PackageReference Include="JsonSchema.Net" Version="4.0.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="schemas\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="schemas\getapxtariffs.schema.json" LogicalName="getapxtariffs.schema.json" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Microsoft.Extensions.Hosting" />
+		<None Remove="Microsoft.Extensions.Http" />
+		<None Remove="schemas\" />
+		<None Remove="schemas\getapxtariffs.schema.json" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+		<PackageReference Include="System.Text.Json" Version="7.0.2" />
+		<PackageReference Include="JsonSchema.Net" Version="4.0.2" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="schemas\" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="schemas\getapxtariffs.schema.json" LogicalName="getapxtariffs.schema.json" />
+	</ItemGroup>
 </Project>

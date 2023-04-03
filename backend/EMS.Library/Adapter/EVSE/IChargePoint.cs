@@ -38,14 +38,15 @@ namespace EMS.Library
         public virtual StringBuilder ToPrintableString()
         {
             var retval = new StringBuilder();
-            retval.AppendFormat("Name                       : {0}", Name);
-            retval.AppendFormat("Manufacturer               : {0}", Manufacturer);
-            retval.AppendFormat("Firmware version           : {0}", FirmwareVersion);
-            retval.AppendFormat("Model                      : {0}", Model);
-            retval.AppendFormat("Station serial             : {0}", StationSerial);
-            retval.AppendFormat("Uptime                     : {0}", Uptime);
-            retval.AppendFormat("Up since                   : {0}", UpSinceUtc.ToString("O"));
-            retval.AppendFormat("Date UTC                   : {0}", DateTimeUtc.ToString("O"));
+            retval.AppendLine();
+            retval.AppendFormat("Name                       : {0}{1}", Name, Environment.NewLine);
+            retval.AppendFormat("Manufacturer               : {0}{1}", Manufacturer, Environment.NewLine);
+            retval.AppendFormat("Firmware version           : {0}{1}", FirmwareVersion, Environment.NewLine);
+            retval.AppendFormat("Model                      : {0}{1}", Model, Environment.NewLine);
+            retval.AppendFormat("Station serial             : {0}{1}", StationSerial, Environment.NewLine);
+            retval.AppendFormat("Uptime                     : {0}{1}", Uptime, Environment.NewLine);
+            retval.AppendFormat("Up since                   : {0}{1}", UpSinceUtc.ToString("O"), Environment.NewLine);
+            retval.AppendFormat("Date UTC                   : {0}{1}", DateTimeUtc.ToString("O"), Environment.NewLine);
             return retval;
         }
     }
@@ -87,7 +88,7 @@ namespace EMS.Library
 
     public interface IChargePoint : IAdapter, IHostedService
     {
-        SocketMeasurementBase LastSocketMeasurement { get; }
+        SocketMeasurementBase? LastSocketMeasurement { get; }
         ChargeSessionInfoBase ChargeSessionInfo { get; }
 
         ProductInformation ReadProductInformation();

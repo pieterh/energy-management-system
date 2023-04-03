@@ -11,6 +11,7 @@ using EMS.Library.Core;
 
 namespace EMS.Tests
 {
+    [SuppressMessage("","S125")]
     public class ComputeMaxCharge
     {
         [Fact]

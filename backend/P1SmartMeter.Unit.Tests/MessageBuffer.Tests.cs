@@ -1,10 +1,7 @@
 using System;
 using System.Text;
 
-using Xunit;
 using Moq;
-using FluentAssertions;
-
 using P1SmartMeter;
 
 namespace P1SmartMeter.MessageBufferTests
@@ -29,7 +26,7 @@ namespace P1SmartMeter.MessageBufferTests
         private const string tc14 = "14 - Overflowing buffer with new complete message";
         private const string tc15 = "15 - Currupt data followed by two complete fake messages";
 
-        private Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
+        private readonly Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
         public MessageBufferTests()
         {
             dataSet.Add(tc01, new TestItem[]
@@ -181,10 +178,9 @@ namespace P1SmartMeter.MessageBufferTests
             foreach (var item in items)
             {
                 errorRaised = false;
-                var hasMessage = mock.Object.Add(item.Data);
-                string msg;
+                _ = mock.Object.Add(item.Data);
 
-                mock.Object.TryTake(out msg).Should().Be(item.ExpectMessage);
+                mock.Object.TryTake(out _).Should().Be(item.ExpectMessage);
                 errorRaised.Should().Be(item.ExpectError);
 #if DEBUG
                 Console.WriteLine(item.Data);
@@ -273,9 +269,9 @@ namespace P1SmartMeter.MessageBufferTests
             errorRaised = false;
 
 
-            mock.Object.TryTake(out string msg).Should().Be(true);
+            mock.Object.TryTake(out string? msg).Should().Be(true);
             msg.Should().BeEquivalentTo(MsgToString(message_2), "Since the first message is dropped");
-            string lastMsg = string.Empty;
+            string? lastMsg = string.Empty;
             while (mock.Object.TryTake(out msg))
             {
                 lastMsg = msg;
@@ -307,9 +303,9 @@ namespace P1SmartMeter.MessageBufferTests
 
             errorRaised.Should().Be(true, "Because the buffer has overflowed");
 
-            mock.Object.TryTake(out string msg).Should().Be(true, "There should be an message available");
+            mock.Object.TryTake(out string? msg).Should().Be(true, "There should be an message available");
             msg.Should().BeEquivalentTo(MsgToString(message_2), "Since the first message is dropped");
-            string lastMsg = string.Empty;
+            string? lastMsg = string.Empty;
             while (mock.Object.TryTake(out msg))
             {
                 lastMsg = msg;

@@ -39,23 +39,20 @@ namespace EMS
         public sealed record Options
         {
             [Option("config", Required = true, HelpText = "Filename of config.")]
-            public string ConfigFile { get; set; }
+            public string? ConfigFile { get; set; }
             [Option("nlogcfg", Required = false, HelpText = "Filename of the nlog file.")]
-            public string NLogConfig { get; set; }
+            public string? NLogConfig { get; set; }
             [Option("nlogdebug", Required = false, Default = false, HelpText = "Throw nlog internal exceptions. Not for production usage.")]
             public bool NLogDebug { get; set; }
         }
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static NLog.Targets.ColoredConsoleTarget _logconsole;
+        private static NLog.Targets.ColoredConsoleTarget _logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole") { UseDefaultRowHighlightingRules = true };
 
         static void Main(string[] args)
         {
             try
             {
-                _logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
-                _logconsole.UseDefaultRowHighlightingRules = true;
-
                 EnforceLogging();
 
                 Options options = new();
@@ -77,7 +74,7 @@ namespace EMS
                 ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
                 Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "git.commit.hash.txt").Trim('\n', '\r')}");
                 Logger.Info("============================================================");
-                DotNetInfo.Info(Logger);              
+                DotNetInfo.Info(Logger);
                 Logger.Info("============================================================");
                 Logger.Info("Garbage Collector Configuration");
                 DotNetInfo.GCInfo(Logger);
@@ -153,7 +150,7 @@ namespace EMS
                 {
                     IHostEnvironment env = builderContext.HostingEnvironment;
                     Logger.Info($"Hosting environment: {env.EnvironmentName}");
-                    if (ConfigurationManager.ValidateConfig(options.ConfigFile))
+                    if (ConfigurationManager.ValidateConfig(options.ConfigFile) && !string.IsNullOrWhiteSpace(options?.ConfigFile))
                     {
                         configuration.Sources.Clear();
                         configuration
@@ -227,22 +224,40 @@ namespace EMS
             {
                 Logger.Debug($"Instance [{instance.Name}]");
                 var adapter = GetAdapter(adapters, instance.AdapterId);
-                Logger.Debug($"Instance [{instance.Name}], loading assembly {adapter.Driver.Assembly}");
+                if (adapter != null)
+                {
+                    Logger.Debug($"Instance [{instance.Name}], loading assembly {adapter.Driver.Assembly}");
 
-                var adapterAssembly = Assembly.Load(adapter.Driver.Assembly);
-                Logger.Debug($"Instance [{instance.Name}], loaded assembly from location {adapterAssembly.Location}");
+                    var adapterAssembly = Assembly.Load(adapter.Driver.Assembly);
+                    Logger.Debug($"Instance [{instance.Name}], loaded assembly from location {adapterAssembly.Location}");
 
-                var adapterType = adapterAssembly.GetType(adapter.Driver.Type);
-                Logger.Debug($"Instance [{instance.Name}], type {adapterType.FullName} loaded");
+                    var adapterType = adapterAssembly.GetType(adapter.Driver.Type);
+                    if (adapterType != null)
+                    {
+                        Logger.Debug($"Instance [{instance.Name}], type {adapterType.FullName} loaded");
 
-                Logger.Debug($"Instance [{instance.Name}], configuring services");
-                adapterType.GetMethod("ConfigureServices", BindingFlags.Static | BindingFlags.Public)
-                                .Invoke(null, new object[] { hostingContext, services, instance });
-                Logger.Debug($"Instance [{instance.Name}], configuring services done");
+                        Logger.Debug($"Instance [{instance.Name}], configuring services");
+                        const string methodName = "ConfigureServices";
+
+                        var method = adapterType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+                        if (method != null)
+                        {
+                            method.Invoke(null, new object[] { hostingContext, services, instance });
+                            Logger.Debug($"Instance [InstanceName], configuring services done", instance.Name);
+                        }
+                        else
+                        {
+                            Logger.Error("The method {MethodName} was not found for adapter type {AdapeterType}", methodName, adapter.Driver.Type);
+                        }
+                    }
+                    else
+                        Logger.Error("The adapter type {AdapeterType} was not found", adapter.Driver.Type);
+                }else
+                    Logger.Error("The adapter with id {Id} was not found", instance.AdapterId);
             }
         }
 
-        public static Adapter GetAdapter(List<Adapter> adapters, Guid adapterid)
+        public static Adapter? GetAdapter(List<Adapter> adapters, Guid adapterid)
         {
             foreach (var adapter in adapters)
             {

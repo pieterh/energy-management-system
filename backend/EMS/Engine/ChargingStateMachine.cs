@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using EMS.Library;
 using EMS.Library.Core;
 using EMS.Library.TestableDateTime;
@@ -10,6 +11,7 @@ namespace EMS.Engine
 
         public ChargingState Current { get; set; } = ChargingState.NotCharging;
         public DateTime LastStateChange { get; set; } = DateTimeProvider.Now;
+        [SuppressMessage("Code Analysis","CA1707")]
         public const int DEFAULT_MINIMUM_TRANSITION_TIME = (6*60); // seconds
 
         public int MinimumTransitionTime { get; set; }

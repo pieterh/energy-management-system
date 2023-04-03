@@ -10,7 +10,7 @@ namespace EMS.Library.Adapter.SmartMeterAdapter
 
     public interface ISmartMeterAdapter : IAdapter, IHostedService
     {
-        public SmartMeterMeasurementBase LastMeasurement { get; }
+        public SmartMeterMeasurementBase? LastMeasurement { get; }
 
 
         public event EventHandler<SmartMeterMeasurementAvailableEventArgs> SmartMeterMeasurementAvailable;

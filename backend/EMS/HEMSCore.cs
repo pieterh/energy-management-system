@@ -142,14 +142,14 @@ namespace EMS
             Logger.LogInformation("5. OnStopped has been called.");
         }
 
-        private void SmartMeter_MeasurementAvailable(object sender, SmartMeterMeasurementAvailableEventArgs e)
+        private void SmartMeter_MeasurementAvailable(object? sender, SmartMeterMeasurementAvailableEventArgs e)
         {
             Logger.LogInformation("- {Measurement}", e.Measurement);
 
-            _compute.AddMeasurement(e.Measurement, _chargePoint.LastSocketMeasurement);
+            _compute.AddMeasurement(e.Measurement, e.Measurement);
         }
 
-        private void ChargePoint_ChargingStateUpdate(object sender, ChargingStateEventArgs e)
+        private void ChargePoint_ChargingStateUpdate(object? sender, ChargingStateEventArgs e)
         {
             Logger.LogInformation("- {StateMessage}, {Ended}, {Delivered}, €{Cost} ",
                 e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered, e.Cost);
@@ -181,11 +181,14 @@ namespace EMS
                         var detail = new CostDetail()
                         {
                             Timestamp = c.Timestamp,
-                            EnergyDelivered = (double)energy,
-                            Cost = (double)(energy * c.Tariff.TariffUsage),
-                            TarifStart = c.Tariff.Timestamp,
-                            TarifUsage = (double)c.Tariff.TariffUsage
+                            EnergyDelivered = (double)energy,  
                         };
+                        if (c.Tariff != null)
+                        {
+                            detail.Cost = (double)(energy * c.Tariff.TariffUsage);
+                            detail.TarifStart = c.Tariff.Timestamp;
+                            detail.TarifUsage = (double)c.Tariff.TariffUsage;
+                        }
                         db.Add(detail);
 
                         LoggerChargingcost.Debug(detail.ToString());
@@ -199,9 +202,16 @@ namespace EMS
             }
         }
 
-        private void Compute_StateUpdate(object sender, StateUpdateEventArgs e)
+        private void Compute_StateUpdate(object? sender, StateUpdateEventArgs e)
         {
-            LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
+            if (e.Info != null)
+            {
+                LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
+            }
+            else
+            {
+                LoggerChargingState.Info($"Mode information not available");
+            }
         }
     }
 }

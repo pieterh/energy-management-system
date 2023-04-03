@@ -1,73 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup>      
-    <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
-    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
-  </PropertyGroup>
-  <Target Name="GitInfo" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
-    <Message Text="get git commit hash"></Message>
-    <Exec Command="git rev-parse HEAD &gt; git.commit.hash.txt" />
-  </Target>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj" />
-    <ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
-    <ProjectReference Include="..\P1SmartMeter\P1SmartMeter.csproj" />
-    <ProjectReference Include="..\EMS.WebHost\EMS.WebHost.csproj" />
-    <ProjectReference Include="..\EPEXSPOT\EPEXSPOT.csproj" />
-    <ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="NLog" Version="5.1.3" />
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="5.2.3" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="5.2.3" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" />
-    <PackageReference Include="JsonSchema.Net" Version="4.0.2" />
-    <PackageReference Include="Microsoft.Json.Schema.Validation" Version="2.3.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="config.json" />
-    <None Remove="NLog.config" />
-    <None Remove="git.commit.hash.txt" />
-    <None Remove="Engine\Model\" />
-    <None Remove="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
-    <None Remove="Microsoft.EntityFrameworkCore.InMemory" />
-    <None Remove="Schemas\" />
-    <None Remove="Schemas\config.schema.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Schemas\config.schema.json">
-      <LogicalName>config.schema.json</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="git.commit.hash.txt" LogicalName="git.commit.hash.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="git.commit.hash.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Engine\" />
-    <Folder Include="Engine\Model\" />
-    <Folder Include="Schemas\" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup>
+		<IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+		<GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+	</PropertyGroup>
+	<Target Name="GitInfo" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
+		<Message Text="get git commit hash">
+		</Message>
+		<Exec Command="git rev-parse HEAD &gt; git.commit.hash.txt" />
+	</Target>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\AlfenNG9xx\AlfenNG9xx.csproj" />
+		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
+		<ProjectReference Include="..\P1SmartMeter\P1SmartMeter.csproj" />
+		<ProjectReference Include="..\EMS.WebHost\EMS.WebHost.csproj" />
+		<ProjectReference Include="..\EPEXSPOT\EPEXSPOT.csproj" />
+		<ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="NLog" Version="5.1.3" />
+		<PackageReference Include="CommandLineParser" Version="2.9.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="5.2.3" />
+		<PackageReference Include="NLog.Web.AspNetCore" Version="5.2.3" />
+		<PackageReference Include="System.Text.Json" Version="7.0.2" />
+		<PackageReference Include="JsonSchema.Net" Version="4.0.2" />
+		<PackageReference Include="Microsoft.Json.Schema.Validation" Version="2.3.0" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="config.json" />
+		<None Remove="NLog.config" />
+		<None Remove="git.commit.hash.txt" />
+		<None Remove="Engine\Model\" />
+		<None Remove="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
+		<None Remove="Microsoft.EntityFrameworkCore.InMemory" />
+		<None Remove="Schemas\" />
+		<None Remove="Schemas\config.schema.json" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Schemas\config.schema.json">
+			<LogicalName>config.schema.json</LogicalName>
+		</EmbeddedResource>
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="git.commit.hash.txt" LogicalName="git.commit.hash.txt" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="config.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="NLog.config">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Include="git.commit.hash.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Engine\" />
+		<Folder Include="Engine\Model\" />
+		<Folder Include="Schemas\" />
+	</ItemGroup>
 </Project>

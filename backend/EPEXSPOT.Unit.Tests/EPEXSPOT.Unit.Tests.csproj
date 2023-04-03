@@ -1,12 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
+		<IsTestProject>true</IsTestProject>
 		<TargetFramework>net7.0</TargetFramework>
 		<IsPackable>false</IsPackable>
+		<IsPublishable>false</IsPublishable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<AssemblyName>EPEXSPOT.Tests</AssemblyName>
 	</PropertyGroup>
-
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EPEXSPOT\EPEXSPOT.csproj" />
 	</ItemGroup>
@@ -34,8 +42,13 @@
 		</PackageReference>
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+		<PackageReference Include="FluentAssertions" Version="6.10.0" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Properties\" />
+		<Folder Include="Properties\" />
 	</ItemGroup>
 </Project>

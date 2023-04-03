@@ -11,7 +11,7 @@ namespace P1SmartMeter
 
         public const int BufferCapacity = 2560;
 
-        public event EventHandler<DataErrorEventArgs> DataError;
+        public event EventHandler<DataErrorEventArgs> DataError = delegate { };
 
         private readonly byte[] _buffer = new byte[BufferCapacity];
         private int _position;
@@ -57,7 +57,7 @@ namespace P1SmartMeter
                 {
                     _position = 0;
                 }
-                OnDataError(new DataErrorEventArgs() { Message = "buffer overflow, data purged from buffer" });
+                OnDataError(new DataErrorEventArgs("Buffer overflow, data purged from buffer"));
             }
 
             Buffer.BlockCopy(ascii.GetBytes(data), 0, _buffer, _position, data.Length);
@@ -69,12 +69,12 @@ namespace P1SmartMeter
             return _position;
         }
 
-        public bool TryTake(out string msg)
+        public bool TryTake(out string? msg)
         {
             return RetrieveMessageFromBuffer(out msg);
         }
 
-        private bool RetrieveMessageFromBuffer(out string msg)
+        private bool RetrieveMessageFromBuffer(out string? msg)
         {
             msg = null;
             bool bufferChanged;
@@ -110,7 +110,7 @@ namespace P1SmartMeter
             return -1;
         }
 
-        private string HandleMessageInBuffer(int msgLength)
+        private string? HandleMessageInBuffer(int msgLength)
         {
             var mbytes = new byte[msgLength];
             var checksumbytes = new byte[4];
@@ -131,7 +131,7 @@ namespace P1SmartMeter
 
             var msgChecksum = Encoding.ASCII.GetString(checksumbytes);
             var calculatedChecksum = CRC16.ComputeChecksumAsString(mbytes.AsSpan().Slice(0, mbytes.Length - 6));
-            string msg = null;
+            string? msg = null;
 
             if (string.Equals(msgChecksum, calculatedChecksum, StringComparison.OrdinalIgnoreCase))
             {
@@ -146,7 +146,7 @@ namespace P1SmartMeter
                 LoggerP1Messages.Error($"---------- start ---------- crc {msgChecksum} != {calculatedChecksum}{Environment.NewLine}{logmsg}");
                 LoggerP1Messages.Error($"---------- end   ----------");
                 // crc error
-                OnDataError(new DataErrorEventArgs() { Message = $"crc {msgChecksum} != {calculatedChecksum}" });
+                OnDataError(new DataErrorEventArgs($"crc {msgChecksum} != {calculatedChecksum}"));
             }
 
             return msg;
@@ -168,14 +168,14 @@ namespace P1SmartMeter
                 Buffer.BlockCopy(_buffer, start, _buffer, 0, _position - start);
                 _position -= start;
                 Logger.Debug($"bytes in buffer {_position}, ");
-                OnDataError(new DataErrorEventArgs() { Message = "partial" });
+                OnDataError(new DataErrorEventArgs("partial") );
             }
             else if (start == _position)
             {
                 Logger.Debug(@"discarding all bytes");
                 var tmp = new byte[_position];
                 Buffer.BlockCopy(_buffer, 0, tmp, 0, _position);
-                OnDataError(new DataErrorEventArgs() { Message = "partial", Data = Encoding.ASCII.GetString(tmp) });
+                OnDataError(new DataErrorEventArgs("partial") { Data = Encoding.ASCII.GetString(tmp) });
                 _position = 0;
             }
         }

@@ -39,6 +39,7 @@ public class TariffTests
             var t = EPEXSPOT.FindTariff(
                         new Tariff[] { new Tariff(new DateTime(2021, 12, 29, 13, 00, 00), 0, 0) },
                         new DateTime(2021, 12, 29, 12, 00, 00, DateTimeKind.Unspecified));
+            t.Should().NotBeNull();
         });
     }
 }

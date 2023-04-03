@@ -145,7 +145,7 @@ namespace EMS.Engine
             bool done = false;
             do
             {
-                if (_measurements.TryPeek(out Measurement m))
+                if (_measurements.TryPeek(out Measurement? m))
                 {
                     var t = DateTimeProvider.Now - m.Received;
                     if (t.TotalSeconds >= BufferSeconds)

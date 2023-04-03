@@ -14,7 +14,7 @@ namespace EMS.WebHost.Helpers
         }
         public override void Write(Utf8JsonWriter writer, float value, JsonSerializerOptions options)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            ArgumentNullException.ThrowIfNull(writer);
             writer.WriteStringValue(string.Format(_cultureInfo, "{0:F0}", value));
         }
     }
@@ -28,7 +28,7 @@ namespace EMS.WebHost.Helpers
         }
         public override void Write(Utf8JsonWriter writer, float value, JsonSerializerOptions options)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            ArgumentNullException.ThrowIfNull(writer);
             writer.WriteStringValue(string.Format(_cultureInfo, "{0:F1}", value));
         }
     }

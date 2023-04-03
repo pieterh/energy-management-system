@@ -107,7 +107,7 @@ namespace EPEXSPOT
             {
                 await Task.Delay(millisecondsDelay, stoppingToken).ConfigureAwait(false);
             }
-            catch (TaskCanceledException) { }
+            catch (TaskCanceledException) { /* ignoring */ }
         }
 
         private void HandleWork()

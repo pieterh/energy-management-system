@@ -1,8 +1,10 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using EMS.Library.Adapter.EVSE;
 
 namespace AlfenNG9xx.Model
 {
+    [SuppressMessage("Code Analysis", "CA1707")]
     public enum MeterType
     {
         RTU = 0,

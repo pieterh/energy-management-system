@@ -10,6 +10,10 @@ namespace P1SmartMeter.Connection
 
     internal sealed class DataArrivedEventArgs : EventArgs
     {
-        public string Data { get; set; }
+        public string Data { get; init; }
+        public DataArrivedEventArgs(string data)
+        {
+            Data = data;
+        }
     }
 }

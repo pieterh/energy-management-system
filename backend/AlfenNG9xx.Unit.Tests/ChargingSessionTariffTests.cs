@@ -39,7 +39,7 @@ namespace AlfenNG9xx.Tests
                 Assert.Equal<Decimal>(3.82m, t.ChargeSessionInfo.Cost);
                 fakeDate = NextMeasurement(fakeDate, t, sm, 10*60, 4000, Mode3State.C2, tariff3);      // 10 min op C2 (charging)
                 Assert.Equal<Decimal>(4.34m, t.ChargeSessionInfo.Cost);
-                fakeDate = NextMeasurement(fakeDate, t, sm, 60, 0, Mode3State.E, tariff4);          // 1 min op E (disconnected)
+                _ = NextMeasurement(fakeDate, t, sm, 60, 0, Mode3State.E, tariff4);          // 1 min op E (disconnected)
                 Assert.True(t.ChargeSessionInfo.SessionEnded);
 
                 // session has ended, let's see the result of this simple charging session

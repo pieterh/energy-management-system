@@ -15,8 +15,9 @@ namespace P1SmartMeter.Telegram.DSMR
             Measurement = m;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
+            if (obj is null) return false;
             if (obj is not MBusClientFields) return false;
             var other = (MBusClientFields)obj;
             return Equals(other);
