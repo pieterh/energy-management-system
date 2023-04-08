@@ -15,9 +15,6 @@ RUN rm /app/ems/config.json
 
 RUN ls -la /app/ems
 RUN ls -la /app/ems/dist
-RUN ls -la /app/ems/dist/_framework
-RUN ls -la /app/ems/dist/_content
-RUN ls -la /app/ems/dist/_content/MudBlazor
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh
