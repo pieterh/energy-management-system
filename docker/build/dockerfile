@@ -6,10 +6,6 @@ RUN chmod ugo+r /usr/local/bin/entrypoint.sh
 
 RUN mkdir /app
 RUN mkdir /app/ems
-RUN chmod ugo+x /app
-RUN chmod ugo+x /app/ems
-RUN chmod ugo+r /app
-RUN chmod ugo+r /app/ems
 
 ARG BACKEND
 ARG FEREACT
@@ -20,11 +16,21 @@ EXPOSE 5000/tcp
 
 COPY $BACKEND/ /app/ems/
 COPY build/EMS.runtimeconfig.json /app/ems/EMS.runtimeconfig.json
-RUN rm /app/ems/NLog.config
-RUN rm /app/ems/config.json
-RUN ls -la /app/ems
+RUN rm -f /app/ems/NLog.config
+RUN rm -f /app/ems/config.json
+RUN rm -f -R /app/ems/dist/*
 
 COPY $FEBLAZORWASM/wwwroot /app/ems/dist/
+
+RUN chmod ugo+x /app
+RUN chmod ugo+x /app/ems
+RUN chmod ugo+r /app
+RUN chmod ugo+r /app/ems
+
+RUN ls -la /app/ems
 RUN ls -la /app/ems/dist
+RUN ls -la /app/ems/dist/_framework
+RUN ls -la /app/ems/dist/_content
+RUN ls -la /app/ems/dist/_content/MudBlazor
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

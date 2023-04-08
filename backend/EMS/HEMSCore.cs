@@ -78,13 +78,13 @@ namespace EMS
                     var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
                     foreach (var item in items)
                     {
-                        Logger.LogInformation("Transaction: {Trans}", item.ToString());
+                        Logger.LogTrace("Transaction: {Trans}", item.ToString());
                         db.Entry(item)
                             .Collection(b => b.CostDetails)
                             .Load();
                         foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp))
                         {
-                            Logger.LogInformation("Transaction detail: {Detail}", detail.ToString());
+                            Logger.LogTrace("Transaction detail: {Detail}", detail.ToString());
                         }
                     }
                 }
@@ -144,7 +144,7 @@ namespace EMS
 
         private void SmartMeter_MeasurementAvailable(object? sender, SmartMeterMeasurementAvailableEventArgs e)
         {
-            Logger.LogInformation("- {Measurement}", e.Measurement);
+            Logger.LogTrace("- {Measurement}", e.Measurement);
 
             _compute.AddMeasurement(e.Measurement, e.Measurement);
         }

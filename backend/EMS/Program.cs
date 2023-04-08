@@ -31,6 +31,7 @@ using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using EMS.Library.dotNET;
+using Microsoft.AspNetCore.Http;
 
 namespace EMS
 {
@@ -159,6 +160,8 @@ namespace EMS
                     }
                     else
                         Logger.Error("There was an error with the configuration file");
+                    
+
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
@@ -204,7 +207,13 @@ namespace EMS
                                 builder.UseHttps();
                             }
                         });
+
                     });
+
+                    Logger.Info("Updating root folders");
+                    webBuilder.UseContentRoot(string.Empty);
+                    webBuilder.UseWebRoot("dist");
+
                     webBuilder.UseStartup<Startup>();
                 }).Build();
 
@@ -252,7 +261,8 @@ namespace EMS
                     }
                     else
                         Logger.Error("The adapter type {AdapeterType} was not found", adapter.Driver.Type);
-                }else
+                }
+                else
                     Logger.Error("The adapter with id {Id} was not found", instance.AdapterId);
             }
         }

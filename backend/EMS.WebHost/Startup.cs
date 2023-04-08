@@ -14,6 +14,9 @@ using Microsoft.OpenApi.Models;
 
 using EMS.WebHost.Helpers;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
 namespace EMS.WebHost
 {
@@ -82,6 +85,33 @@ namespace EMS.WebHost
                 options.SaveToken = true;
             });
 
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+
+                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] {
+                        "image/jpeg",
+                        "image/png",
+                        "application/font-woff2",
+                        "image/svg+xml",
+                        "application/octet-stream",
+                        "application/wasm"
+                });
+
+                options.EnableForHttps = true;
+            });
+
+            services.Configure<BrotliCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Fastest;
+            });
+
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.SmallestSize;
+            });
+
 #if DEBUG
             services.AddCors(options =>
             {
@@ -99,12 +129,6 @@ namespace EMS.WebHost
                       });
             });
 #endif
-
-            //In production, the React files will be served from this directory
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "dist";
-            });
         }
 
         public void Configure(ILogger<Startup> logger, IApplicationBuilder app)
@@ -147,9 +171,38 @@ namespace EMS.WebHost
 
             app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
-            app.UseStaticFiles();
+            app.UseResponseCompression();
+            //app.UseStaticFiles();
 
-            app.UseMiddleware<Middleware.SpaMiddleware>(Logger);
+            var provider = new FileExtensionContentTypeProvider();
+            provider.Mappings.Clear();
+            // Add new mappings
+            provider.Mappings[".blat"] = "application/octet-stream";
+            provider.Mappings[".br"] = "application/x-brotli";
+            provider.Mappings[".css"] = "text/css";
+            provider.Mappings[".dll"] = "application/octet-stream";
+            provider.Mappings[".gif"] = "image/gif";
+            provider.Mappings[".htm"] = "text/html";
+            provider.Mappings[".html"] = "text/html";
+            provider.Mappings[".dat"] = "application/octet-stream";
+            provider.Mappings[".jpg"] = "image/jpg";
+            provider.Mappings[".js"] = "text/javascript";
+            provider.Mappings[".json"] = "application/json";
+            provider.Mappings[".png"] = "image/png";
+            provider.Mappings[".wasm"] = "application/wasm";
+            provider.Mappings[".woff"] = "application/font-woff";
+            provider.Mappings[".woff2"] = "application/font-woff";
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Path.Combine(Env.ContentRootPath, "dist")),
+                RequestPath = string.Empty,
+                ContentTypeProvider = provider,
+                DefaultContentType = "application/octet-stream",
+                ServeUnknownFileTypes = true
+            });
+
+            //app.UseMiddleware<Middleware.SpaMiddleware>(Logger);
 
             app.UseRouting();
 
@@ -175,6 +228,13 @@ namespace EMS.WebHost
                 Logger.LogInformation("{Path}", context.Request.Path);
                 return next.Invoke();
             });
+
+            Logger.LogInformation("============================================================");
+            Logger.LogInformation("Web Host Environment");
+            Logger.LogInformation("ApplicationName: {ApplicationName}", _env.ApplicationName);
+            Logger.LogInformation("EnvironmentName: {EnvironmentName}", _env.EnvironmentName);
+            Logger.LogInformation("ContentRootPath: {ContentRootPath}", _env.ContentRootPath);
+            Logger.LogInformation("WebRootPath {WebRootPath}", _env.WebRootPath);
         }
     }
 }

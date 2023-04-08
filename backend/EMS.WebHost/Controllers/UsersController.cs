@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using EMS.WebHost.Helpers;
+using Microsoft.AspNetCore.Hosting;
 
 namespace EMS.WebHost.Controllers
 {
@@ -43,17 +44,21 @@ namespace EMS.WebHost.Controllers
         public required string Name { get; init; }
     }
 
+    
+
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
         private ILogger Logger { get; init; }
+        private readonly IWebHostEnvironment _env;
         private readonly IJwtService _jwtService;
 
-        public UsersController(ILogger<UsersController> logger, IJwtService jwtService)
+        public UsersController(ILogger<UsersController> logger, IWebHostEnvironment env, IJwtService jwtService)
         {
             Logger = logger;
+            _env = env;
             _jwtService = jwtService;
         }
 
@@ -88,6 +93,8 @@ namespace EMS.WebHost.Controllers
         [HttpGet("ping")]
         public IActionResult Ping()
         {
+
+
             var id = User.Claims.First<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub).Value;
             var name = User.Claims.First<Claim>((x) => x.Type == "name").Value;
             foreach (var c in User.Claims)

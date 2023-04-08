@@ -53,6 +53,8 @@
 		<None Remove="Microsoft.EntityFrameworkCore.InMemory" />
 		<None Remove="Schemas\" />
 		<None Remove="Schemas\config.schema.json" />
+		<None Remove="dist_template_files\readme.html" />
+		<None Remove="dist_template_files\" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="Schemas\config.schema.json">
@@ -77,5 +79,17 @@
 		<Folder Include="Engine\" />
 		<Folder Include="Engine\Model\" />
 		<Folder Include="Schemas\" />
+		<Folder Include="dist_template_files\" />
 	</ItemGroup>
+	<ItemGroup>
+	  <AssetsSourceFiles Include="dist_template_files\readme.html" />
+	</ItemGroup>
+<!--	<ItemGroup>
+		<None Update="wwwroot\index.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>-->
+	<Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+		<Copy SourceFiles="@(AssetsSourceFiles)" DestinationFolder="$(OutputPath)\dist" SkipUnchangedFiles="true" />
+	</Target>
 </Project>
