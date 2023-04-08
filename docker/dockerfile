@@ -3,18 +3,21 @@ from mcr.microsoft.com/dotnet/aspnet:latest
 
 RUN mkdir /app
 RUN mkdir /app/ems
-RUN chmod ugo+x /app
-RUN chmod ugo+x /app/ems
-RUN chmod ugo+r /app
-RUN chmod ugo+r /app/ems
+RUN mkdir /app/ems/dist
 
 COPY backend/EMS/bin/Release/net7.0/ /app/ems/
+RUN rm -R /app/ems/dist/.
+COPY frontend/EMS.ReactApp/dist/ /app/ems/dist/
+RUN chmod -R ugo+x /app
+
 RUN rm /app/ems/NLog.config
 RUN rm /app/ems/config.json
+
 RUN ls -la /app/ems
-COPY frontend/EMS.ReactApp/dist/ /app/ems/dist/
 RUN ls -la /app/ems/dist
-RUN ls -la /app/ems/dist/app
+RUN ls -la /app/ems/dist/_framework
+RUN ls -la /app/ems/dist/_content
+RUN ls -la /app/ems/dist/_content/MudBlazor
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh
