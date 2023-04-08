@@ -6,7 +6,7 @@ RUN mkdir /app/ems
 RUN mkdir /app/ems/dist
 
 COPY backend/EMS/bin/Release/net7.0/ /app/ems/
-RUN rm -R /app/ems/dist/.
+RUN rm -f -R /app/ems/dist/*
 COPY frontend/EMS.ReactApp/dist/ /app/ems/dist/
 RUN chmod -R ugo+x /app
 
