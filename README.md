@@ -49,9 +49,12 @@ The recommended method is to use Docker compose (See below). For instructions ho
 
 ### Docker compose
 ```
-mkdir /hems
-cd /hems
+mkdir hems
+cd hems
+mkdir config
 ```
+
+create config.json and a NLog.config in the 'config' subfolder. You can find examples of these in this repository folder docker/tests/config/
 
 *docker-compose.yml*
 
@@ -64,11 +67,13 @@ services:
     container_name: hems
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8080:5000"
     volumes:
       - ./config:/app/ems/userdata
     environment:
       - TZ=Europe/Amsterdam
+      - EMS_PATHS_CONFIG=/app/ems/userdata/config.json
+      - EMS_PATHS_NLOG=/app/ems/userdata/NLog.config
 ```
 
 You can use the following two options to start the container:
@@ -97,12 +102,13 @@ docker pull pieterhil/energy-management-system:latest
 
 ```
 docker run -d \
-    -p 8080:8080 \
+    -p 8080:5000 \
     -p 8443:443 \
-    -v <path for config files>:/app/ems/userdata \
-    -e TZ=Europe/Amsterdam
-    --device=<device_id> \
-    --name=hems \ 
+    -v config:/app/ems/userdata \
+    -e TZ=Europe/Amsterdam \
+    -e EMS_PATHS_CONFIG=/app/ems/userdata/config.json \
+    -e EMS_PATHS_NLOG=/app/ems/userdata/NLog.config \
+    --name=hems \
     pieterhil/energy-management-system:latest
 ```
 
