@@ -1,10 +1,7 @@
 using System;
 using System.Text;
 
-using Xunit;
 using Moq;
-using FluentAssertions;
-
 using P1SmartMeter;
 
 namespace P1SmartMeter.MessageBufferTests
@@ -20,13 +17,16 @@ namespace P1SmartMeter.MessageBufferTests
         private const string tc06 = "06 - Last part message 1, followed by complete message 2";
         private const string tc07 = "07 - First part message 1, followed by complete message 2";
         private const string tc08 = "08 - First part message 1, followed by complete message 2 in mulitple chunks";
-        private const string tc08b = "08b - First part message 1, followed by complete message 2 in mulitple chunks";
+        private const string tc09 = "09 - First part message 1, followed by complete message 2 in mulitple chunks";
 
-        private const string tc09 = "09 - Corrupt message 1, followed by complete message 2";
-        private const string tc10 = "10 - Partial message 1 that includes end-marker and crc is in second chunk";
-        private const string tc11 = "11 - Partial message 1 that includes end-marker, followed by the rest in multiple chunks";
+        private const string tc10 = "10 - Corrupt message 1, followed by complete message 2";
+        private const string tc11 = "11 - Partial message 1 that includes end-marker and crc is in second chunk";
+        private const string tc12 = "12 - Partial message 1 that includes end-marker, followed by the rest in multiple chunks";
+        private const string tc13 = "13 - Overflowing buffer with random data";
+        private const string tc14 = "14 - Overflowing buffer with new complete message";
+        private const string tc15 = "15 - Currupt data followed by two complete fake messages";
 
-        private Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
+        private readonly Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
         public MessageBufferTests()
         {
             dataSet.Add(tc01, new TestItem[]
@@ -81,22 +81,22 @@ namespace P1SmartMeter.MessageBufferTests
             dataSet.Add(tc08, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, 30) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage = false, ExpectError = true } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage = true, ExpectError = false } ,
+                }
+            );
+
+            dataSet.Add(tc09, new TestItem[]
+                {
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
                     new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
                     new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
                 }
             );
 
-            dataSet.Add(tc08b, new TestItem[]
-                {
-                                new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
-                                new TestItem() { Data = MsgToString(message_2).Substring(0, 10) , ExpectMessage=false, ExpectError=true } ,
-                                new TestItem() { Data = MsgToString(message_2).Substring(10, 10) , ExpectMessage=false, ExpectError=false } ,
-                                new TestItem() { Data = MsgToString(message_2).Substring(20), ExpectMessage=true, ExpectError=false } ,
-                }
-            );
-
-            dataSet.Add(tc09, new TestItem[]
+            dataSet.Add(tc10, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - 25) , ExpectMessage = false, ExpectError = true } ,
@@ -104,13 +104,13 @@ namespace P1SmartMeter.MessageBufferTests
                     new TestItem() { Data = MsgToString(message_2).Substring(10) , ExpectMessage = true, ExpectError = false }
                 }
             );
-            dataSet.Add(tc10, new TestItem[]
+            dataSet.Add(tc11, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (4+2)) , ExpectMessage = true, ExpectError = false } ,
                 }
             );
-            dataSet.Add(tc11, new TestItem[]
+            dataSet.Add(tc12, new TestItem[]
                 {
                     new TestItem() { Data = MsgToString(message_1).Substring(0, MsgToString(message_1).Length - (4+2)) , ExpectMessage = false, ExpectError = false } ,
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (6), 1) , ExpectMessage = false, ExpectError = false } ,
@@ -121,6 +121,31 @@ namespace P1SmartMeter.MessageBufferTests
                     new TestItem() { Data = MsgToString(message_1).Substring(MsgToString(message_1).Length - (1), 1) , ExpectMessage = true, ExpectError = false }
                 }
             );
+            dataSet.Add(tc13, new TestItem[]
+                {
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(10, 5) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = new string('X', MessageBuffer.BufferCapacity / 3) , ExpectMessage = false, ExpectError = false },
+                    new TestItem() { Data = new string('Y', MessageBuffer.BufferCapacity / 3) , ExpectMessage = false, ExpectError = false },
+                    new TestItem() { Data = new string('Z', MessageBuffer.BufferCapacity / 3) , ExpectMessage = false, ExpectError = true },
+                    new TestItem() { Data = MsgToString(message_1) , ExpectMessage = true, ExpectError = false }
+                }
+            );
+            dataSet.Add(tc14, new TestItem[]
+                {
+                    new TestItem() { Data = MsgToString(message_1).Substring(0, 10) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = MsgToString(message_1).Substring(10, 5) , ExpectMessage = false, ExpectError = false } ,
+                    new TestItem() { Data = new string('A', MessageBuffer.BufferCapacity - 40) , ExpectMessage = false, ExpectError = false },
+                    new TestItem() { Data = string.Concat("/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!148A\r\n", MsgToString(message_1), MsgToString(message_1)) , ExpectMessage = true, ExpectError = true }
+                }
+            );
+            dataSet.Add(tc15, new TestItem[]
+                {
+                    new TestItem() { Data = string.Concat("AA/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!B243\r\n", "/ISK5\\2M550T-10131-0:62.7.0(00.000*kW)!B243\r\n") , ExpectMessage = true, ExpectError = true },
+                    new TestItem() { Data = string.Empty , ExpectMessage = true, ExpectError = false },
+                    new TestItem() { Data = string.Empty , ExpectMessage = false, ExpectError = false }
+                }
+            );
         }
 
         [Theory]
@@ -129,13 +154,16 @@ namespace P1SmartMeter.MessageBufferTests
         [InlineData(tc03)]
         [InlineData(tc04)]
         [InlineData(tc05)]
-        [InlineData(tc06)]        
+        [InlineData(tc06)]
         [InlineData(tc07)]
         [InlineData(tc08)]
-        [InlineData(tc08b)]
         [InlineData(tc09)]
         [InlineData(tc10)]
         [InlineData(tc11)]
+        [InlineData(tc12)]
+        [InlineData(tc13)]
+        [InlineData(tc14)]
+        [InlineData(tc15)]
         public void Add(string testCase)
         {
             var items = dataSet[testCase];
@@ -150,15 +178,33 @@ namespace P1SmartMeter.MessageBufferTests
             foreach (var item in items)
             {
                 errorRaised = false;
-                var hasMessage = mock.Object.Add(item.Data);
-                string msg;
+                _ = mock.Object.Add(item.Data);
 
-                mock.Object.TryTake(out msg).Should().Be(item.ExpectMessage);
+                mock.Object.TryTake(out _).Should().Be(item.ExpectMessage);
                 errorRaised.Should().Be(item.ExpectError);
 #if DEBUG
                 Console.WriteLine(item.Data);
 #endif
             }
+        }
+
+        [Fact]
+        public void SingleMessageAddAndRetrieve()
+        {
+            var mock = new Mock<MessageBuffer>();
+            var errorRaised = false;
+
+            mock.Object.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            var msgSnd = MsgToString(message_1);
+            mock.Object.Add(msgSnd);
+            mock.Object.TryTake(out var retrievedMsg).Should().BeTrue("Since we just added one complete message");
+
+            retrievedMsg.Should().BeEquivalentTo(msgSnd, "We expecting the same as we put in");
+            errorRaised.Should().BeFalse("We expecting no errors while handling this message");
         }
 
         [Fact]
@@ -173,7 +219,7 @@ namespace P1SmartMeter.MessageBufferTests
             };
 
             var msg = MsgToString(message_1);
-            while(mock.Object.BufferUsed + msg.Length < MessageBuffer.BufferCapacity)
+            while (mock.Object.BufferUsed + msg.Length < MessageBuffer.BufferCapacity)
             {
                 mock.Object.Add(msg);
             }
@@ -223,10 +269,10 @@ namespace P1SmartMeter.MessageBufferTests
             errorRaised = false;
 
 
-            mock.Object.TryTake(out string msg).Should().Be(true);
+            mock.Object.TryTake(out string? msg).Should().Be(true);
             msg.Should().BeEquivalentTo(MsgToString(message_2), "Since the first message is dropped");
-            string lastMsg = string.Empty;
-            while(mock.Object.TryTake(out msg))
+            string? lastMsg = string.Empty;
+            while (mock.Object.TryTake(out msg))
             {
                 lastMsg = msg;
             }
@@ -244,28 +290,90 @@ namespace P1SmartMeter.MessageBufferTests
             {
                 errorRaised = true;
             };
+
             var sb = new StringBuilder();
             sb.Append(MsgToString(message_1));  // first message to stringbuilder
-            var msg2 = MsgToString(message_2);  // add a bunch of message 2 to the stringbuilder
+            var msg2 = MsgToString(message_2);  // add a bunch of message 2 to the stringbuilder           
             for (int i = 0; i < 10; i++)
             {
                 sb.Append(msg2);
             }
             sb.Append(MsgToString(message_3));  // and message three to stringbuilder
-
             mock.Object.Add(sb.ToString()); // add to the buffer
 
             errorRaised.Should().Be(true, "Because the buffer has overflowed");
 
-            mock.Object.TryTake(out string msg).Should().Be(true, "There should be an message available");
+            mock.Object.TryTake(out string? msg).Should().Be(true, "There should be an message available");
             msg.Should().BeEquivalentTo(MsgToString(message_2), "Since the first message is dropped");
-            string lastMsg = string.Empty;
+            string? lastMsg = string.Empty;
             while (mock.Object.TryTake(out msg))
             {
                 lastMsg = msg;
             }
             lastMsg.Should().BeEquivalentTo(MsgToString(message_3), "Last message should be number three");
             mock.Object.IsEmpty.Should().BeTrue("Because we did add only complete messages and have retrieved all off them that did fit in the buffer");
+        }
+
+        [Fact]
+        public void CanHandleDataErrorsWithoutSubscribers()
+        {
+            MessageBuffer mb = new();
+            mb.Add("");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+        }
+
+        [Fact]
+        public void CanHandleDataErrorsWithASubscriber()
+        {
+            MessageBuffer mb = new();
+            bool errorRaised = false;
+            mb.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            mb.Add("123");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            errorRaised.Should().Be(true);
+        }
+
+        [Fact]
+        public void CanHandleDataCRCMissing()
+        {
+            MessageBuffer mb = new();
+            bool errorRaised = false;
+            mb.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            mb.Add("/123!");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            errorRaised.Should().Be(false);
+        }
+
+        [Fact]
+        public void CanHandleDataCRCPartial()
+        {
+            MessageBuffer mb = new();
+            bool errorRaised = false;
+            mb.DataError += (sender, args) =>
+            {
+                errorRaised = true;
+            };
+
+            mb.Add("/123!");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("1D");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("AE");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("\r");
+            mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
+            mb.Add("\n");
+            mb.TryTake(out _).Should().BeTrue("There is now a 'complete' message in the buffer");
+            mb.BufferUsed.Should().Be(0, "We added and removed one complete message");
+            errorRaised.Should().Be(false, "There should be no errors handling this 'complete' message");
         }
 
         private static string MsgToString(string[] message)

@@ -17,7 +17,7 @@ namespace EMS.Library
         /// <exception cref="FileNotFoundException"></exception>
         public static string ReadAsString(System.Reflection.Assembly assembly, string resourceName)
         {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            ArgumentNullException.ThrowIfNull(assembly);
 #if DEBUG
             Logger.Trace($"looking for resources in {assembly.Location}");
             foreach (var s in assembly.GetManifestResourceNames())
@@ -34,7 +34,8 @@ namespace EMS.Library
 
         public static void LogAllResourcesInAssembly(System.Reflection.Assembly assembly)
         {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            ArgumentNullException.ThrowIfNull(assembly);
+
             Logger.Info($"Found following resources in assembly {assembly.GetName().FullName}");
             foreach (var r in assembly.GetManifestResourceNames())
             {

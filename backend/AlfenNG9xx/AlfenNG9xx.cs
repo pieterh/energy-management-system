@@ -11,6 +11,8 @@ using EMS.Library.Configuration;
 using EMS.Library.TestableDateTime;
 
 using AlfenNG9xx.Model;
+using EMS.Library.Core;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AlfenNG9xx
 {
@@ -23,16 +25,18 @@ namespace AlfenNG9xx
         private readonly IPriceProvider _priceProvider;
 
         private readonly object _modbusMasterLock = new();
-        private ModbusMaster _modbusMaster;
+        [SuppressMessage("Code Analysis","CA2213")]
+        private ModbusMaster? _modbusMaster;
+
         private readonly string _alfenIp;
         private readonly int _alfenPort;
         private readonly ChargingSession _chargingSession = new();
 
-        public SocketMeasurementBase LastSocketMeasurement { get; private set; }
+        public SocketMeasurementBase? LastSocketMeasurement { get; private set; }
         public ChargeSessionInfoBase ChargeSessionInfo { get { return _chargingSession.ChargeSessionInfo; } }
 
-        public event EventHandler<IChargePoint.StatusUpdateEventArgs> StatusUpdate;
-        public event EventHandler<IChargePoint.ChargingStateEventArgs> ChargingStateUpdate;
+        public event EventHandler<ChargingStatusUpdateEventArgs> ChargingStatusUpdate = delegate { };
+        public event EventHandler<ChargingStateEventArgs> ChargingStateUpdate = delegate { };
 
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
@@ -118,12 +122,19 @@ namespace AlfenNG9xx
                     {
                         Logger.Error("Partial Modbus packaged received, we try later again");
                     }
+                    catch (Exception e) when (e.Message.StartsWith("Timeout connecting", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Logger.Error("{Message}", e.Message);
+                        Logger.Error("Disposing connection and we try again later");
+                        DisposeModbusMaster();
+                        await Delay(2500, stoppingToken).ConfigureAwait(false);
+                    }                    
                     catch (Exception e)
                     {
                         Logger.Error(e, "Unhandled, we try later again\n");
                         Logger.Error("Disposing connection");
                         DisposeModbusMaster();
-                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
+                        await Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
 
@@ -132,6 +143,15 @@ namespace AlfenNG9xx
             {
                 Logger.Error(ex, "Alfen NG9xx - Unhandled exception");
             }
+        }
+
+        private static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
+        {
+            try
+            {
+                await Task.Delay(millisecondsDelay, stoppingToken).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException) { /* ignoring */ }
         }
 
         private void HandleWork()
@@ -145,7 +165,7 @@ namespace AlfenNG9xx
             var chargingStateChanged = LastSocketMeasurement?.Mode3State != sm.Mode3State;
 
             LastSocketMeasurement = sm;
-            StatusUpdate?.Invoke(this, new IChargePoint.StatusUpdateEventArgs(sm));
+            ChargingStatusUpdate?.Invoke(this, new ChargingStatusUpdateEventArgs(sm));
             if (chargingStateChanged)
             {
                 var sessionEnded = _chargingSession.ChargeSessionInfo.SessionEnded;
@@ -153,11 +173,11 @@ namespace AlfenNG9xx
                 var cost = _chargingSession.ChargeSessionInfo.Cost;
                 var costs = _chargingSession.ChargeSessionInfo.Costs;
 
-                foreach (var c in _chargingSession.ChargeSessionInfo.Costs)
+                foreach (Cost c in _chargingSession.ChargeSessionInfo.Costs)
                 {
-                    Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff.TariffUsage);
+                    Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff?.TariffUsage);
                 }
-                ChargingStateUpdate?.Invoke(this, new IChargePoint.ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
+                ChargingStateUpdate?.Invoke(this, new ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
             }
         }
 
@@ -165,7 +185,6 @@ namespace AlfenNG9xx
         protected virtual void ShowProductInformation()
         {
             var pi = ReadProductIdentification();
-            if (pi == null) return;
             Logger.Info(pi.ToPrintableString());
         }
 
@@ -221,12 +240,11 @@ namespace AlfenNG9xx
 #endif
         public ProductIdentification ReadProductIdentification()
         {
-            var result = new ProductIdentification();
             var pi = ReadHoldingRegisters(200, 100, 79);
-            if (pi == null) return null;
-
+            
             Logger.Trace(HexDumper.ConvertToHexDump(pi));
 
+            var result = new ProductIdentification();
             result.Name = Converters.ConvertRegistersToString(pi, 0, 17);
             result.Manufacturer = Converters.ConvertRegistersToString(pi, 17, 5);
             result.TableVersion = Converters.ConvertRegistersShort(pi, 22);

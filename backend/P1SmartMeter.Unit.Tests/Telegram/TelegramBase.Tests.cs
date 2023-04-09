@@ -13,7 +13,9 @@ namespace P1SmartMeter.TelegramTests
         public void HandlesNullRawData()
         {
             var td = new H();
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
             var tb = new TelegramBase(td, null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
             tb.Header.Should().BeNullOrWhiteSpace("without raw data, there is no header");
             tb.Crc16.Should().BeNullOrWhiteSpace("without raw data, there is no crc");
             tb.Fields.Count.Should().Be(0, "without raw data, there are no fields");

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,7 +7,6 @@ using Json.Schema;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.JSon;
 using EMS.Library.TestableDateTime;
-using System.Diagnostics.CodeAnalysis;
 
 namespace EPEXSPOT
 {
@@ -27,14 +27,15 @@ namespace EPEXSPOT
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
+            ArgumentNullException.ThrowIfNull(instance);
             BackgroundServiceHelper.CreateAndStart<IPriceProvider, EPEXSPOT>(services, instance.Config);
         }
 
         public EPEXSPOT(Config config, IHttpClientFactory httpClientFactory)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
-            Logger.Info($"EPEXSPOT({config.ToString().Replace(Environment.NewLine, " ")})");
-            
+            Logger.Info($"EPEXSPOT({config.ToString().Replace(Environment.NewLine, " ", StringComparison.Ordinal)})");
+
             _endpoint = !string.IsNullOrWhiteSpace(config.EndPoint) ? config.EndPoint : string.Empty;
             _httpClientFactory = httpClientFactory;
         }
@@ -81,7 +82,7 @@ namespace EPEXSPOT
                             Logger.Error("Exception: " + tce.Message);
                         }
                     }
-                    catch (Exception e) when (e.Message.StartsWith("Partial exception packet"))
+                    catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.Ordinal))
                     {
                         Logger.Error("Partial Modbus packaged received, we try later again");
                     }
@@ -89,15 +90,24 @@ namespace EPEXSPOT
                     {
                         Logger.Error("Exception: " + e.Message);
                         Logger.Error("Unhandled, we try later again");
-                        Logger.Error("Disposing connection");
-                        await Task.Delay(2500, stoppingToken).ConfigureAwait(false);
+                        await Delay(2500, stoppingToken).ConfigureAwait(false);
                     }
                 }
                 Logger.Info($"Canceled");
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Unhandled exception");
             }
+        }
+
+        private static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
+        {
+            try
+            {
+                await Task.Delay(millisecondsDelay, stoppingToken).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException) { /* ignoring */ }
         }
 
         private void HandleWork()
@@ -107,8 +117,8 @@ namespace EPEXSPOT
             if (_tariffs.Length > 12) return;
 
             var t = GetTariff(DateTimeProvider.Now.Date, DateTimeProvider.Now.Date.AddDays(2)).Result;
- 
-            _tariffs = RemoveOld(t);            
+
+            _tariffs = RemoveOld(t);
         }
 
         public Tariff? GetTariff()
@@ -131,12 +141,12 @@ namespace EPEXSPOT
                 { "endTimestamp", endUtc.ToString("o") }
             };
 
-            Uri uri = new (Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString));
+            Uri uri = new(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString));
 
             using var resultStream = await client.GetStreamAsync(uri).ConfigureAwait(false);
 
             using var streamReader = new StreamReader(resultStream);
-            var result = JsonSerializer.Deserialize<SpotTariff[]>(streamReader.BaseStream, new JsonSerializerOptions());            
+            var result = JsonSerializer.Deserialize<SpotTariff[]>(streamReader.BaseStream, new JsonSerializerOptions());
 
             // calculate consumer price by adding the 'opslag duurzame energie', 'energie belasting' and 'inkoopkosten'
             var r = from x in result
@@ -155,7 +165,7 @@ namespace EPEXSPOT
             var getapxtariffslasttimestampUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffslasttimestamp");
             using var resultStream = await client.GetStreamAsync(getapxtariffslasttimestampUri).ConfigureAwait(false);
             using var streamReader = new StreamReader(resultStream);
-            var result = JsonSerializer.Deserialize<DateTime>(streamReader.BaseStream, new JsonSerializerOptions());    
+            var result = JsonSerializer.Deserialize<DateTime>(streamReader.BaseStream, new JsonSerializerOptions());
 
             Logger.Info($"tariff lasttime -> {result}");
             return result;

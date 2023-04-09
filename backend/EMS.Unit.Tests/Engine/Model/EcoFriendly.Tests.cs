@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using EMS.Engine;
 using EMS.Engine.Model;
 using FluentAssertions;
@@ -8,6 +9,7 @@ using Xunit;
 
 namespace EMS.Tests.Engine.Model
 {
+    [SuppressMessage("Code Analyses","CA1707")]
 	public class EcoFriendlyTests
 	{
         [Fact]

@@ -19,11 +19,11 @@ namespace AlfenNG9xx.Model
         {
             var retval = base.ToPrintableString();
 
-            retval.AppendFormat("Table version              : {0}", TableVersion);
-            retval.AppendFormat("Platform type              : {0}", PlatformType);
-            retval.AppendFormat("Station serial             : {0}", StationSerial);
-            retval.AppendFormat("Date Local                 : {0}", DateTimeLocal.ToString("O"));
-            retval.AppendFormat("Timezone                   : {0}", StationTimezone);
+            retval.AppendFormat("Table version              : {0}{1}", TableVersion, Environment.NewLine);            
+            retval.AppendFormat("Platform type              : {0}{1}", PlatformType, Environment.NewLine);
+            retval.AppendFormat("Station serial             : {0}{1}", StationSerial, Environment.NewLine);
+            retval.AppendFormat("Date Local                 : {0}{1}", DateTimeLocal.ToString("O"), Environment.NewLine);
+            retval.AppendFormat("Timezone                   : {0}{1}", StationTimezone, Environment.NewLine);
             return retval;
         }
     }

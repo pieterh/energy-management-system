@@ -13,9 +13,9 @@ jobs:
   build_ems_app:
     name: Build and test
     runs-on: windows-latest # Need to run on windows due to roslyn analyzers not available (yet?) on linux
-    strategy:
-      matrix:
-        dotnet-version: [ '7.0.x' ]
+    env:
+        dotnet-version:  '7.0.x'
+        generate-sbom: false
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -26,10 +26,10 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
-    - name: Setup .NET ${{ matrix.dotnet-version }}
+    - name: Setup .NET ${{ env.dotnet-version }}
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: ${{ env.dotnet-version }}
     - name: dotnet info
       run: |
         echo "============================================================" >> ${{ runner.temp }}/environment.txt
@@ -122,29 +122,29 @@ jobs:
         exit 0
       working-directory: frontend/EMS.BlazorWasm
     - name: Install CycloneDX .NET
-      if: ${{ false }}
+      if: ${{ env.generate-sbom == true }}
       shell: bash
       run: |  
         dotnet tool install CycloneDX --global
     - name: CycloneDX .NET Generate SBOM - backend
-      if: ${{ false }}
+      if: ${{ env.generate-sbom == true }}
       shell: bash
       run: |  
         dotnet CycloneDX backend/ems.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-backend-ems.json
     - name: CycloneDX .NET Generate SBOM - frontend
-      if: ${{ false }}
+      if: ${{ env.generate-sbom == true }}
       shell: bash
       run: |  
         dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
     - name: Upload SBOM Artifact
       uses: actions/upload-artifact@v3
-      if: ${{ false }}
+      if: ${{ env.generate-sbom == true }}
       with:
         name: SBOM
         path: ${{ runner.temp }}\sbom\*
     - name: SBOM submission action
       uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
-      if: ${{ false }}
+      if: ${{ env.generate-sbom == true }}
       with:
         sbom-files: ${{ runner.temp }}\sbom\sbom-backend-ems.json
         token: ${{ secrets.GH_TOKEN }}

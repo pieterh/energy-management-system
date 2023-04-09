@@ -23,6 +23,7 @@ namespace EMS.Library.Assembly
 
 		public static StringBuilder GetInfo(System.Reflection.Assembly assembly)
 		{
+            ArgumentNullException.ThrowIfNull(assembly);
 			var str = new StringBuilder();
             str.AppendJoin(' ', "Loaded ==>", assembly.GetName().FullName);
 			return str;
@@ -38,9 +39,10 @@ namespace EMS.Library.Assembly
         {
             var name = a.GetName().Name ?? string.Empty;
             return (
-                 !name.StartsWith("Microsoft")  &&
-                 !name.StartsWith("System") &&
-                 !name.StartsWith("Anonymously Hosted DynamicMethods")
+                 !name.StartsWith("Microsoft", StringComparison.Ordinal)  &&
+                 !name.StartsWith("System", StringComparison.Ordinal) &&
+                 !name.StartsWith("netstandard", StringComparison.Ordinal) &&
+                 !name.StartsWith("Anonymously Hosted DynamicMethods", StringComparison.Ordinal)
             );
         }
     }

@@ -22,16 +22,18 @@ namespace EMS
             var validationResult = schema.Evaluate(result, new EvaluationOptions() { OutputFormat = OutputFormat.Hierarchical });
             
             if (!validationResult.IsValid){
+                Logger.Error("There was an error in the format of the configuration file {FileName}", filename);
                 JSon.ShowEvaluationDetails(validationResult.Details);
                 throw new ArgumentException("The configuration file has not a valid format.", nameof(filename));
             }
             return result;
         }
 
-        public static bool ValidateConfig(string filename)
+        public static bool ValidateConfig(string? filename)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(filename)) return false;
                 var r = ReadConfig(filename);                
                 return !string.IsNullOrWhiteSpace(r.GetRawText());
             }

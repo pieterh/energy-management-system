@@ -32,7 +32,7 @@ namespace EMS.Engine.Model
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
 
             var chargeCurrent = Math.Round(LimitEco(avg.averageCharge, avg.averageUsage), 2);
-            Logger?.LogInformation("avg current {averageUsage} and avg charging at {averageCharge}; limitted chargecurrent = {chargeCurrent} ({nrPoints} datapoints (buffer size {bufferSeconds} seconds)",
+            Logger?.LogInformation("avg current {AverageUsage} and avg charging at {AverageCharge}; limitted chargecurrent = {ChargeCurrent} ({NrPoints} datapoints (buffer size {BufferSeconds} seconds)",
             avg.averageUsage, avg.averageCharge, chargeCurrent, avg.nrOfDataPoints, MaxBufferSeconds);
 
             if ((State.Current == ChargingState.Charging && chargeCurrent < MinimumEcoModeExportStop) ||
@@ -55,7 +55,7 @@ namespace EMS.Engine.Model
                     var avgShort = Measurements.CalculateAggregatedAverageUsage(DateTimeProvider.Now.AddSeconds(-10));
                     var chargeCurrentShort1 = Math.Round(LimitEco(avgShort.averageCharge, avgShort.averageUsage), 2);
 
-                    Logger?.LogInformation("charging {chargeCurrent} -> {chargeCurrentShort}", chargeCurrent, chargeCurrentShort1);
+                    Logger?.LogInformation("charging {ChargeCurrent} -> {ChargeCurrentShort}", chargeCurrent, chargeCurrentShort1);
                     if (t.changed)
                         LoggerState?.Info("charging {chargeCurrent} -> {chargeCurrentShort}", chargeCurrent, chargeCurrentShort1);
 
@@ -63,7 +63,7 @@ namespace EMS.Engine.Model
                 }
                 else
                 {
-                    Logger?.LogInformation("charging {chargeCurrent} -> not yet allowed", chargeCurrent);
+                    Logger?.LogInformation("charging {ChargeCurrent} -> not yet allowed", chargeCurrent);
                     return (0, 0, 0);
                 }
             }

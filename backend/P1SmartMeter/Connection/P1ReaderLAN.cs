@@ -15,11 +15,11 @@ namespace P1SmartMeter.Connection
         private readonly string _host;
         private readonly int _port;
         private const int RECEIVE_BUFFER_SIZE = 2048;
-        private Task _backgroundTask;
+        private Task? _backgroundTask;
 
-        private Socket _socket;
-        private NetworkStream _stream;
-        private SocketAsyncEventArgs _receiveEventArgs;
+        private Socket? _socket;
+        private NetworkStream? _stream;
+        private SocketAsyncEventArgs? _receiveEventArgs;
 
         public P1ReaderLAN(string host, int port)
         {
@@ -46,7 +46,7 @@ namespace P1SmartMeter.Connection
 
         private void DisposeStream()
         {
-            Logger.Trace($"DisposeStream {_stream?.Socket.LocalEndPoint.ToString()}");
+            Logger.Trace($"DisposeStream {_stream?.Socket?.LocalEndPoint?.ToString()}");
             _receiveEventArgs?.Dispose();
             _receiveEventArgs = null;
 
@@ -95,7 +95,7 @@ namespace P1SmartMeter.Connection
         {
             TokenSource.Cancel();
             /* wait a bit for the background task in the case that it still is trying to connect */
-            _backgroundTask.Wait(750);
+            _backgroundTask?.Wait(750);
 
             DisposeStream();
             DisposeBackgroundTask();
@@ -120,7 +120,9 @@ namespace P1SmartMeter.Connection
                 }
 
                 isConnected = true;
-                Logger.Trace($"Connected {isConnected},{_socket.Connected},{((IPEndPoint)_socket.LocalEndPoint)?.Port}");
+                var port = _socket != null && _socket.LocalEndPoint != null ? ((IPEndPoint)_socket.LocalEndPoint).Port : -1;
+                var connected = _socket?.Connected;
+                Logger.Trace($"Connected {isConnected},{connected},{port}");
             }
             catch (SocketException se1)
                 when (se1.SocketErrorCode == SocketError.TimedOut ||
@@ -138,7 +140,7 @@ namespace P1SmartMeter.Connection
             return isConnected;
         }
 
-        private async void OnCompleted(object sender, SocketAsyncEventArgs eventArgs)
+        private async void OnCompleted(object? sender, SocketAsyncEventArgs eventArgs)
         {
             try
             {
@@ -168,9 +170,11 @@ namespace P1SmartMeter.Connection
             switch (connectEventArgs.SocketError)
             {
                 case SocketError.Success:
-                    Logger.Info($"{connectEventArgs.LastOperation}, port={((IPEndPoint)socket.LocalEndPoint).Port}, connected={socket.Connected}, socketError={connectEventArgs.SocketError}");
-                    bool willRaiseEvent = socket.ReceiveAsync(connectEventArgs);
-                    if (!willRaiseEvent)
+                    var port = socket != null && socket.LocalEndPoint != null ? ((IPEndPoint)socket.LocalEndPoint).Port : -1;
+                    var connected = socket?.Connected;
+                    Logger.Info($"{connectEventArgs.LastOperation}, port={port}, connected={connected}, socketError={connectEventArgs.SocketError}");
+                    var willRaiseEvent = socket?.ReceiveAsync(connectEventArgs);
+                    if (willRaiseEvent.HasValue && !willRaiseEvent.Value)
                     {
                         await ProcesReceive(connectEventArgs).ConfigureAwait(false);
                     }
@@ -192,15 +196,17 @@ namespace P1SmartMeter.Connection
             if (await StopRequested(0).ConfigureAwait(false)) { return; }
             var socket = receiveEventArgs.ConnectSocket;
 
-            if (receiveEventArgs.BytesTransferred <= 0 || !socket.Connected)
+            if (receiveEventArgs.BytesTransferred <= 0 || socket == null || !socket.Connected )
             {
-                Logger.Error($"No bytes received {receiveEventArgs.BytesTransferred}. Lost connection and retry. {((IPEndPoint)socket.LocalEndPoint).Port},{socket.Connected},{receiveEventArgs.SocketError}");
+                var port = socket != null && socket.LocalEndPoint != null ? ((IPEndPoint)socket.LocalEndPoint).Port : -1;
+                var connected = socket?.Connected;
+                Logger.Error($"No bytes received {receiveEventArgs.BytesTransferred}. Lost connection and retry. {port},{connected},{receiveEventArgs.SocketError}");
                 await RestartConnection().ConfigureAwait(false);
                 return;
             }
 
             var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
-            OnDataArrived(new DataArrivedEventArgs() { Data = data });
+            OnDataArrived(new DataArrivedEventArgs(data));
 
             // Start receiving more data
             if (!socket.ReceiveAsync(receiveEventArgs))

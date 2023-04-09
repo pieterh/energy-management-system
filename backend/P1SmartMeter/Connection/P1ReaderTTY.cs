@@ -11,7 +11,7 @@ namespace P1SmartMeter.Connection
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly string _usbPort;
-        private SerialPort _serialPort;
+        private SerialPort? _serialPort;
 
         public P1ReaderTTY(string deviceName)
         {
@@ -73,8 +73,7 @@ namespace P1SmartMeter.Connection
             string indata = sp.ReadExisting();
             Logger.Info($"BackgroundTask read {indata.Length} characters...");
 
-            OnDataArrived(new DataArrivedEventArgs() { Data = indata });
+            OnDataArrived(new DataArrivedEventArgs(indata));
         }
-
     }
 }

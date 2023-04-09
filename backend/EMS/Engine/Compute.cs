@@ -52,6 +52,9 @@ namespace EMS
                     case ChargingMode.SlowCharge:
                         _model = _slowCharge;
                         break;
+                    default:
+                        _model = _maxCharging;
+                        break;
                 }
 
                 // changing the mode also means that the buffer size is going to change
@@ -60,7 +63,7 @@ namespace EMS
             }
         }
 
-        private ChargeControlInfo _info;
+        private ChargeControlInfo _info = new();
         public ChargeControlInfo Info
         {
             get { return _info; }
@@ -84,18 +87,7 @@ namespace EMS
             }
         }
 
-        public class StateEventArgs : EventArgs
-        {
-            public ChargeControlInfo Info { get; set; }
-
-            public StateEventArgs(ChargeControlInfo nfo)
-            {
-                Info = nfo;
-            }
-        }
-
-        public event EventHandler<StateEventArgs> StateUpdate;
-
+        public event EventHandler<StateUpdateEventArgs> StateUpdate = delegate { };
 
         public Compute(ILogger logger, ChargingMode mode)
         {
@@ -103,9 +95,9 @@ namespace EMS
             _ecoFriendly = new(logger, _measurements, _state);
             _maxSolar = new(logger, _measurements, _state);
             _slowCharge = new(logger, _measurements, _state);
+            _model = _maxCharging;
 
             Mode = mode;
-            Info = new();
         }
 
         public (double l1, double l2, double l3) Charging()
@@ -121,9 +113,20 @@ namespace EMS
             _measurements.AddData(m?.CurrentL1, m?.CurrentL2, m?.CurrentL3, sm?.CurrentL1, sm?.CurrentL2, sm?.CurrentL3);
         }
 
-        private void RaiseStateUpdate(ChargeControlInfo nfo)
+        private void RaiseStateUpdate(ChargeControlInfo? nfo)
         {
-            StateUpdate?.Invoke(this, new StateEventArgs(nfo));
+            var statusUpdate = StateUpdate;
+            statusUpdate.Invoke(this, new StateUpdateEventArgs(nfo));
+        }
+    }
+
+    public class StateUpdateEventArgs : EventArgs
+    {
+        public ChargeControlInfo? Info { get; set; }
+
+        public StateUpdateEventArgs(ChargeControlInfo? nfo)
+        {
+            Info = nfo;
         }
     }
 }

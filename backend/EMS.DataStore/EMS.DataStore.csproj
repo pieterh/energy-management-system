@@ -22,6 +22,10 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.4" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="efbundle" />

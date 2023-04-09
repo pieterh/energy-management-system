@@ -6,9 +6,12 @@ using Xunit;
 using FluentAssertions;
 
 using P1SmartMeter.Telegram;
+using System.Xml.Linq;
+using FluentAssertions.Equivalency;
 
 namespace P1SmartMeter.TelegramTests
 {
+    [SuppressMessage("","S125")]
     public class TelegramFieldDefinitionTests
     {
         [Fact]
@@ -38,10 +41,9 @@ namespace P1SmartMeter.TelegramTests
             const string code = "__mycode__";
             const string name = "__myname__";
 
-            var def = new TelegramFieldDefinition() { Code = code };
+            var def = new TelegramFieldDefinition(code, name, new[] { TelegramFieldType.Plain });
             def.Code.Should().Be(code, "that is way we have created it");
-            def.GetLabel().Should().Be($"{code}", "we have not assigned it a name yet");
-            def.Name = name;
+            def.Name.Should().Be(name, "that is way we have created it");
             def.GetLabel().Should().Be($"{name} ({code})", "we created it with this name and code");
         }
 
@@ -49,7 +51,8 @@ namespace P1SmartMeter.TelegramTests
         public void ReturnsRawValueWhenTheTypeDoesntExists()
         {
             const string code = "__mycode__";
-            var def = new TelegramFieldDefinition() { Code = code };
+            const string name = "__myname__";
+            var def = new TelegramFieldDefinition(code, name, new[] { TelegramFieldType.Plain });
             const string rawValue = "__rawValue__";
             def.ParseValue(0, rawValue).Should().Be(rawValue, "the type doesn't exist so the plain type is used resulting a raw value");
         }
@@ -57,8 +60,7 @@ namespace P1SmartMeter.TelegramTests
         [Fact]
         public void ProperlyConvertsTheNumericTypeAsAnInteger()
         {
-            var def = new TelegramFieldDefinition() { Code = "1-0:32.32.0", Name = "Num voltage sags L1" };
-            def.Types.Add(TelegramFieldType.Numeric);
+            var def = new TelegramFieldDefinition("1-0:32.32.0", "Num voltage sags L1", new[] { TelegramFieldType.Numeric });
             const string rawValue = "1234";
             var result = def.ParseValue(0, rawValue);
             result.GetType().Should().Be(typeof(int), "the type is TelegramFieldType.Numeric");
@@ -68,8 +70,7 @@ namespace P1SmartMeter.TelegramTests
         [Fact]
         public void ProperlyConvertsTheNumericWithUnitTypeAsADouble()
         {
-            var def = new TelegramFieldDefinition() { Code = "1-0:22.7.0", Name = "Power Returned L1" };
-            def.Types.Add(TelegramFieldType.NumericWithUnitAsDouble);
+            var def = new TelegramFieldDefinition("1-0:22.7.0", "Power Returned L1", new[] { TelegramFieldType.NumericWithUnitAsDouble });
             const string rawValue = "00.900*kW";
             var result = def.ParseValue(0, rawValue);
             result.IsValueTuple().Should().BeTrue("the value and the unit should be returned as a tuple");
@@ -85,8 +86,7 @@ namespace P1SmartMeter.TelegramTests
         [Fact]
         public void ProperlyConvertsTheNumericWithUnitTypeAsAnInt()
         {
-            var def = new TelegramFieldDefinition() { Code = "1-0:31.7.0", Name = "Current L1" };
-            def.Types.Add(TelegramFieldType.NumericWithUnit);
+            var def = new TelegramFieldDefinition("1-0:31.7.0", "Current L1", new[] { TelegramFieldType.NumericWithUnit });
             const string rawValue = "003*A";
             var result = def.ParseValue(0, rawValue);
             result.IsValueTuple().Should().BeTrue("the value and the unit should be returned as a tuple");
@@ -113,8 +113,7 @@ namespace P1SmartMeter.TelegramTests
         [Fact]
         public void ProperlyConvertsTheStringTypeAsAString()
         {
-            var def = new TelegramFieldDefinition() { Code = "0-0:96.1.1", Name = "Equipment identifier" };
-            def.Types.Add(TelegramFieldType.String);
+            var def = new TelegramFieldDefinition("0-0:96.1.1", "Equipment identifier", new[] { TelegramFieldType.String });
             const string rawValue = "SpaceX";
             var result = def.ParseValue(0, rawValue);
             result.GetType().Should().Be(typeof(string), "the type is TelegramFieldType.String");
@@ -124,8 +123,7 @@ namespace P1SmartMeter.TelegramTests
         [Fact]
         public void ProperlyConvertsTheStringTypeAsAStringTag9()
         {
-            var def = new TelegramFieldDefinition() { Code = "0-0:96.1.1", Name = "Equipment identifier" };
-            def.Types.Add(TelegramFieldType.OctetString);
+            var def = new TelegramFieldDefinition("0-0:96.1.1", "Equipment identifier", new[] { TelegramFieldType.OctetString });
             const string rawValue = "4B384547303034303436333935353037"; // K8EG004046395507
             var result = def.ParseValue(0, rawValue);
             result.GetType().Should().Be(typeof(string), "the type is TelegramFieldType.OctetString");
@@ -135,8 +133,7 @@ namespace P1SmartMeter.TelegramTests
         [Fact]
         public void ProperlyConvertsTheTimestampTypeAsADateTime()
         {
-            var def = new TelegramFieldDefinition() { Code = "0-0:1.0.0", Name = "Timestamp" };
-            def.Types.Add(TelegramFieldType.Timestamp);
+            var def = new TelegramFieldDefinition("0-0:1.0.0", "Timestamp", new[] { TelegramFieldType.Timestamp });
             const string rawValue = "210307123722W";
             var result = def.ParseValue(0, rawValue);
             result.GetType().Should().Be(typeof(DateTime), "the type is TelegramFieldType.Timestamp");

@@ -13,7 +13,6 @@ public class JsonFloatConverterUnitTests
     {
         JsonSerializerOptions serializerDefaults = new(JsonSerializerDefaults.General);
         var t = new FloatConverterP0();
-        var buffer = new ArrayBufferWriter<byte>();
        
         Action write = () => {
             var reader = new Utf8JsonReader();
@@ -27,8 +26,10 @@ public class JsonFloatConverterUnitTests
     {
         JsonSerializerOptions serializerDefaults = new(JsonSerializerDefaults.General);
         var t = new FloatConverterP0();
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Action write = () => t.Write(null, 0, serializerDefaults);
-        
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+
         write.Should().Throw<ArgumentNullException>();
     }
 
@@ -64,7 +65,6 @@ public class JsonFloatConverterUnitTests
     {
         JsonSerializerOptions serializerDefaults = new(JsonSerializerDefaults.General);
         var t = new FloatConverterP1();
-        var buffer = new ArrayBufferWriter<byte>();
 
         Action write = () => {
             var reader = new Utf8JsonReader();
@@ -78,7 +78,9 @@ public class JsonFloatConverterUnitTests
     {
         JsonSerializerOptions serializerDefaults = new(JsonSerializerDefaults.General);
         var t = new FloatConverterP1();
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Action write = () => t.Write(null, 0, serializerDefaults);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 
         write.Should().Throw<ArgumentNullException>();
     }

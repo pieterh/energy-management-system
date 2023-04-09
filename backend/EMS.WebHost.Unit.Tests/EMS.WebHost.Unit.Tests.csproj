@@ -1,41 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="6.10.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-    <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="3.2.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-	<PackageReference Include="coverlet.msbuild" Version="3.2.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  <PrivateAssets>all</PrivateAssets>
-	</PackageReference>
-    <PackageReference Include="Moq" Version="4.18.4" />
-	<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-	<PackageReference Include="System.Net.Http" Version="4.3.4" />
-  </ItemGroup>
-    <ItemGroup>
-	    <None Remove="System.Text.RegularExpressions" />
-	    <None Remove="System.Net.Http" />
-	    <None Remove="Helpers\" />
-	    <None Remove="Properties\" />
-    </ItemGroup>
-    <ItemGroup>
-	    <Folder Include="Helpers\" />
-	    <Folder Include="Properties\" />
-    </ItemGroup>
-    <ItemGroup>
-	    <ProjectReference Include="..\EMS.WebHost\EMS.WebHost.csproj" />
-    </ItemGroup>
+	<PropertyGroup>
+		<IsTestProject>true</IsTestProject>
+		<TargetFramework>net7.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<IsPublishable>false</IsPublishable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="6.10.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+		<PackageReference Include="xunit" Version="2.4.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="3.2.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.msbuild" Version="3.2.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Moq" Version="4.18.4" />
+		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="System.Text.RegularExpressions" />
+		<None Remove="System.Net.Http" />
+		<None Remove="Helpers\" />
+		<None Remove="Properties\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Helpers\" />
+		<Folder Include="Properties\" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\EMS.WebHost\EMS.WebHost.csproj" />
+	</ItemGroup>
 </Project>

@@ -15,7 +15,7 @@
       "name": "P1 Smartmeter",
       "driver": {
         "assembly": "P1SmartMeter, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-        "type": "P1SmartMeter.P1SmartMeter"
+        "type": "P1SmartMeter.SmartMeter"
       }
     },
     {

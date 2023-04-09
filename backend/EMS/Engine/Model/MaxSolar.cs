@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace EMS.Engine.Model
 {
-    public class MaxSolar: Base
+    public class MaxSolar : Base
     {
         protected static readonly NLog.Logger LoggerCurrent = NLog.LogManager.GetLogger("chargingcurrent");
         public override ushort MinimumDataPoints
@@ -28,7 +28,7 @@ namespace EMS.Engine.Model
             var avg = Measurements.CalculateAggregatedAverageUsage();
 
             if (avg.nrOfDataPoints < MinimumDataPoints) return (-1, -1, -1);
-            Logger?.LogInformation("avg current {averageUsage} and charging at {averageCharge}", avg.averageUsage, avg.averageCharge);
+            Logger?.LogInformation("avg current {AverageUsage} and charging at {AverageCharge}", avg.averageUsage, avg.averageCharge);
 
             var chargeCurrent = Math.Round(LimitCurrentSolar(avg.averageCharge, avg.averageUsage), 2);
 

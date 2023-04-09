@@ -29,31 +29,31 @@ using EMS.WebHost;
 using EMS.DataStore;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using EMS.Library.dotNET;
+using Microsoft.AspNetCore.Http;
 
 namespace EMS
 {
     static class Program
     {
-        public record Options
+        public sealed record Options
         {
             [Option("config", Required = true, HelpText = "Filename of config.")]
-            public string ConfigFile { get; set; }
+            public string? ConfigFile { get; set; }
             [Option("nlogcfg", Required = false, HelpText = "Filename of the nlog file.")]
-            public string NLogConfig { get; set; }
+            public string? NLogConfig { get; set; }
             [Option("nlogdebug", Required = false, Default = false, HelpText = "Throw nlog internal exceptions. Not for production usage.")]
             public bool NLogDebug { get; set; }
         }
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-        private static NLog.Targets.ColoredConsoleTarget _logconsole;
+        private static NLog.Targets.ColoredConsoleTarget _logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole") { UseDefaultRowHighlightingRules = true };
 
         static void Main(string[] args)
         {
             try
             {
-                _logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole");
-                _logconsole.UseDefaultRowHighlightingRules = true;
-
                 EnforceLogging();
 
                 Options options = new();
@@ -63,28 +63,34 @@ namespace EMS
                     {
                         options = o;
                     })
-                    .WithNotParsed(errs => {
+                    .WithNotParsed(errs =>
+                    {
                         throw new ArgumentException("Something wrong with your arguments! ;-)");
                     });
-         
+
 
                 ConfigureLogging(options);
                 Logger.Info("============================================================");
                 AssemblyInfo.Init();
-
                 ResourceHelper.LogAllResourcesInAssembly(System.Reflection.Assembly.GetExecutingAssembly());
                 Logger.Info($"Git hash {ResourceHelper.ReadAsString(System.Reflection.Assembly.GetExecutingAssembly(), "git.commit.hash.txt").Trim('\n', '\r')}");
+                Logger.Info("============================================================");
+                DotNetInfo.Info(Logger);
+                Logger.Info("============================================================");
+                Logger.Info("Garbage Collector Configuration");
+                DotNetInfo.GCInfo(Logger);
+                Logger.Info("============================================================");
 
                 using var host = CreateHost(options);
                 host.Run();
             }
             catch (ArgumentException) { /* Somehow we need to catch, otherwise the finally doesn't seem to run */ }
             finally
-            {                
+            {
                 Logger.Info("========================= DONE ==============================");
                 // Ensure to flush and stop internal timers/threads before application-exit (Avoid segmentation fault on Linux)
-                NLog.LogManager.Shutdown();                
-                _logconsole.Dispose();                
+                NLog.LogManager.Shutdown();
+                _logconsole.Dispose();
             }
         }
 
@@ -99,7 +105,7 @@ namespace EMS
             if (NLog.LogManager.Configuration == null ||
                 !NLog.LogManager.GetCurrentClassLogger().IsFatalEnabled || !NLog.LogManager.GetCurrentClassLogger().IsErrorEnabled ||
                 overrideExisting)
-            {                
+            {
                 var config = new NLog.Config.LoggingConfiguration();
                 config.AddRule(NLog.LogLevel.Warn, NLog.LogLevel.Fatal, _logconsole);
                 NLog.LogManager.Configuration = config; // Sensitive
@@ -124,8 +130,9 @@ namespace EMS
                     // set basic logging
                     EnforceLogging(true);
                     Logger.Fatal("No logging was configured. Default to basic logging to console.");
-                }                
-            }catch(FileNotFoundException)
+                }
+            }
+            catch (FileNotFoundException)
             {
                 Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
                 EnforceLogging(true);
@@ -133,8 +140,8 @@ namespace EMS
         }
 
         static IHost CreateHost(Options options)
-        {           
-            var t = Host.CreateDefaultBuilder()                
+        {
+            var t = Host.CreateDefaultBuilder()
                 .ConfigureLogging((ILoggingBuilder logBuilder) =>
                 {
                     logBuilder.ClearProviders();
@@ -144,7 +151,7 @@ namespace EMS
                 {
                     IHostEnvironment env = builderContext.HostingEnvironment;
                     Logger.Info($"Hosting environment: {env.EnvironmentName}");
-                    if (ConfigurationManager.ValidateConfig(options.ConfigFile))
+                    if (ConfigurationManager.ValidateConfig(options.ConfigFile) && !string.IsNullOrWhiteSpace(options?.ConfigFile))
                     {
                         configuration.Sources.Clear();
                         configuration
@@ -152,7 +159,9 @@ namespace EMS
                            .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
                     }
                     else
-                        Logger.Error("There was an error with the configuration file");                    
+                        Logger.Error("There was an error with the configuration file");
+                    
+
                 })
                 .ConfigureServices((builderContext, services) =>
                 {
@@ -164,18 +173,20 @@ namespace EMS
                     a.Database.Migrate();
 
                     services
-                        .AddDbContext<DataProtectionKeyContext>(o => {
-                                o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
-                                o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                        .AddDbContext<DataProtectionKeyContext>(o =>
+                        {
+                            o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
+                            o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                         })
                         .AddDataProtection()
-                        .AddKeyManagementOptions((opt) => {
+                        .AddKeyManagementOptions((opt) =>
+                        {
                             opt.XmlEncryptor = new NullXmlEncryptor();
-                            })
+                        })
                         .PersistKeysToDbContext<DataProtectionKeyContext>();
 
                     services.AddHttpClient();
-                    
+
                     ConfigureInstances(builderContext, services);
 
                     BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
@@ -184,7 +195,7 @@ namespace EMS
                 {
                     webBuilder.UseKestrel((builderContext, kestrelOptions) =>
                     {
-                        
+
                         kestrelOptions.AddServerHeader = false;
                         WebConfig wc = new();
                         builderContext.Configuration.GetSection("web").Bind(wc);
@@ -196,10 +207,16 @@ namespace EMS
                                 builder.UseHttps();
                             }
                         });
+
                     });
+
+                    Logger.Info("Updating root folders");
+                    webBuilder.UseContentRoot(string.Empty);
+                    webBuilder.UseWebRoot("dist");
+
                     webBuilder.UseStartup<Startup>();
                 }).Build();
-            
+
             return t;
         }
 
@@ -216,22 +233,41 @@ namespace EMS
             {
                 Logger.Debug($"Instance [{instance.Name}]");
                 var adapter = GetAdapter(adapters, instance.AdapterId);
-                Logger.Debug($"Instance [{instance.Name}], loading assembly {adapter.Driver.Assembly}");
+                if (adapter != null)
+                {
+                    Logger.Debug($"Instance [{instance.Name}], loading assembly {adapter.Driver.Assembly}");
 
-                var adapterAssembly = Assembly.Load(adapter.Driver.Assembly);
-                Logger.Debug($"Instance [{instance.Name}], loaded assembly from location {adapterAssembly.Location}");
+                    var adapterAssembly = Assembly.Load(adapter.Driver.Assembly);
+                    Logger.Debug($"Instance [{instance.Name}], loaded assembly from location {adapterAssembly.Location}");
 
-                var adapterType = adapterAssembly.GetType(adapter.Driver.Type);
-                Logger.Debug($"Instance [{instance.Name}], type {adapterType.FullName} loaded");
+                    var adapterType = adapterAssembly.GetType(adapter.Driver.Type);
+                    if (adapterType != null)
+                    {
+                        Logger.Debug($"Instance [{instance.Name}], type {adapterType.FullName} loaded");
 
-                Logger.Debug($"Instance [{instance.Name}], configuring services");
-                adapterType.GetMethod("ConfigureServices", BindingFlags.Static | BindingFlags.Public)
-                                .Invoke(null, new object[] { hostingContext, services, instance });
-                Logger.Debug($"Instance [{instance.Name}], configuring services done");
+                        Logger.Debug($"Instance [{instance.Name}], configuring services");
+                        const string methodName = "ConfigureServices";
+
+                        var method = adapterType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+                        if (method != null)
+                        {
+                            method.Invoke(null, new object[] { hostingContext, services, instance });
+                            Logger.Debug($"Instance [InstanceName], configuring services done", instance.Name);
+                        }
+                        else
+                        {
+                            Logger.Error("The method {MethodName} was not found for adapter type {AdapeterType}", methodName, adapter.Driver.Type);
+                        }
+                    }
+                    else
+                        Logger.Error("The adapter type {AdapeterType} was not found", adapter.Driver.Type);
+                }
+                else
+                    Logger.Error("The adapter with id {Id} was not found", instance.AdapterId);
             }
         }
 
-        public static Adapter GetAdapter(List<Adapter> adapters, Guid adapterid)
+        public static Adapter? GetAdapter(List<Adapter> adapters, Guid adapterid)
         {
             foreach (var adapter in adapters)
             {

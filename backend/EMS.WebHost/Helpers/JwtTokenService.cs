@@ -11,13 +11,12 @@ namespace EMS.WebHost.Helpers
     public interface IJwtService
     {
         string Generate(Guid userId, string username, string name);
-        TokenValidationParameters GetTokenValidationParameters();
     }
 
     public class JwtConfig
     {
-        public string Issuer { get; set; }
-        public string Audience { get; set; }
+        public string? Issuer { get; set; }
+        public string? Audience { get; set; }
         public ushort Expiration { get; set; }
         public ushort ClockSkew { get; set; }
     }
@@ -30,10 +29,12 @@ namespace EMS.WebHost.Helpers
 
         public JwtTokenService(IConfiguration configurations)
         {
+            ArgumentNullException.ThrowIfNull(configurations);
             JwtConfig j = new();
             configurations.GetSection("web:jwt").Bind(j);
             Settings = j;            
         }
+
         public string Generate(Guid userId, string username, string name)
         {
             var claims = new List<Claim>
@@ -56,18 +57,21 @@ namespace EMS.WebHost.Helpers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public TokenValidationParameters GetTokenValidationParameters()
+        public static TokenValidationParameters CreateTokenValidationParameters(IConfiguration configurations)
         {
+            ArgumentNullException.ThrowIfNull(configurations);
+            JwtConfig j = new();
+            configurations.GetSection("web:jwt").Bind(j);
             var retval = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = Settings.Issuer,
-                ValidAudience = Settings.Audience,
+                ValidIssuer = j.Issuer,
+                ValidAudience = j.Audience,
                 IssuerSigningKey = new RsaSecurityKey(key.Rsa.ExportParameters(false)),
-                ClockSkew = TimeSpan.FromSeconds(Settings.ClockSkew)
+                ClockSkew = TimeSpan.FromSeconds(j.ClockSkew)
             };
             return retval;
         }

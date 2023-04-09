@@ -15,7 +15,7 @@ namespace P1SmartMeter
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
         private readonly List<TcpClient> _clients = new();
-        private TcpListener _listener;
+        private TcpListener? _listener;
 
         public P1RelayServer()
         {            
@@ -76,7 +76,7 @@ namespace P1SmartMeter
         {
             try
             {
-                TcpClient client = Task.Run(() => _listener.AcceptTcpClientAsync(), TokenSource.Token).GetAwaiter().GetResult();
+                TcpClient client = Task.Run(() => _listener?.AcceptTcpClientAsync(), TokenSource.Token).GetAwaiter().GetResult();
                 Logger.Info($"Client connected!");
                 client.SendBufferSize = 2048;
                 lock (_clients)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,36 +12,20 @@ namespace P1SmartMeter.Telegram
         [GeneratedRegex(@"^([\d\.]*)\*?(.*)$", RegexOptions.None, 100)]
         private static partial Regex NumericWithUnitParser();
 
-        public string Code { get; set; }
-        public string Name { get; set; }
-        public IList<TelegramFieldType> Types { get; init; } = new List<TelegramFieldType>();
-
-        public TelegramFieldDefinition() { }
+        public string Code { get; init; }
+        public string Name { get; init; }
+        public ReadOnlyCollection<TelegramFieldType> Types { get; init; }
 
         public TelegramFieldDefinition(string code, string name, IList<TelegramFieldType> types)
         {
             Code = code;
             Name = name;
-            Types = types;
+            Types = types.AsReadOnly();
         }
 
-        public static TelegramFieldDefinition Invalid => new()
-        {
-            Code = "invalid",
-            Name = string.Empty,
-            Types = new[] { TelegramFieldType.Plain }
-        };
-
-        public static TelegramFieldDefinition Unknown(string code)
-        {
-            return new TelegramFieldDefinition
-            {
-                Code = code,
-                Name = string.Empty,
-                Types = new[] { TelegramFieldType.Plain }
-            };
-        }
-
+        public static TelegramFieldDefinition Invalid => new("invalid", string.Empty, new[] { TelegramFieldType.Plain });
+        public static TelegramFieldDefinition Unknown(string code) => new (code, string.Empty, new[] { TelegramFieldType.Plain});     
+        
         public string GetLabel()
         {
             if (!string.IsNullOrEmpty(Name))
@@ -64,11 +49,6 @@ namespace P1SmartMeter.Telegram
             switch (type)
             {
                 case TelegramFieldType.Numeric:
-                    if (rawValue.Contains('.', StringComparison.Ordinal))
-                    {
-                        return double.Parse(rawValue, CultureInfo.InvariantCulture);
-                    }
-
                     return int.Parse(rawValue, CultureInfo.InvariantCulture);
 
                 case TelegramFieldType.NumericWithUnit:

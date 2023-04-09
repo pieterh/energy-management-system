@@ -9,49 +9,56 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using EMS.WebHost.Helpers;
+using Microsoft.AspNetCore.Hosting;
 
 namespace EMS.WebHost.Controllers
 {
     public class Response
     {
-        public int Status { get; set; }
-        public string StatusText { get; set; }
-        public string Message { get; set; }
+        public required int Status { get; set; }
+        public required string StatusText { get; init; }
+        public string? Message { get; init; }
     }
 
     public class LoginResponse : Response
     {
-        public string Token { get; set; }
-        public UserModel User { get; set; }
+        public required string Token { get; init; }
+        public required UserModel User { get; init; }
     }
+
     public class PingResponse : Response
     {
-        public UserModel User { get; set; }
+        public required UserModel User { get; init; }
     }
 
     public class LoginModel
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public required string Username { get; init; }
+        public required string Password { get; init; }
     }
+
     public class UserModel
     {
         public Guid Id { get; set; }
-        public string Username { get; set; }
-        public string Name { get; set; }
+        public required string Username { get; init; }
+        public required string Name { get; init; }
     }
-     
+
+    
+
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
         private ILogger Logger { get; init; }
+        private readonly IWebHostEnvironment _env;
         private readonly IJwtService _jwtService;
 
-        public UsersController(ILogger<UsersController> logger, IJwtService jwtService)
+        public UsersController(ILogger<UsersController> logger, IWebHostEnvironment env, IJwtService jwtService)
         {
             Logger = logger;
+            _env = env;
             _jwtService = jwtService;
         }
 
@@ -62,6 +69,7 @@ namespace EMS.WebHost.Controllers
 
         public IActionResult Authenticate([FromBody] LoginModel model)
         {
+            ArgumentNullException.ThrowIfNull(model);
             var user = PerformAuth(model);
             if (user != null)
             {
@@ -70,6 +78,7 @@ namespace EMS.WebHost.Controllers
                 var result = new LoginResponse
                 {
                     Status = 200,
+                    StatusText = "OK",
                     Token = token,
                     User = user
                 };
@@ -80,14 +89,17 @@ namespace EMS.WebHost.Controllers
                 return Unauthorized();
             }
         }
-        
+
         [HttpGet("ping")]
-        public IActionResult Ping() {
-            var id = User.Claims.FirstOrDefault<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub)?.Value;
-            var name = User.Claims.FirstOrDefault<Claim>((x) => x.Type == "name")?.Value;            
-            foreach(var c in User.Claims)
+        public IActionResult Ping()
+        {
+
+
+            var id = User.Claims.First<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub).Value;
+            var name = User.Claims.First<Claim>((x) => x.Type == "name").Value;
+            foreach (var c in User.Claims)
             {
-                Logger.LogDebug("{type} - {value}", c.Type, c.Value);
+                Logger.LogDebug("{Type} - {Value}", c.Type, c.Value);
             }
             var user = new UserModel
             {
@@ -96,13 +108,13 @@ namespace EMS.WebHost.Controllers
                 Name = name
             };
 
-            return new JsonResult(new PingResponse() { Status = 200, User = user });
+            return new JsonResult(new PingResponse() { Status = 200, StatusText = "OK", User = user });
         }
 
-        private static UserModel PerformAuth(LoginModel model)
+        private static UserModel? PerformAuth(LoginModel model)
         {
-            var user = (model.Username.Equals("admin") &&
-                    model.Password.Equals("admin")) ? new UserModel
+            var user = (model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase) &&
+                    model.Password.Equals("admin", StringComparison.Ordinal)) ? new UserModel
                     {
                         Id = Guid.NewGuid(),
                         Username = "admin",

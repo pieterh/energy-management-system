@@ -10,23 +10,18 @@ namespace AlfenNG9xx
 {
     public class ChargingSession
     {
-        private bool _isConnected = false;
-        private double _meterReadingStart = 0;
+        private bool _isConnected;
+        private double _meterReadingStart;
         private DateTime _chargingStart;
-        private bool _isCharging = false;
+        private bool _isCharging;
 
-           private Tariff _currentTariff = null;
-        private double _meterReadingStartTariff = 0;      
-        
+        private Tariff? _currentTariff;
+        private double _meterReadingStartTariff;
 
-        public ChargeSessionInfoBase ChargeSessionInfo { get; private set; }
 
-        public ChargingSession()
-        {
-            ChargeSessionInfo = DefaultSessionInfo();
-        }
+        public ChargeSessionInfoBase ChargeSessionInfo { get; private set; } = DefaultSessionInfo();
 
-        public void UpdateSession(SocketMeasurement newMeasurement, Tariff newTariff)
+        public void UpdateSession(SocketMeasurement newMeasurement, Tariff? newTariff)
         {
             if (newMeasurement == null) return;
 
@@ -86,7 +81,7 @@ namespace AlfenNG9xx
             // calculate the costs for the usage in for the last tariff
             if (_isCharging && _currentTariff != null)
             {
-                if (_currentTariff.TariffUsage != newTariff.TariffUsage)
+                if (!_currentTariff.Equals(newTariff))
                 {
                     // nog te doen: gebruik moment van gebruik van dit tarief ipv now
                     ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
@@ -98,8 +93,8 @@ namespace AlfenNG9xx
                 else
                 {
                     // nog te doen: hoe tussentijds
-                    var energy = (decimal)(newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff);                    
-                    var costPerWatt = _currentTariff.TariffUsage > 0 ? _currentTariff.TariffUsage / 1000.0m : 0.0m;                        
+                    var energy = (decimal)(newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff);
+                    var costPerWatt = _currentTariff.TariffUsage > 0 ? _currentTariff.TariffUsage / 1000.0m : 0.0m;
                     ChargeSessionInfo.RunningCost = energy * costPerWatt;
                 }
             }

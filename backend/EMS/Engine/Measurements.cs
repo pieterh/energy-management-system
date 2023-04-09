@@ -24,10 +24,10 @@ namespace EMS.Engine
             CurrentChargingL3 = currentChargingL3;
         }
 
-        public int NrOfDataPoints {get;set; }
+        public int NrOfDataPoints { get; set; }
         public double CurrentUsingL1 { get; set; }
         public double CurrentUsingL2 { get; set; }
-        public double CurrentUsingL3 {get;set; }
+        public double CurrentUsingL3 { get; set; }
         public double CurrentChargingL1 { get; set; }
         public double CurrentChargingL2 { get; set; }
         public double CurrentChargingL3 { get; set; }
@@ -37,7 +37,8 @@ namespace EMS.Engine
     {
         private readonly Queue<Measurement> _measurements = new(60);
         private int _bufferSeconds;
-        public int BufferSeconds {
+        public int BufferSeconds
+        {
             get { return _bufferSeconds; }
             set
             {
@@ -48,12 +49,12 @@ namespace EMS.Engine
             }
         }
 
-        public int ItemsInBuffer {  get { return _measurements.Count; } }
+        public int ItemsInBuffer { get { return _measurements.Count; } }
 
         public Measurements(int seconds)
         {
             _bufferSeconds = seconds;
-        }       
+        }
 
         public void AddData(double? l1, double? l2, double? l3, double? chargerl1, double? chargerl2, double? chargerl3)
         {
@@ -101,10 +102,9 @@ namespace EMS.Engine
 
         private static AverageUsage CalculateAverageUsage(IEnumerable<Measurement> m, DateTime? timeFrame)
         {
-            if (timeFrame.HasValue)
-                m = m.Where((x) => x.Received >= timeFrame);            
+            var ma = (timeFrame.HasValue) ? m.Where((x) => x.Received >= timeFrame).ToArray() : m.ToArray();
 
-            if (!m.Any()) { return new AverageUsage(); }
+            if (!ma.Any()) { return new AverageUsage(); }
 
             double avgCurrentUsingL1 = 0, avgCurrentUsingL2 = 0, avgCurrentUsingL3 = 0;
             double avgCurrentChargingL1 = 0, avgCurrentChargingL2 = 0, avgCurrentChargingL3 = 0;
@@ -118,7 +118,7 @@ namespace EMS.Engine
                 );
 
             return new AverageUsage(
-                 m.Count(),
+                 ma.Length,
                  avgCurrentUsingL1, avgCurrentUsingL2, avgCurrentUsingL3,
                  avgCurrentChargingL1, avgCurrentChargingL2, avgCurrentChargingL3
                 );
@@ -145,7 +145,7 @@ namespace EMS.Engine
             bool done = false;
             do
             {
-                if (_measurements.TryPeek(out Measurement m))
+                if (_measurements.TryPeek(out Measurement? m))
                 {
                     var t = DateTimeProvider.Now - m.Received;
                     if (t.TotalSeconds >= BufferSeconds)

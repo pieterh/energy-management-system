@@ -8,7 +8,7 @@ using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.Engine;
 using EMS.Library.Core;
-using EMS.Library.Adapter.SmartMeter;
+using EMS.Library.Adapter.SmartMeterAdapter;
 using EMS.Library.TestableDateTime;
 using EMS.DataStore;
 using System.Diagnostics.CodeAnalysis;
@@ -24,20 +24,22 @@ namespace EMS
         private readonly Compute _compute;
 
         private readonly ILogger Logger;
-        private readonly ISmartMeter _smartMeter;
+        private readonly ISmartMeterAdapter _smartMeter;
         private readonly IChargePoint _chargePoint;
 
         private const int _interval = 10000; //ms
 
         public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
 
-        public ChargingMode ChargingMode {
+        public ChargingMode ChargingMode
+        {
             get => _compute.Mode;
             set => _compute.Mode = value;
         }
 
-        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeter smartMeter, IChargePoint chargePoint)
+        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint)
         {
+            ArgumentNullException.ThrowIfNull(appLifetime);
             Logger = logger;
 
             _smartMeter = smartMeter;
@@ -53,7 +55,7 @@ namespace EMS
         public override Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("1. StartAsync has been called.");
-            _smartMeter.MeasurementAvailable += SmartMeter_MeasurementAvailable;
+            _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
             _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
             _compute.StateUpdate += Compute_StateUpdate;
 
@@ -71,18 +73,18 @@ namespace EMS
                 using (var db = new HEMSContext())
                 {
 
-                    Logger.LogInformation("Database path: {path}.", HEMSContext.DbPath);
+                    Logger.LogInformation("Database path: {Path}.", HEMSContext.DbPath);
 
                     var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
                     foreach (var item in items)
                     {
-                        Logger.LogInformation("Transaction: {trans}", item.ToString());
+                        Logger.LogTrace("Transaction: {Trans}", item.ToString());
                         db.Entry(item)
                             .Collection(b => b.CostDetails)
                             .Load();
                         foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp))
                         {
-                            Logger.LogInformation("Transaction detail: {detail}", detail.ToString());
+                            Logger.LogTrace("Transaction detail: {Detail}", detail.ToString());
                         }
                     }
                 }
@@ -102,10 +104,12 @@ namespace EMS
 
                     await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
                 }
-            }catch(TaskCanceledException)
+            }
+            catch (TaskCanceledException)
             {
                 Logger.LogInformation("Canceled");
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.LogError(ex, "Unhandled exception");
             }
@@ -120,7 +124,7 @@ namespace EMS
         {
             Logger.LogInformation("3. OnStopping has been called.");
 
-            _smartMeter.MeasurementAvailable -= SmartMeter_MeasurementAvailable;
+            _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
             _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
             _compute.StateUpdate -= Compute_StateUpdate;
         }
@@ -138,16 +142,16 @@ namespace EMS
             Logger.LogInformation("5. OnStopped has been called.");
         }
 
-        private void SmartMeter_MeasurementAvailable(object sender, ISmartMeter.MeasurementAvailableEventArgs e)
+        private void SmartMeter_MeasurementAvailable(object? sender, SmartMeterMeasurementAvailableEventArgs e)
         {
-            Logger.LogInformation("- {measurement}", e.Measurement);
+            Logger.LogTrace("- {Measurement}", e.Measurement);
 
-            _compute.AddMeasurement(e.Measurement, _chargePoint.LastSocketMeasurement);
+            _compute.AddMeasurement(e.Measurement, e.Measurement);
         }
 
-        private void ChargePoint_ChargingStateUpdate(object sender, IChargePoint.ChargingStateEventArgs e)
+        private void ChargePoint_ChargingStateUpdate(object? sender, ChargingStateEventArgs e)
         {
-            Logger.LogInformation("- {stateMessage}, {ended}, {delivered}, €{cost} ",
+            Logger.LogInformation("- {StateMessage}, {Ended}, {Delivered}, €{Cost} ",
                 e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered, e.Cost);
 
 
@@ -156,8 +160,9 @@ namespace EMS
 
             if (e.SessionEnded)
             {
-                using (var db = new HEMSContext()){
-                
+                using (var db = new HEMSContext())
+                {
+
                     var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
 
                     var transaction = new ChargingTransaction
@@ -176,15 +181,18 @@ namespace EMS
                         var detail = new CostDetail()
                         {
                             Timestamp = c.Timestamp,
-                            EnergyDelivered = (double)energy,
-                            Cost = (double)(energy * c.Tariff.TariffUsage),
-                            TarifStart = c.Tariff.Timestamp,
-                            TarifUsage = (double)c.Tariff.TariffUsage
+                            EnergyDelivered = (double)energy,  
                         };
+                        if (c.Tariff != null)
+                        {
+                            detail.Cost = (double)(energy * c.Tariff.TariffUsage);
+                            detail.TarifStart = c.Tariff.Timestamp;
+                            detail.TarifUsage = (double)c.Tariff.TariffUsage;
+                        }
                         db.Add(detail);
 
                         LoggerChargingcost.Debug(detail.ToString());
-                        
+
                         transaction.CostDetails.Add(detail);
                     }
 
@@ -194,9 +202,16 @@ namespace EMS
             }
         }
 
-        private void Compute_StateUpdate(object sender, Compute.StateEventArgs e)
+        private void Compute_StateUpdate(object? sender, StateUpdateEventArgs e)
         {
-            LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
+            if (e.Info != null)
+            {
+                LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
+            }
+            else
+            {
+                LoggerChargingState.Info($"Mode information not available");
+            }
         }
     }
 }

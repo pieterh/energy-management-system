@@ -11,7 +11,7 @@ namespace EMS.WebHost.Middleware
         private RequestDelegate Next { get; init; }
         private ILogger Logger { get; init; }
 
-        private static readonly Action<ILogger, string, Exception> _invokeRequested = LoggerMessage.Define<string>(
+        private static readonly Action<ILogger, string, Exception?> _invokeRequested = LoggerMessage.Define<string>(
                 LogLevel.Information,
                 new EventId(1, nameof(Invoke)),
                 "SpaMiddleware Invoke --> {RequestPath}");

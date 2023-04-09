@@ -1,0 +1,13 @@
+{
+  "runtimeOptions": {
+    "frameworks": [
+      {
+        "name": "Microsoft.AspNetCore.App",
+        "version": "7.0.4"
+      }
+    ],
+    "configProperties": {
+      "System.GC.Server": true
+    }
+  }
+}

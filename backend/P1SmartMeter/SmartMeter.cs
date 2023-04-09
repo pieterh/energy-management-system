@@ -3,64 +3,74 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using EMS.Library;
-using EMS.Library.Adapter.SmartMeter;
-using EMS.Library.Configuration;
-using EMS.Library.TestableDateTime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using EMS.Library;
+using EMS.Library.Adapter.SmartMeterAdapter;
+using EMS.Library.Configuration;
+using EMS.Library.TestableDateTime;
+
 using P1SmartMeter.Connection;
 using P1SmartMeter.Telegram.DSMR;
 
 namespace P1SmartMeter
 {
-    public class P1SmartMeter : Microsoft.Extensions.Hosting.BackgroundService, ISmartMeter
+    public class SmartMeter : Microsoft.Extensions.Hosting.BackgroundService, ISmartMeterAdapter
     {
         private readonly ILogger Logger;
         private bool _disposed;
 
         private enum ConnectionType { LAN, TTY };
         private readonly ConnectionType _connectionType;
-        private readonly string _host;
-        private readonly int _port;
+        private readonly string? _host;
+        private readonly int? _port;
+        private readonly string? _usbPort;
+        private readonly MessageBuffer _buffer;
 
-        private readonly string _usbPort;
-
-        private IP1Reader _reader;
-        private MessageBuffer _buffer;
+        private IP1Reader? _reader;
+        
         private readonly P1RelayServer _relayServer;
 
-        public SmartMeterMeasurementBase LastMeasurement { get => Measurement; }
+        public SmartMeterMeasurementBase? LastMeasurement { get => Measurement; }
 
-        private SmartMeterMeasurement _measurement;
-        protected SmartMeterMeasurement Measurement
+        private SmartMeterMeasurementBase? _measurement;
+        protected SmartMeterMeasurementBase? Measurement
         {
-            get {
+            get
+            {
                 return _measurement;
             }
-            set {         
+            set
+            {
                 _measurement = value;
-                MeasurementAvailable?.Invoke(this, new ISmartMeter.MeasurementAvailableEventArgs() { Measurement = value });
+                if (value != null)
+                    SmartMeterMeasurementAvailable.Invoke(this, new SmartMeterMeasurementAvailableEventArgs() { Measurement = value });
             }
         }
 
-        public event EventHandler<ISmartMeter.MeasurementAvailableEventArgs> MeasurementAvailable;
+        public event EventHandler<SmartMeterMeasurementAvailableEventArgs> SmartMeterMeasurementAvailable = delegate { };
 
         public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
         {
+            ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(instance);
             services.AddSingleton<P1RelayServer>();
 
-            BackgroundServiceHelper.CreateAndStart<ISmartMeter, P1SmartMeter>(services, instance.Config);
+            BackgroundServiceHelper.CreateAndStart<ISmartMeterAdapter, SmartMeter>(services, instance.Config);
         }
 
 
-        public P1SmartMeter(ILogger<P1SmartMeter> logger, Config config, P1RelayServer relayServer)
+        public SmartMeter(ILogger<SmartMeter> logger, Config config, P1RelayServer relayServer)
         {
+            ArgumentNullException.ThrowIfNull(logger);
+            ArgumentNullException.ThrowIfNull(config);
+            ArgumentNullException.ThrowIfNull(relayServer);
+
             Logger = logger;
             _relayServer = relayServer;
-            Logger.LogInformation("P1SmartMeter({Cfg})", config.ToString().Replace(Environment.NewLine, " "));
+            Logger.LogInformation("SmartMeter({Cfg})", config.ToString().Replace(Environment.NewLine, " ", StringComparison.Ordinal));
 
             if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)
             {
@@ -73,6 +83,8 @@ namespace P1SmartMeter
                 _connectionType = ConnectionType.TTY;
                 _usbPort = config.Device; // ie "/dev/sttyUSB1"
             }
+
+            _buffer = new MessageBuffer();
         }
 
         public override void Dispose()
@@ -115,12 +127,11 @@ namespace P1SmartMeter
                 ActionBlock<string> _relayBlock;
                 ActionBlock<DSMRTelegram> _lastBlock;
 
-                _buffer = new MessageBuffer();
                 _firstBlock = new TransformManyBlock<string, string>(input =>
                 {
                     _buffer.Add(input);
                     var l = new List<string>();
-                    while (_buffer.TryTake(out string msg))
+                    while (_buffer.TryTake(out string? msg) && msg != null)
                     {
                         Logger.LogDebug("first received complete message. passing it to transform... {Length}", msg.Length);
                         l.Add(msg);
@@ -163,7 +174,7 @@ namespace P1SmartMeter
 
                 _secondBlock.LinkTo(_lastBlock);
 
-                _reader = CreateMeterReader();
+                _reader = CreateMeterReader(_connectionType, _host, _port, _usbPort);
                 _reader.DataArrived += (sender, args) =>
                 {
                     _firstBlock.Post(args.Data);
@@ -181,25 +192,31 @@ namespace P1SmartMeter
                 {
                     await _reader.StopAsync(stoppingToken).ConfigureAwait(false);
                 }
-            }catch(TaskCanceledException)
+            }
+            catch (TaskCanceledException)
             {
                 Logger.LogInformation("Canceled");
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
-                Logger.LogError(ex, "Unhandled exceptio");
+                Logger.LogError(ex, "Unhandled exception");
             }
         }
 
-        internal IP1Reader CreateMeterReader()
+        static IP1Reader CreateMeterReader(ConnectionType connectionType, string? host, int? port, string? usbPort)
         {
-            switch (_connectionType)
+            switch (connectionType)
             {
                 case ConnectionType.LAN:
-                    return new P1ReaderLAN(_host, _port);
+                    if (string.IsNullOrWhiteSpace(host)) throw new ArgumentOutOfRangeException(nameof(connectionType), "Missing hostname for ConnectionType.LAN");
+                    if (!port.HasValue) throw new ArgumentOutOfRangeException(nameof(connectionType), "Missing port for ConnectionType.LAN");
+                    return new P1ReaderLAN(host, port.Value);
                 case ConnectionType.TTY:
-                    return new P1ReaderTTY(_usbPort);
+                    if (string.IsNullOrWhiteSpace(usbPort)) throw new ArgumentOutOfRangeException(nameof(connectionType), "Missing usbport for ConnectionType.TTY");
+                    return new P1ReaderTTY(usbPort);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(connectionType), "Unhandled conntection type");
             }
-            return null;
         }
     }
 }
