@@ -32,6 +32,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using EMS.Library.dotNET;
 using Microsoft.AspNetCore.Http;
+using EMS.Library.Files;
 
 namespace EMS
 {
@@ -134,7 +135,7 @@ namespace EMS
             }
             catch (FileNotFoundException)
             {
-                Logger.Error($"Ther logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
+                Logger.Error($"The logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
                 EnforceLogging(true);
             }
         }
@@ -149,19 +150,29 @@ namespace EMS
                 .UseNLog()
                 .ConfigureAppConfiguration((builderContext, configuration) =>
                 {
+
                     IHostEnvironment env = builderContext.HostingEnvironment;
                     Logger.Info($"Hosting environment: {env.EnvironmentName}");
-                    if (ConfigurationManager.ValidateConfig(options.ConfigFile) && !string.IsNullOrWhiteSpace(options?.ConfigFile))
+                    var configFile = options.ConfigFile;
+                    var configFileEnvironmentSpecific = $"config.{env.EnvironmentName}.json";
+                    if (FileTools.FileExistsAndReadable(configFile))
                     {
-                        configuration.Sources.Clear();
-                        configuration
-                           .AddJsonFile(options.ConfigFile, optional: false, reloadOnChange: false)
-                           .AddJsonFile($"config.{env.EnvironmentName}.json", optional: true, reloadOnChange: false);
+                        if (ConfigurationManager.ValidateConfig(configFile) && !string.IsNullOrWhiteSpace(configFile))
+                        {
+                            configuration.Sources.Clear();
+                            configuration.AddJsonFile(configFile, optional: false, reloadOnChange: false);
+
+                            if (FileTools.FileExistsAndReadable(configFileEnvironmentSpecific))
+                            {
+                                configuration.AddJsonFile(configFileEnvironmentSpecific, optional: true, reloadOnChange: false);
+                            }
+                        }
+                        else
+
+                            throw new ArgumentException($"There was an error with the configuration file {configFile}");
                     }
                     else
-                        Logger.Error("There was an error with the configuration file");
-                    
-
+                        throw new ArgumentException($"The configuration file {configFile} was not found or not readable.");
                 })
                 .ConfigureServices((builderContext, services) =>
                 {

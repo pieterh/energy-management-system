@@ -33,4 +33,4 @@ RUN ls -la /app/ems/dist/_framework
 RUN ls -la /app/ems/dist/_content
 RUN ls -la /app/ems/dist/_content/MudBlazor
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT /usr/local/bin/entrypoint.sh --config ${EMS_PATHS_CONFIG} --nlogcfg ${EMS_PATHS_NLOG}
