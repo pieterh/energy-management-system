@@ -172,7 +172,6 @@ namespace EMS.WebHost
             app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
             app.UseResponseCompression();
-            //app.UseStaticFiles();
 
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings.Clear();
@@ -201,8 +200,6 @@ namespace EMS.WebHost
                 DefaultContentType = "application/octet-stream",
                 ServeUnknownFileTypes = true
             });
-
-            //app.UseMiddleware<Middleware.SpaMiddleware>(Logger);
 
             app.UseRouting();
 
