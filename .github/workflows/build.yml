@@ -190,7 +190,7 @@ jobs:
         path: ${{ runner.temp }}/ems.zip
     - name: Publish - Blazor WASM frontend
       run: |
-        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazerWasm
+        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazorWasm
     - name: Zip Release - Blazor WASM frontend
       uses: TheDoctor0/zip-release@0.7.1
       with:
