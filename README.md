@@ -95,22 +95,29 @@ docker image prune
 
 ### Docker
 
-Get the image from the repository:
+Get the latest image from the repository:
 ```
 docker pull pieterhil/energy-management-system:latest
 ```
 
+Remove any old containers from the system that where left over from a prvious run.
 ```
-docker run -d \
+docker container rm hems
+```
+
+```
+docker run \
     -p 8080:5000 \
-    -p 8443:443 \
-    -v config:/app/ems/userdata \
+    --mount type=bind,source="$(pwd)"/config,destination=/app/ems/userdata \
     -e TZ=Europe/Amsterdam \
     -e EMS_PATHS_CONFIG=/app/ems/userdata/config.json \
     -e EMS_PATHS_NLOG=/app/ems/userdata/NLog.config \
     --name=hems \
-    pieterhil/energy-management-system:latest
+    pieterhil/energy-management-system:feature-blazorwasm
 ```
+
+### Frontend
+The frontend is accessible using the browser http://127.0.0.1:8080 if you are running the docker on you own local system.
 
 ## Developing and Contributing
 We'd love to get contributions from you! Take a look at the

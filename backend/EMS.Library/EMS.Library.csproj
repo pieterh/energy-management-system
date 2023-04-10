@@ -26,6 +26,7 @@
 		<Folder Include="Assembly\" />
 		<Folder Include="Exceptions\" />
 		<Folder Include="dotNET\" />
+		<Folder Include="Files\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Adapter\PriceProvider\" />
