@@ -100,7 +100,7 @@ Get the latest image from the repository:
 docker pull pieterhil/energy-management-system:latest
 ```
 
-Remove any old containers from the system that where left over from a prvious run.
+Remove any old containers from the system that where left over from a previous run.
 ```
 docker container rm hems
 ```
@@ -113,7 +113,7 @@ docker run \
     -e EMS_PATHS_CONFIG=/app/ems/userdata/config.json \
     -e EMS_PATHS_NLOG=/app/ems/userdata/NLog.config \
     --name=hems \
-    pieterhil/energy-management-system:feature-blazorwasm
+    pieterhil/energy-management-system:latest
 ```
 
 ### Frontend

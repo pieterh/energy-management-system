@@ -30,6 +30,8 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="FluentAssertions" Version="6.10.0" />
+		<PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="System.Text.RegularExpressions" />

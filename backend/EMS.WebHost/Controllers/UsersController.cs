@@ -42,9 +42,7 @@ namespace EMS.WebHost.Controllers
         public Guid Id { get; set; }
         public required string Username { get; init; }
         public required string Name { get; init; }
-    }
-
-    
+    }   
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
@@ -52,13 +50,11 @@ namespace EMS.WebHost.Controllers
     public class UsersController : ControllerBase
     {
         private ILogger Logger { get; init; }
-        private readonly IWebHostEnvironment _env;
         private readonly IJwtService _jwtService;
 
-        public UsersController(ILogger<UsersController> logger, IWebHostEnvironment env, IJwtService jwtService)
+        public UsersController(ILogger<UsersController> logger, IJwtService jwtService)
         {
             Logger = logger;
-            _env = env;
             _jwtService = jwtService;
         }
 
