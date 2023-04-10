@@ -49,9 +49,12 @@ The recommended method is to use Docker compose (See below). For instructions ho
 
 ### Docker compose
 ```
-mkdir /hems
-cd /hems
+mkdir hems
+cd hems
+mkdir config
 ```
+
+create config.json and a NLog.config in the 'config' subfolder. You can find examples of these in this repository folder docker/tests/config/
 
 *docker-compose.yml*
 
@@ -64,11 +67,13 @@ services:
     container_name: hems
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8080:5000"
     volumes:
       - ./config:/app/ems/userdata
     environment:
       - TZ=Europe/Amsterdam
+      - EMS_PATHS_CONFIG=/app/ems/userdata/config.json
+      - EMS_PATHS_NLOG=/app/ems/userdata/NLog.config
 ```
 
 You can use the following two options to start the container:
@@ -90,21 +95,29 @@ docker image prune
 
 ### Docker
 
-Get the image from the repository:
+Get the latest image from the repository:
 ```
 docker pull pieterhil/energy-management-system:latest
 ```
 
+Remove any old containers from the system that where left over from a prvious run.
 ```
-docker run -d \
-    -p 8080:8080 \
-    -p 8443:443 \
-    -v <path for config files>:/app/ems/userdata \
-    -e TZ=Europe/Amsterdam
-    --device=<device_id> \
-    --name=hems \ 
-    pieterhil/energy-management-system:latest
+docker container rm hems
 ```
+
+```
+docker run \
+    -p 8080:5000 \
+    --mount type=bind,source="$(pwd)"/config,destination=/app/ems/userdata \
+    -e TZ=Europe/Amsterdam \
+    -e EMS_PATHS_CONFIG=/app/ems/userdata/config.json \
+    -e EMS_PATHS_NLOG=/app/ems/userdata/NLog.config \
+    --name=hems \
+    pieterhil/energy-management-system:feature-blazorwasm
+```
+
+### Frontend
+The frontend is accessible using the browser http://127.0.0.1:8080 if you are running the docker on you own local system.
 
 ## Developing and Contributing
 We'd love to get contributions from you! Take a look at the
