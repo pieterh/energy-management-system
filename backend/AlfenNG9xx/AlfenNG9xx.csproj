@@ -22,4 +22,10 @@
 		<InternalsVisibleTo Include="AlfenNG9xx.Unit.Tests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Modbus\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Modbus\" />
+	</ItemGroup>
 </Project>
