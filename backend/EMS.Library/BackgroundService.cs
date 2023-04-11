@@ -70,7 +70,7 @@ namespace EMS.Library
         }
         protected Task StartAsync()
         {
-            if (_parentToken == null) throw new HEMSApplicationException("Missing parent token");
+            if (_parentToken == null) throw new Exceptions.ApplicationException("Missing parent token");
             _parentToken.Value.ThrowIfCancellationRequested(); // not starting anymore
 
             DisposeTokenSource();
