@@ -166,7 +166,7 @@ namespace AlfenNG9xx
                 }
             }
 
-            Logger.Info("Alfen NG9xx - Canceled");
+            Logger.Info("Canceled");
             stoppingToken.ThrowIfCancellationRequested();
         }
 
