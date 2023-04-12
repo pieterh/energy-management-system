@@ -64,6 +64,7 @@ namespace EMS
             return Task.CompletedTask;
         }
 
+        [SuppressMessage("Code Analysis","CA1031")]
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try

@@ -14,6 +14,7 @@ using EMS.Library.TestableDateTime;
 
 using P1SmartMeter.Connection;
 using P1SmartMeter.Telegram.DSMR;
+using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter
 {
@@ -115,6 +116,7 @@ namespace P1SmartMeter
             _reader = null;
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Logger.LogInformation("P1SmartMeter Starting");
