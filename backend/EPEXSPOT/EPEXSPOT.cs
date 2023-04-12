@@ -60,6 +60,7 @@ namespace EPEXSPOT
             Logger.Trace($"Dispose({disposing}) done => _disposed {_disposed}");
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
