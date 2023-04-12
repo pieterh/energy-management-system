@@ -252,6 +252,8 @@ jobs:
       run: |
         mkdir -p dist/ems
         unzip ${{ runner.temp }}/ems.zip -d dist
+        find dist/ems/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
+        ls -la dist/ems/runtimes
       working-directory: docker     
     - name: Download EMS.BlazorWasm Build Artifact
       uses: actions/download-artifact@v3
