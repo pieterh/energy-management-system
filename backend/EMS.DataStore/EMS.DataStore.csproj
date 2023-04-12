@@ -26,6 +26,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="NLog" Version="5.1.3" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="efbundle" />

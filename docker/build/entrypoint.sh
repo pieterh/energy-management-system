@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-printf "\n\033[0;44m---> Starting HEMS \033[0m\n"
 id
+uname -a
+ 
+printf "\n\033[0;44m---> Starting HEMS \033[0m\n"
+
 #params=$(echo "$@" "--nlogdebug true")
 params=$(echo "$@" )
 paramsStr=$( IFS=$'\n'; echo "${params}" )

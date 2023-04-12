@@ -73,6 +73,6 @@
   },
   "db": {
     "type": "sqlite",
-    "name": "hems.db"
+    "name": "/app/ems/userdata/hems.db"
   }
 }

@@ -1,13 +1,9 @@
-﻿using System;
-using System.IO;
+﻿
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -18,21 +14,15 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using NLog;
 using NLog.Web;
+using EMS.DataStore;
 using EMS.DataStore.InMemory;
 using EMS.Library;
 using EMS.Library.Assembly;
 using EMS.Library.Configuration;
 using EMS.Library.Core;
-
-using EMS.WebHost;
-
-using EMS.DataStore;
-using System.Linq;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using EMS.Library.dotNET;
-using Microsoft.AspNetCore.Http;
 using EMS.Library.Files;
+using EMS.WebHost;
 
 namespace EMS
 {
@@ -132,11 +122,17 @@ namespace EMS
                     EnforceLogging(true);
                     Logger.Fatal("No logging was configured. Default to basic logging to console.");
                 }
+                Logger.Info("Logger is configured.");
             }
             catch (FileNotFoundException)
             {
-                Logger.Error($"The logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
                 EnforceLogging(true);
+                Logger.Error($"The logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");                
+            }
+            catch (IOException e)
+            {
+                EnforceLogging(true);
+                Logger.Error($"There was an io error during configuration or writing logfile. Using default logging to console.", e);
             }
         }
 
@@ -221,7 +217,6 @@ namespace EMS
 
                     });
 
-                    Logger.Info("Updating root folders");
                     webBuilder.UseContentRoot(string.Empty);
                     webBuilder.UseWebRoot("dist");
 
