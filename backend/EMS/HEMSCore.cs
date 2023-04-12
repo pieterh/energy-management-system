@@ -113,6 +113,8 @@ namespace EMS
             {
                 Logger.LogError(ex, "Unhandled exception");
             }
+
+            stoppingToken.ThrowIfCancellationRequested();
         }
 
         private void OnStarted()
