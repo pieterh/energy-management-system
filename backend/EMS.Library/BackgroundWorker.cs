@@ -1,6 +1,4 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.Library
 {
@@ -21,9 +19,9 @@ namespace EMS.Library
             {
                 DisposeBackgroundTask();
             }
-
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         private void DisposeBackgroundTask()
         {
             if (_backgroundTask == null) return;

@@ -130,6 +130,7 @@ namespace AlfenNG9xx
             catch (TaskCanceledException) { /* ignoring */ }
         }
 
+        [SuppressMessage("Code Analysis","CA1031")]
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Logger.Info("Alfen NG9xx - Starting");
@@ -213,6 +214,7 @@ namespace AlfenNG9xx
             Logger.Info(pi.ToPrintableString());
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         protected void ShowStationStatus()
         {
             try
@@ -231,6 +233,7 @@ namespace AlfenNG9xx
             }
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         protected void ShowSocketMeasurement()
         {
             try

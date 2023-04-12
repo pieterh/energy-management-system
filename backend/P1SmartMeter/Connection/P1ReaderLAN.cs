@@ -140,6 +140,7 @@ namespace P1SmartMeter.Connection
             return isConnected;
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         private async void OnCompleted(object? sender, SocketAsyncEventArgs eventArgs)
         {
             try
