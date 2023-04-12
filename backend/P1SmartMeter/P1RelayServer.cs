@@ -7,6 +7,7 @@ using System.Linq;
 using EMS.Library;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter
 {
@@ -34,6 +35,7 @@ namespace P1SmartMeter
             _listener = null;
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         public void Relay(string data2relay)
         {
             
@@ -72,6 +74,7 @@ namespace P1SmartMeter
             });
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         protected override void DoBackgroundWork()
         {
             try
