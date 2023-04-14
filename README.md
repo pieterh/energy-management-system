@@ -72,7 +72,7 @@ services:
     user: 1001:123
     restart: unless-stopped
     ports:
-      - "8080:5000"
+      - "8080:8080"
     volumes:
       - ./config:/app/ems/userdata
     environment:
@@ -112,7 +112,7 @@ docker container rm hems
 
 ```
 docker run \
-    -p 8080:5000 \
+    -p 8080:8080 \
     --mount type=bind,source="$(pwd)"/config,destination=/app/ems/userdata \
     --user 1001:123
     -e TZ=Europe/Amsterdam \

@@ -23,9 +23,8 @@ jobs:
     - name: Start docker containers
       run: |
         chmod ugo+w config         
-        id
         docker compose --file hems-integration-test-docker-compose.yml up --pull --build --detach
-        sleep 30
+        sleep 15
       working-directory: docker/tests  
     - name: Build - backend
       run: |

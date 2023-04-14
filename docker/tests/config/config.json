@@ -61,9 +61,6 @@
     }
   ],
   "web": {
-    "port": 5000,
-    "host": "localhost",
-    "https": false,
     "jwt": {
       "issuer": "hems",
       "audience": "hems",
@@ -71,6 +68,13 @@
       "clockskew": 10
     }
   },
+  "Kestrel": {
+    "EndPoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:8080"
+      }
+    }
+  },  
   "db": {
     "type": "sqlite",
     "name": "/app/ems/userdata/hems.db"

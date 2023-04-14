@@ -72,14 +72,18 @@
     }
   ],
   "web": {
-    "port": 5005,
-    "host": "localhost",
-    "https": false,
     "jwt": {
       "issuer": "hems",
       "audience": "hems",
       "expiration": 60,
       "clockskew": 10
+    }
+  },
+  "Kestrel": {
+    "EndPoints": {
+      "Http": {
+        "Url": "http://*:5005"
+      }
     }
   },
   "db": {
