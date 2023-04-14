@@ -30,7 +30,7 @@ namespace AlfenNG9xx
         private readonly string _alfenIp;
         private readonly int _alfenPort;      
 
-        public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
+        public static void ConfigureServices(IServiceCollection services, Instance instance)
         {
             ArgumentNullException.ThrowIfNull(instance);
 

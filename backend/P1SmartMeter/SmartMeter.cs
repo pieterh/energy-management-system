@@ -53,7 +53,7 @@ namespace P1SmartMeter
 
         public event EventHandler<SmartMeterMeasurementAvailableEventArgs> SmartMeterMeasurementAvailable = delegate { };
 
-        public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
+        public static void ConfigureServices(IServiceCollection services, Instance instance)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(instance);
