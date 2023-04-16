@@ -43,7 +43,7 @@ namespace AlfenNG9xx.Tests
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
 
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
@@ -85,7 +85,7 @@ namespace AlfenNG9xx.Tests
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
 
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
@@ -131,7 +131,7 @@ namespace AlfenNG9xx.Tests
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
 
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
@@ -168,7 +168,7 @@ namespace AlfenNG9xx.Tests
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
 
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
@@ -196,7 +196,7 @@ namespace AlfenNG9xx.Tests
               .Returns<byte, ushort, ushort>((slave, address, count) => { return (address == 300) ? piRegisters_300 : piRegisters_1200; });
 
 
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 

@@ -17,14 +17,14 @@ namespace EMS
             // read JSON directly from a file
             using var streamReader = GetConfigFile(filename);
             var result = JsonSerializer.Deserialize<JsonElement>(streamReader.BaseStream, Options);
-            var schema = JSon.GetSchema("config.schema.json");
+            var schema = JsonHelpers.GetSchema("config.schema.json");
             SchemaRegistry.Global.Register(schemaUri, schema);
             var validationResult = schema.Evaluate(result, new EvaluationOptions() { OutputFormat = OutputFormat.Hierarchical });
 
             if (!validationResult.IsValid)
             {
                 Logger.Error("There was an error in the format of the configuration file {FileName}", filename);
-                JSon.ShowEvaluationDetails(validationResult.Details);
+                JsonHelpers.ShowEvaluationDetails(validationResult.Details);
                 throw new ArgumentException("The configuration file has not a valid format.", nameof(filename));
             }
             return result;

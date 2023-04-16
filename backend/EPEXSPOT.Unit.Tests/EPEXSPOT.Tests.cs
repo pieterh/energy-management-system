@@ -11,7 +11,7 @@ public class TariffTests
     public void FindsCorrectTariff(Tariff[] tariff, DateTime dateTime, int idx)
     {
         ArgumentNullException.ThrowIfNull(tariff);
-        Tariff? t = EPEXSPOT.FindTariff(tariff, dateTime);
+        Tariff? t = EPEXSPOTService.FindTariff(tariff, dateTime);
         Assert.NotNull(t);
         Assert.Equal(tariff[idx].Timestamp, t?.Timestamp);
     }
@@ -20,14 +20,14 @@ public class TariffTests
     [MemberData(nameof(TestDataGenerator.NotAvailable), MemberType = typeof(TestDataGenerator))]
     public void TariffNotAvailable(Tariff[] tariff, DateTime dateTime)
     {
-        var t = EPEXSPOT.FindTariff(tariff, dateTime);
+        var t = EPEXSPOTService.FindTariff(tariff, dateTime);
         Assert.Null(t);
     }
 
     [Fact]
     public void HandlesEmpty()
     {
-        var t = EPEXSPOT.FindTariff(Array.Empty<Tariff>(), new DateTime(2021, 12, 29, 12, 00, 00, DateTimeKind.Utc));
+        var t = EPEXSPOTService.FindTariff(Array.Empty<Tariff>(), new DateTime(2021, 12, 29, 12, 00, 00, DateTimeKind.Utc));
         Assert.Null(t);
     }
 
@@ -36,7 +36,7 @@ public class TariffTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            var t = EPEXSPOT.FindTariff(
+            var t = EPEXSPOTService.FindTariff(
                         new Tariff[] { new Tariff(new DateTime(2021, 12, 29, 13, 00, 00), 0, 0) },
                         new DateTime(2021, 12, 29, 12, 00, 00, DateTimeKind.Unspecified));
             t.Should().NotBeNull();
