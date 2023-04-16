@@ -24,6 +24,8 @@ namespace EMS.WebHost
 {
     public record WebConfig
     {
+        public string? ContentRootPath { get; set; }
+        public string? WebRootPath { get; set; }
         public JwtConfig? Jwt { get; set; }
     }
 
