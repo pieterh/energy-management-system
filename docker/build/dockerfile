@@ -6,29 +6,17 @@ RUN chmod ugo+x /usr/local/bin/entrypoint.sh \
  && mkdir /app \
  && mkdir /app/ems 
  
-ARG BACKEND
-ARG FEREACT
-ARG FEBLAZORWASM
-
 ENV ASPNETCORE_URLS ""
 EXPOSE 8080/tcp
 
+ARG BACKEND
 COPY $BACKEND/ /app/ems/
-COPY build/EMS.runtimeconfig.json /app/ems/EMS.runtimeconfig.json
-RUN rm -f -R /app/ems/dist/* \
- && rm -f /app/ems/NLog.config \
- && rm -f /app/ems/config.json
-
-COPY $FEBLAZORWASM/wwwroot /app/ems/dist/
 
 RUN chmod -R ugo+X /app \
  && chmod -R ugo+r /app \
  && ls -la /app/ems \
  && ls -la /app/ems/runtimes \
- && ls -la /app/ems/dist \
- && ls -la /app/ems/dist/_framework \
- && ls -la /app/ems/dist/_content \
- && ls -la /app/ems/dist/_content/MudBlazor 
+ && ls -la /app/ems/wwwroot 
 
 RUN adduser --disabled-password app
 USER app

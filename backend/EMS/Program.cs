@@ -24,6 +24,7 @@ using EMS.Library.dotNET;
 using EMS.Library.Exceptions;
 using EMS.Library.Files;
 using EMS.WebHost;
+using System.Text.Json;
 
 namespace EMS
 {
@@ -142,39 +143,43 @@ namespace EMS
         }
 
         static IHost CreateHost(Options options)
-        {
-            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
-            {
-                ContentRootPath = string.Empty,
-                WebRootPath = "dist"
-            });
-
-            builder.Logging.ClearProviders();
-            builder.Logging.AddNLogWeb();
-            var env = builder.Environment;
-
-            Logger.Info($"Hosting environment: {env.EnvironmentName}");
+        {        
             var configFile = options.ConfigFile;
-            var configFileEnvironmentSpecific = $"config.{env.EnvironmentName}.json";
-            if (FileTools.FileExistsAndReadable(configFile))
+            
+            if (!string.IsNullOrWhiteSpace(configFile) && FileTools.FileExistsAndReadable(configFile))
             {
-                if (ConfigurationManager.ValidateConfig(configFile) && !string.IsNullOrWhiteSpace(configFile))
-                {
-                    builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: false);
-
-                    if (FileTools.FileExistsAndReadable(configFileEnvironmentSpecific))
-                    {
-                        builder.Configuration.AddJsonFile(configFileEnvironmentSpecific, optional: true, reloadOnChange: false);
-                    }
-                }
-                else
-
+                if (!ConfigurationManager.ValidateConfig(configFile))
                     throw new ArgumentException($"There was an error with the configuration file {configFile}");
             }
             else
             {
                 throw new ArgumentException($"The configuration file {configFile} was not found or not readable.");
             }
+            
+            using var jd = JsonDocument.Parse(File.ReadAllText(configFile));
+            var wce = jd.RootElement.GetProperty("web");
+            WebConfig? wc =  wce.Deserialize<WebConfig>();
+            NullException.ThrowIfNull(wc, "The web configuration is not found");
+
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                ContentRootPath = wc.ContentRootPath,
+                WebRootPath = wc.WebRootPath
+            });
+
+            builder.Logging.ClearProviders();
+            builder.Logging.AddNLogWeb();
+
+            var env = builder.Environment;
+            Logger.Info($"Hosting environment: {env.EnvironmentName}");
+            var configFileEnvironmentSpecific = $"config.{env.EnvironmentName}.json";
+
+            builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: false);
+            if (FileTools.FileExistsAndReadable(configFileEnvironmentSpecific))
+            {
+                builder.Configuration.AddJsonFile(configFileEnvironmentSpecific, optional: true, reloadOnChange: false);
+            }
+
 
             /* nog te doen: hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
             EMS.DataStore.DbConfig dbConfig = new();

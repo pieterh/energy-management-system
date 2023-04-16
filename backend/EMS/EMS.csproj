@@ -83,12 +83,7 @@
 	<ItemGroup>
 	  <AssetsSourceFiles Include="dist_template_files\readme.html" />
 	</ItemGroup>
-<!--	<ItemGroup>
-		<None Update="wwwroot\index.html">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>-->
 	<Target Name="CopyCustomContent" AfterTargets="AfterBuild">
-		<Copy SourceFiles="@(AssetsSourceFiles)" DestinationFolder="$(OutputPath)\dist" SkipUnchangedFiles="true" />
+		<Copy SourceFiles="@(AssetsSourceFiles)" DestinationFolder="$(OutputPath)\wwwroot" SkipUnchangedFiles="true" />
 	</Target>
 </Project>

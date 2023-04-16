@@ -24,7 +24,7 @@
       "name": "EPEXSPOT Price Provider",
       "driver": {
         "assembly": "EPEXSPOT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-        "type": "EPEXSPOT.EPEXSPOT"
+        "type": "EPEXSPOT.EPEXSPOTService"
       }
     }
   ],
@@ -72,6 +72,8 @@
     }
   ],
   "web": {
+    "ContentRootPath": "",
+    "WebRootPath": "wwwroot",
     "jwt": {
       "issuer": "hems",
       "audience": "hems",
