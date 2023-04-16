@@ -213,10 +213,10 @@ namespace EMS
         private static void ConfigureInstances(this WebApplicationBuilder builder)
         {
             var services = builder.Services;
-            var adapters = new List<Adapter>();
+            var adapters = new List<AdapterConfiguration>();
             builder.Configuration.GetSection("adapters").Bind(adapters);
 
-            var instances = new List<Instance>();
+            var instances = new List<AdapterInstance>();
             builder.Configuration.GetSection("instances").Bind(instances);
             var activeInstances = instances.Where((x) => x.Enabled);
 
@@ -258,7 +258,7 @@ namespace EMS
             }
         }
 
-        public static Adapter? GetAdapter(List<Adapter> adapters, Guid adapterid)
+        public static AdapterConfiguration? GetAdapter(List<AdapterConfiguration> adapters, Guid adapterid)
         {
             foreach (var adapter in adapters)
             {

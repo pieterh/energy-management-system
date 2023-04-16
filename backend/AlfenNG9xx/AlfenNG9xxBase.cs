@@ -41,7 +41,7 @@ namespace AlfenNG9xx
             ChargingStateUpdate.Invoke(this, eventArgs);
         }
 
-        protected AlfenBase(Config config, IPriceProvider priceProvider)
+        protected AlfenBase(InstanceConfiguration config, IPriceProvider priceProvider)
         {
             ArgumentNullException.ThrowIfNull(config);
             ArgumentNullException.ThrowIfNull(priceProvider);

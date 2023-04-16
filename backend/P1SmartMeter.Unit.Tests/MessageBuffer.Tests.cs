@@ -4,7 +4,7 @@ using System.Text;
 using Moq;
 using P1SmartMeter;
 
-namespace P1SmartMeter.MessageBufferTests
+namespace P1SmartMeter.MessageBufferUnitTests
 {
     public class MessageBufferTests
     {

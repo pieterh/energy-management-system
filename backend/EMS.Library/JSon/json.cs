@@ -8,7 +8,7 @@ using Json.Schema;
 
 namespace EMS.Library.JSon
 {
-    public static class JSon
+    public static class JsonHelpers
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
