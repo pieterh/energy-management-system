@@ -4,33 +4,21 @@ COPY build/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod ugo+x /usr/local/bin/entrypoint.sh \
  && chmod ugo+r /usr/local/bin/entrypoint.sh \
  && mkdir /app \
- && mkdir /app/ems
+ && mkdir /app/ems 
+ 
+ENV ASPNETCORE_URLS ""
+EXPOSE 8080/tcp
 
 ARG BACKEND
-ARG FEREACT
-ARG FEBLAZORWASM
-
-ENV ASPNETCORE_URLS=http://+:5000
-EXPOSE 5000/tcp
-
 COPY $BACKEND/ /app/ems/
-COPY build/EMS.runtimeconfig.json /app/ems/EMS.runtimeconfig.json
-RUN rm -f /app/ems/NLog.config \
- && rm -f /app/ems/config.json \
- && rm -f -R /app/ems/dist/* \
- && find /app/ems/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
 
-COPY $FEBLAZORWASM/wwwroot /app/ems/dist/
-
-RUN chmod ugo+x /app \
- && chmod ugo+x /app/ems \
- && chmod ugo+r /app \
- && chmod ugo+r /app/ems \
+RUN chmod -R ugo+X /app \
+ && chmod -R ugo+r /app \
  && ls -la /app/ems \
  && ls -la /app/ems/runtimes \
- && ls -la /app/ems/dist \
- && ls -la /app/ems/dist/_framework \
- && ls -la /app/ems/dist/_content \
- && ls -la /app/ems/dist/_content/MudBlazor 
+ && ls -la /app/ems/wwwroot 
+
+RUN adduser --disabled-password app
+USER app
 
 ENTRYPOINT /usr/local/bin/entrypoint.sh --config ${EMS_PATHS_CONFIG} --nlogcfg ${EMS_PATHS_NLOG}

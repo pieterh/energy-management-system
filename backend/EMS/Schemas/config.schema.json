@@ -78,9 +78,8 @@
     "web": {
       "type": "object",
       "properties": {
-        "port": { "type": "number" },
-        "host": { "type": "string" },
-        "https": { "type": "boolean" },
+        "ContentRootPath": { "type": "string" },
+        "WebRootPath": { "type": "string" },
         "jwt": {
           "type": "object",
           "properties": {
@@ -98,8 +97,31 @@
         }
       },
       "required": [
-        "port",
-        "host"
+        "ContentRootPath",
+        "WebRootPath",
+        "jwt"
+      ]
+    },
+    "Kestrel": {
+      "type": "object",
+      "properties": {
+        "EndPoints": {
+          "type": "object",
+          "properties": {
+            "Http": {
+              "type": "object",
+              "properties": {
+                "Url": { "type": "string" }
+              },
+              "required": [
+                "Url"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "EndPoints"
       ]
     },
     "db": {

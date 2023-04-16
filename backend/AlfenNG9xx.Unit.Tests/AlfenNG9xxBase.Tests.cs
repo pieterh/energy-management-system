@@ -13,7 +13,7 @@ namespace AlfenNG9xxBase.Tests
         [SuppressMessage("", "S1215")]
         public void DisposesProperly()
         {
-            var mock = new Mock<AlfenNG9xx.AlfenBase>(new Config(), new TestPriceProvider());
+            var mock = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
             mock.CallBase = true;
 
             mock.Object.isDisposed.Should().BeFalse();
@@ -30,7 +30,7 @@ namespace AlfenNG9xxBase.Tests
         [SuppressMessage("", "S1215")]
         public void DisposesCanSafelyCalledTwice()
         {
-            var mock = new Mock<AlfenNG9xx.AlfenBase>(new Config(), new TestPriceProvider());
+            var mock = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
             mock.CallBase = true;
 
             mock.Object.isDisposed.Should().BeFalse();
@@ -50,7 +50,7 @@ namespace AlfenNG9xxBase.Tests
         [Fact]
         public void HandleWorkShouldStopProperly()
         {
-            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new Config(), new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ReadProductInformation()).Returns(new EMS.Library.ProductInformation());
             mockAlfen.Setup((x) => x.ReadStationStatus()).Returns(new EMS.Library.StationStatus());
@@ -82,7 +82,7 @@ namespace AlfenNG9xxBase.Tests
         [Fact]
         public void HandleWorkRaisesEvents()
         {
-            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new Config(), new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ReadProductInformation()).Returns(new EMS.Library.ProductInformation());
             mockAlfen.Setup((x) => x.ReadStationStatus()).Returns(new EMS.Library.StationStatus());
@@ -123,7 +123,7 @@ namespace AlfenNG9xxBase.Tests
         {
             var socketMeasurement = new AlfenNG9xx.Model.SocketMeasurement();
 
-            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new Config(), new TestPriceProvider());
+            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ReadProductInformation()).Returns(new EMS.Library.ProductInformation());
             mockAlfen.Setup((x) => x.ReadStationStatus()).Returns(new EMS.Library.StationStatus());

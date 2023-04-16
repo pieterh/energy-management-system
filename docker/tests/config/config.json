@@ -24,7 +24,7 @@
       "name": "EPEXSPOT Price Provider",
       "driver": {
         "assembly": "EPEXSPOT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-        "type": "EPEXSPOT.EPEXSPOT"
+        "type": "EPEXSPOT.EPEXSPOTService"
       }
     }
   ],
@@ -61,9 +61,8 @@
     }
   ],
   "web": {
-    "port": 5000,
-    "host": "localhost",
-    "https": false,
+    "ContentRootPath": "",
+    "WebRootPath": "wwwroot",
     "jwt": {
       "issuer": "hems",
       "audience": "hems",
@@ -71,8 +70,15 @@
       "clockskew": 10
     }
   },
+  "Kestrel": {
+    "EndPoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:8080"
+      }
+    }
+  },  
   "db": {
     "type": "sqlite",
-    "name": "hems.db"
+    "name": "/app/ems/userdata/hems.db"
   }
 }

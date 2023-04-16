@@ -1,13 +1,9 @@
-﻿using System;
-using System.IO;
+﻿
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -18,21 +14,17 @@ using Microsoft.Extensions.Logging;
 using CommandLine;
 using NLog;
 using NLog.Web;
+using EMS.DataStore;
 using EMS.DataStore.InMemory;
 using EMS.Library;
 using EMS.Library.Assembly;
 using EMS.Library.Configuration;
 using EMS.Library.Core;
-
-using EMS.WebHost;
-
-using EMS.DataStore;
-using System.Linq;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using EMS.Library.dotNET;
-using Microsoft.AspNetCore.Http;
+using EMS.Library.Exceptions;
 using EMS.Library.Files;
+using EMS.WebHost;
+using System.Text.Json;
 
 namespace EMS
 {
@@ -85,7 +77,11 @@ namespace EMS
                 using var host = CreateHost(options);
                 host.Run();
             }
-            catch (ArgumentException) { /* Somehow we need to catch, otherwise the finally doesn't seem to run */ }
+            catch (ArgumentException ae)
+            {
+                /* Somehow we need to catch, otherwise the finally doesn't seem to run */
+                Logger.Error("Unexpected error occurred and will terminate.", ae);
+            }
             finally
             {
                 Logger.Info("========================= DONE ==============================");
@@ -132,112 +128,101 @@ namespace EMS
                     EnforceLogging(true);
                     Logger.Fatal("No logging was configured. Default to basic logging to console.");
                 }
+                Logger.Info("Logger is configured.");
             }
             catch (FileNotFoundException)
             {
-                Logger.Error($"The logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
                 EnforceLogging(true);
+                Logger.Error($"The logger configuration file '{options.NLogConfig}' could not be found. Using default logging to console.");
+            }
+            catch (IOException e)
+            {
+                EnforceLogging(true);
+                Logger.Error($"There was an io error during configuration or writing logfile. Using default logging to console.", e);
             }
         }
 
         static IHost CreateHost(Options options)
-        {
-            var t = Host.CreateDefaultBuilder()
-                .ConfigureLogging((ILoggingBuilder logBuilder) =>
+        {        
+            var configFile = options.ConfigFile;
+            
+            if (!string.IsNullOrWhiteSpace(configFile) && FileTools.FileExistsAndReadable(configFile))
+            {
+                if (!ConfigurationManager.ValidateConfig(configFile))
+                    throw new ArgumentException($"There was an error with the configuration file {configFile}");
+            }
+            else
+            {
+                throw new ArgumentException($"The configuration file {configFile} was not found or not readable.");
+            }
+            
+            using var jd = JsonDocument.Parse(File.ReadAllText(configFile));
+            var wce = jd.RootElement.GetProperty("web");
+            WebConfig? wc =  wce.Deserialize<WebConfig>();
+            NullException.ThrowIfNull(wc, "The web configuration is not found");
+
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                ContentRootPath = wc.ContentRootPath,
+                WebRootPath = wc.WebRootPath
+            });
+
+            builder.Logging.ClearProviders();
+            builder.Logging.AddNLogWeb();
+
+            var env = builder.Environment;
+            Logger.Info($"Hosting environment: {env.EnvironmentName}");
+            var configFileEnvironmentSpecific = $"config.{env.EnvironmentName}.json";
+
+            builder.Configuration.AddJsonFile(configFile, optional: false, reloadOnChange: false);
+            if (FileTools.FileExistsAndReadable(configFileEnvironmentSpecific))
+            {
+                builder.Configuration.AddJsonFile(configFileEnvironmentSpecific, optional: true, reloadOnChange: false);
+            }
+
+
+            /* nog te doen: hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
+            EMS.DataStore.DbConfig dbConfig = new();
+            builder.Configuration.GetSection("db").Bind(dbConfig);
+            EMS.DataStore.HEMSContext.DbPath = dbConfig.name;
+            using var a = new HEMSContext();
+            a.Database.Migrate();
+
+            builder.Services.AddDbContext<DataProtectionKeyContext>(o =>
                 {
-                    logBuilder.ClearProviders();
+                    o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
+                    o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
                 })
-                .UseNLog()
-                .ConfigureAppConfiguration((builderContext, configuration) =>
+                .AddDataProtection()
+                .AddKeyManagementOptions((opt) =>
                 {
-
-                    IHostEnvironment env = builderContext.HostingEnvironment;
-                    Logger.Info($"Hosting environment: {env.EnvironmentName}");
-                    var configFile = options.ConfigFile;
-                    var configFileEnvironmentSpecific = $"config.{env.EnvironmentName}.json";
-                    if (FileTools.FileExistsAndReadable(configFile))
-                    {
-                        if (ConfigurationManager.ValidateConfig(configFile) && !string.IsNullOrWhiteSpace(configFile))
-                        {
-                            configuration.Sources.Clear();
-                            configuration.AddJsonFile(configFile, optional: false, reloadOnChange: false);
-
-                            if (FileTools.FileExistsAndReadable(configFileEnvironmentSpecific))
-                            {
-                                configuration.AddJsonFile(configFileEnvironmentSpecific, optional: true, reloadOnChange: false);
-                            }
-                        }
-                        else
-
-                            throw new ArgumentException($"There was an error with the configuration file {configFile}");
-                    }
-                    else
-                        throw new ArgumentException($"The configuration file {configFile} was not found or not readable.");
+                    opt.XmlEncryptor = new NullXmlEncryptor();
                 })
-                .ConfigureServices((builderContext, services) =>
-                {
-                    /* nog te doen: hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
-                    EMS.DataStore.DbConfig dbConfig = new();
-                    builderContext.Configuration.GetSection("db").Bind(dbConfig);
-                    EMS.DataStore.HEMSContext.DbPath = dbConfig.name;
-                    using var a = new HEMSContext();
-                    a.Database.Migrate();
+                .PersistKeysToDbContext<DataProtectionKeyContext>();
 
-                    services
-                        .AddDbContext<DataProtectionKeyContext>(o =>
-                        {
-                            o.UseInMemoryDatabase(DataProtectionKeyContext.DBName);
-                            o.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-                        })
-                        .AddDataProtection()
-                        .AddKeyManagementOptions((opt) =>
-                        {
-                            opt.XmlEncryptor = new NullXmlEncryptor();
-                        })
-                        .PersistKeysToDbContext<DataProtectionKeyContext>();
+            builder.Services.AddHttpClient();
 
-                    services.AddHttpClient();
+            builder.ConfigureInstances();
 
-                    ConfigureInstances(builderContext, services);
+            BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(builder.Services);
 
-                    BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(services);
-                })
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseKestrel((builderContext, kestrelOptions) =>
-                    {
+            // Create and configure startup
+            var startup = new Startup(builder.Environment, builder.Configuration);
+            startup.ConfigureServices(builder.Services);
+            var app = builder.Build();
+            startup.Configure(app);
 
-                        kestrelOptions.AddServerHeader = false;
-                        WebConfig wc = new();
-                        builderContext.Configuration.GetSection("web").Bind(wc);
-                        kestrelOptions.ListenAnyIP(wc.Port, builder =>
-                        {
-                            if (wc.https && !builderContext.HostingEnvironment.IsDevelopment())
-                            {
-                                Logger.Warn("Using https is currently not supported.");
-                                builder.UseHttps();
-                            }
-                        });
-
-                    });
-
-                    Logger.Info("Updating root folders");
-                    webBuilder.UseContentRoot(string.Empty);
-                    webBuilder.UseWebRoot("dist");
-
-                    webBuilder.UseStartup<Startup>();
-                }).Build();
-
-            return t;
+            return app;
         }
 
-        private static void ConfigureInstances(HostBuilderContext hostingContext, IServiceCollection services)
+        private static void ConfigureInstances(this WebApplicationBuilder builder)
         {
-            var adapters = new List<Adapter>();
-            hostingContext.Configuration.GetSection("adapters").Bind(adapters);
+            var services = builder.Services;
+            var adapters = new List<AdapterConfiguration>();
+            builder.Configuration.GetSection("adapters").Bind(adapters);
 
-            var instances = new List<Instance>();
-            hostingContext.Configuration.GetSection("instances").Bind(instances);
+            var instances = new List<AdapterInstance>();
+            builder.Configuration.GetSection("instances").Bind(instances);
             var activeInstances = instances.Where((x) => x.Enabled);
 
             foreach (var instance in activeInstances)
@@ -262,7 +247,7 @@ namespace EMS
                         var method = adapterType.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
                         if (method != null)
                         {
-                            method.Invoke(null, new object[] { hostingContext, services, instance });
+                            method.Invoke(null, new object[] { services, instance });
                             Logger.Debug($"Instance [InstanceName], configuring services done", instance.Name);
                         }
                         else
@@ -278,7 +263,7 @@ namespace EMS
             }
         }
 
-        public static Adapter? GetAdapter(List<Adapter> adapters, Guid adapterid)
+        public static AdapterConfiguration? GetAdapter(List<AdapterConfiguration> adapters, Guid adapterid)
         {
             foreach (var adapter in adapters)
             {

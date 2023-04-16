@@ -11,7 +11,7 @@ using EMS.Library.TestableDateTime;
 namespace EPEXSPOT
 {
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
-    public class EPEXSPOT : Microsoft.Extensions.Hosting.BackgroundService, IPriceProvider
+    public class EPEXSPOTService : Microsoft.Extensions.Hosting.BackgroundService, IPriceProvider
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private bool _disposed;
@@ -25,13 +25,13 @@ namespace EPEXSPOT
 
         private Tariff[] _tariffs = Array.Empty<Tariff>();   // time sorted array of tariffs that where fetched
 
-        public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
+        public static void ConfigureServices(IServiceCollection services, AdapterInstance instance)
         {
             ArgumentNullException.ThrowIfNull(instance);
-            BackgroundServiceHelper.CreateAndStart<IPriceProvider, EPEXSPOT>(services, instance.Config);
+            BackgroundServiceHelper.CreateAndStart<IPriceProvider, EPEXSPOTService>(services, instance.Config);
         }
 
-        public EPEXSPOT(Config config, IHttpClientFactory httpClientFactory)
+        public EPEXSPOTService(InstanceConfiguration config, IHttpClientFactory httpClientFactory)
         {
             if (config == null) throw new ArgumentNullException(nameof(config));
             Logger.Info($"EPEXSPOT({config.ToString().Replace(Environment.NewLine, " ", StringComparison.Ordinal)})");

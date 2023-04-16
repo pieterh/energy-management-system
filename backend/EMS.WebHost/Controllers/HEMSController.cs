@@ -72,7 +72,7 @@ namespace EMS.WebHosts
         [Produces("application/json")]
         public ActionResult<HemsLastSessionsResponse> GetSessionInfo()
         {
-            var sessions = new List<Session>();
+            var sessions = new List<ChargingSession>();
 
             using (var db = new HEMSContext())
             {
@@ -83,7 +83,7 @@ namespace EMS.WebHosts
                 foreach (var item in items)
                 {
                     Logger.LogInformation("{Item}", item.ToString());
-                    var session = new Session()
+                    var session = new ChargingSession()
                     {
                         Timestamp = item.Timestamp,
                         EnergyDelivered = (decimal)item.EnergyDelivered,
@@ -137,10 +137,10 @@ namespace EMS.WebHosts
 
     public class HemsLastSessionsResponse : Response
     {
-        public required IEnumerable<Session> Sessions { get; init; }
+        public required IEnumerable<ChargingSession> Sessions { get; init; }
     }
 
-    public class Session
+    public class ChargingSession
     {
         public required DateTime Timestamp { get; init; }
         public required decimal EnergyDelivered { get; init; }

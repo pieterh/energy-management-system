@@ -30,14 +30,14 @@ namespace AlfenNG9xx
         private readonly string _alfenIp;
         private readonly int _alfenPort;      
 
-        public static void ConfigureServices(HostBuilderContext hostContext, IServiceCollection services, Instance instance)
+        public static void ConfigureServices(IServiceCollection services, AdapterInstance instance)
         {
             ArgumentNullException.ThrowIfNull(instance);
 
             BackgroundServiceHelper.CreateAndStart<IChargePoint, Alfen>(services, instance.Config);
         }
 
-        public Alfen(Config config, IPriceProvider priceProvider) : base(config, priceProvider)
+        public Alfen(InstanceConfiguration config, IPriceProvider priceProvider) : base(config, priceProvider)
         {
             dynamic cfg = config;
             _alfenIp = cfg.Host;

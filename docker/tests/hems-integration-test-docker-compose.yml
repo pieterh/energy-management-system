@@ -4,9 +4,10 @@ services:
   hems:
     image: pieterhil/energy-management-system:feature-blazorwasm
     container_name: hems-integration-test
+    user: 1001:123
     entrypoint: bash -c "cd /app/ems && ls -la /app/ems/userdata && dotnet EMS.dll -- --config /app/ems/userdata/config.json --nlogcfg /app/ems/userdata/NLog.config --nlogdebug true"
     ports:
-      - "5005:5000"
+      - "5005:8080"
     volumes:
       - ./config:/app/ems/userdata:rw
     environment:

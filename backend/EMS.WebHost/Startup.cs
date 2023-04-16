@@ -17,28 +17,26 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
+using EMS.WebHost.Controllers;
+using Microsoft.AspNetCore.Routing;
 
 namespace EMS.WebHost
 {
     public record WebConfig
     {
-        public ushort Port { get; set; }
+        public string? ContentRootPath { get; set; }
+        public string? WebRootPath { get; set; }
         public JwtConfig? Jwt { get; set; }
-        public bool https { get; set; }
     }
 
     public class Startup
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
-        private readonly IWebHostEnvironment _env;
-        private readonly IConfiguration _configuration;
+        private IWebHostEnvironment Env { get; init; }
+        private IConfiguration Configuration { get; init; }
 
         public WebConfig? WebConfig { get; set; }
-        private ILogger? Logger { get; set; }
-
-        public IWebHostEnvironment Env => _env;
-        public IConfiguration Configuration => _configuration;
 
         [SuppressMessage("Code Analysis", "CA1810")]
         static Startup()
@@ -49,8 +47,8 @@ namespace EMS.WebHost
 
         public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
-            _env = env;
-            _configuration = configuration;
+            Env = env;
+            Configuration = configuration;
         }
 
         public void ConfigureServices(IServiceCollection services)
@@ -60,13 +58,6 @@ namespace EMS.WebHost
             WebConfig = wc;
 
             services.AddSingleton<IJwtService, JwtTokenService>();
-
-            services.AddControllers();
-
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
-            });
 
             services.AddAuthentication(options =>
             {
@@ -83,6 +74,13 @@ namespace EMS.WebHost
                 Configuration.GetSection("web:jwt").Bind(j);
                 options.TokenValidationParameters = JwtTokenService.CreateTokenValidationParameters(Configuration);
                 options.SaveToken = true;
+            });
+
+            services.AddControllers().AddApplicationPart(typeof(UsersController).Assembly);
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
             });
 
             services.AddResponseCompression(options =>
@@ -118,22 +116,17 @@ namespace EMS.WebHost
                 options.AddPolicy(name: MyAllowSpecificOrigins,
                       builder =>
                       {
-                          builder.WithOrigins("http://127.0.0.1:5005",
-                                              "http://localhost:5005",
-                                              "http://127.0.0.1:5281",
-                                              "http://localhost:5281"
-                                              )
-                          .AllowCredentials()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          builder
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
                       });
             });
 #endif
         }
 
-        public void Configure(ILogger<Startup> logger, IApplicationBuilder app)
+        public void Configure(WebApplication app)
         {
-            Logger = logger;
             if (Env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -194,44 +187,44 @@ namespace EMS.WebHost
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Path.Combine(Env.ContentRootPath, "dist")),
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Env.WebRootPath),
                 RequestPath = string.Empty,
                 ContentTypeProvider = provider,
                 DefaultContentType = "application/octet-stream",
                 ServeUnknownFileTypes = true
             });
 
-            app.UseRouting();
-
             app.UseCors(MyAllowSpecificOrigins);
 
-            // put this between UseRouting and UseEndpoints
+            app.UseRouting();
+
+            // put this between UseRouting and map of controllers / swagger
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-                endpoints.MapSwagger();
-            });
+            app.MapControllers();
+            app.MapSwagger();
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("v1/swagger.json", "HEMS API V1");
             });
+
+            app.MapFallbackToFile("index.html");
+
             app.Use((context, next) =>
             {
-                Logger.LogInformation("{Path}", context.Request.Path);
+                Logger.Info("{Path}", context.Request.Path);
                 return next.Invoke();
             });
 
-            Logger.LogInformation("============================================================");
-            Logger.LogInformation("Web Host Environment");
-            Logger.LogInformation("ApplicationName: {ApplicationName}", _env.ApplicationName);
-            Logger.LogInformation("EnvironmentName: {EnvironmentName}", _env.EnvironmentName);
-            Logger.LogInformation("ContentRootPath: {ContentRootPath}", _env.ContentRootPath);
-            Logger.LogInformation("WebRootPath {WebRootPath}", _env.WebRootPath);
+            Logger.Info("============================================================");
+            Logger.Info("Web Host Environment");
+            Logger.Info("ApplicationName: {ApplicationName}", Env.ApplicationName);
+            Logger.Info("EnvironmentName: {EnvironmentName}", Env.EnvironmentName);
+            Logger.Info("ContentRootPath: {ContentRootPath}", Env.ContentRootPath);
+            Logger.Info("WebRootPath {WebRootPath}", Env.WebRootPath);
         }
     }
 }

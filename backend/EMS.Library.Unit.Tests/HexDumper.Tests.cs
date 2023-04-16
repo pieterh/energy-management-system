@@ -3,7 +3,7 @@ using System.Text;
 using Xunit;
 using EMS.Library;
 
-namespace HexDumperTest
+namespace HexDumperUnitTest
 {
     public class HexDumperTest
     {

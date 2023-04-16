@@ -265,6 +265,26 @@ jobs:
         mkdir -p dist/ems.blazorwasm
         unzip ${{ runner.temp }}/ems.blazorwasm.zip -d dist/ems.blazorwasm
       working-directory: docker
+    - name: create backend
+      working-directory: docker
+      run: |
+        mkdir -p dist/app
+        mv dist/ems/* dist/app
+        rm -f dist/app/NLog.config \
+        rm -f dist/app/config.json
+        cp build/EMS.runtimeconfig.json dist/app/EMS.runtimeconfig.json
+        ls -la dist
+        ls -la dist/app
+        find dist/app/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
+        ls -la dist/app/runtimes
+    - name: create blazorfrontend
+      working-directory: docker
+      run: |
+        ls -la dist/ems.blazorwasm
+        ls -la dist/ems.blazorwasm/ems.blazorwasm
+        rm -f -R dist/app/wwwroot
+        mkdir dist/app/wwwroot
+        mv dist/ems.blazorwasm/ems.blazorwasm/wwwroot/* dist/app/wwwroot
     - name: Docker metadata
       id: meta
       uses: docker/metadata-action@v4
@@ -279,8 +299,7 @@ jobs:
         platforms: linux/amd64,linux/arm64,linux/arm
         tags: ${{ steps.meta.outputs.tags }}
         build-args: |
-          BACKEND=dist/ems 
-          FEBLAZORWASM=dist/ems.blazorwasm/ems.blazorwasm
+          BACKEND=dist/app 
         push: true
   call-2:
     name: "Integration tests!"
