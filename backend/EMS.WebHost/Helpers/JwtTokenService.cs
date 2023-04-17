@@ -52,7 +52,7 @@ namespace EMS.WebHost.Helpers
                 Settings.Audience,
                 claims,
                 expires: DateTime.UtcNow + TimeSpan.FromMinutes(Settings.Expiration),
-                signingCredentials: creds
+                signingCredentials: creds                
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

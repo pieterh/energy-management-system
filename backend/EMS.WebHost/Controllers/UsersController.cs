@@ -44,8 +44,9 @@ namespace EMS.WebHost.Controllers
         public required string Name { get; init; }
     }   
 
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
@@ -86,6 +87,7 @@ namespace EMS.WebHost.Controllers
             }
         }
 
+        
         [HttpGet("ping")]
         public IActionResult Ping()
         {
