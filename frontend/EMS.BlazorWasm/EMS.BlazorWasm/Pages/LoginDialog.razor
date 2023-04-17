@@ -9,7 +9,7 @@
                 <MudItem>
                     <MudCard>
                         <MudCardContent>
-                            <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Username" For="@(() => _model.Username)" Label="Usernam" Variant="Variant.Outlined" AutoFocus="true"></MudTextField>
+                            <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Username" For="@(() => _model.Username)" Label="Username" Variant="Variant.Outlined" AutoFocus="true"></MudTextField>
                             <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Password" For="@(() => _model.Password)" Label="Password" InputType="@_passwordInput" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" AdornmentAriaLabel="Show Password" OnAdornmentClick="onShowPasswordClick"></MudTextField>
                             <MudCheckBox  @bind-Checked="@_isRememberMe" Label="Remember me"></MudCheckBox>
                         </MudCardContent>
