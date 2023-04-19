@@ -186,7 +186,23 @@ namespace AlfenNG9xx
 
                     return _modbusMaster.ReadHoldingRegisters(slave, address, count);
                 }
-                catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.OrdinalIgnoreCase))
+                catch(System.IO.IOException ioe)
+                {
+                    // The operation is not allowed on non-connected sockets
+                    Logger.Error("Received an IOException, we try later again", ioe);
+                    Logger.Error("Just to be sure, we are disposing the connection");
+                    DisposeModbusMaster();
+                    throw new CommunicationException("IOException", ioe);
+                }
+                catch(System.InvalidOperationException ioe)
+                {
+                    // The operation is not allowed on non-connected sockets
+                    Logger.Error("Received an InvalidOperationException, we try later again", ioe);
+                    Logger.Error("Just to be sure, we are disposing the connection");
+                    DisposeModbusMaster();
+                    throw new CommunicationException("InvalidOperationException", ioe);
+                }
+                catch (Exception e) when (e.Message.StartsWith("Partial packet exception", StringComparison.OrdinalIgnoreCase))
                 {
                     Logger.Error("Partial Modbus packaged received, we try later again");
                     Logger.Error("Disposing connection");
