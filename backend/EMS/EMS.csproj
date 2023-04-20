@@ -34,7 +34,7 @@
 		<PackageReference Include="NLog.Extensions.Logging" Version="5.2.3" />
 		<PackageReference Include="NLog.Web.AspNetCore" Version="5.2.3" />
 		<PackageReference Include="System.Text.Json" Version="7.0.2" />
-		<PackageReference Include="JsonSchema.Net" Version="4.0.3" />
+		<PackageReference Include="JsonSchema.Net" Version="4.0.4" />
 		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
