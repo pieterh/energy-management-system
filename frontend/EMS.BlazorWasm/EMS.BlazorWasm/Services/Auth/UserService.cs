@@ -47,12 +47,15 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             var loginResponse = await r.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
             if (loginResponse == null) throw new NullReferenceException("Oeps2");
 
-            var (user, token) = loginResponse;
-            if (user == null) throw new NullReferenceException("Oeps3");
+            if (loginResponse.Status == 200)
+            {
+                var (user, token) = loginResponse;
+                if (user == null) throw new NullReferenceException("Oeps3");
 
-            await _localStorage.SaveObjectAsync("user", user);
-            await _localStorage.SaveStringAsync("token", token);
-            _authenticationStateProvider.LoginNotify();
+                await _localStorage.SaveObjectAsync("user", user);
+                await _localStorage.SaveStringAsync("token", token);
+                _authenticationStateProvider.LoginNotify();
+            }
             return loginResponse;
         }
 
@@ -61,6 +64,16 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             await _localStorage.RemoveAsync("user");
             await _localStorage.RemoveAsync("token");
             _authenticationStateProvider.LogoutNotify();
+        }
+
+        public async Task<SetPasswordResponse> SetPasswordAsync(SetPasswordModel model, CancellationToken cancellationToken)        
+        {
+            var content = JsonContent.Create<SetPasswordModel>(model);
+            var r = await _httpClient.PostAsync("api/users/setpassword", content, cancellationToken);
+            if (r == null) throw new NullReferenceException("Oeps");
+            var setPasswordResponse = await r.Content.ReadFromJsonAsync<SetPasswordResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
+            if (setPasswordResponse == null) throw new NullReferenceException("Oeps2");
+            return setPasswordResponse;
         }
 
         public async Task<PingResponse> Ping()

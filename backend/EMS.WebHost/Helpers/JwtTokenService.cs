@@ -10,7 +10,7 @@ namespace EMS.WebHost.Helpers
 {
     public interface IJwtService
     {
-        string Generate(Guid userId, string username, string name);
+        string Generate(Guid userId, string username, string name, bool needPasswordChange);
     }
 
     public class JwtConfig
@@ -32,18 +32,22 @@ namespace EMS.WebHost.Helpers
             ArgumentNullException.ThrowIfNull(configurations);
             JwtConfig j = new();
             configurations.GetSection("web:jwt").Bind(j);
-            Settings = j;            
+            Settings = j;
         }
 
-        public string Generate(Guid userId, string username, string name)
+        public string Generate(Guid userId, string username, string name, bool needPasswordChange)
         {
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Typ, "JWT"),
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim("name", name)                
+                new Claim("name", name),
+                new Claim("username", username)                 
             };
+
+            if (needPasswordChange)
+                claims.Add(new Claim("needpasswordchange", needPasswordChange.ToString()));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.RsaSsaPssSha256);
 
@@ -52,7 +56,7 @@ namespace EMS.WebHost.Helpers
                 Settings.Audience,
                 claims,
                 expires: DateTime.UtcNow + TimeSpan.FromMinutes(Settings.Expiration),
-                signingCredentials: creds                
+                signingCredentials: creds
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

@@ -1,9 +1,11 @@
 ﻿@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
 @using System.ComponentModel.DataAnnotations
 
 <MudDialog>
     <DialogContent>
-        <EditForm EditContext="@_editContext" >
+        <EditForm EditContext="@_editContext">
             <DataAnnotationsValidator />
             <MudGrid>
                 <MudItem>
@@ -11,10 +13,11 @@
                         <MudCardContent>
                             <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Username" For="@(() => _model.Username)" Label="Username" Variant="Variant.Outlined" AutoFocus="true"></MudTextField>
                             <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Password" For="@(() => _model.Password)" Label="Password" InputType="@_passwordInput" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" AdornmentAriaLabel="Show Password" OnAdornmentClick="onShowPasswordClick"></MudTextField>
-                            <MudCheckBox  @bind-Checked="@_isRememberMe" Label="Remember me"></MudCheckBox>
+                            <MudCheckBox @bind-Checked="@_isRememberMe" Label="Remember me"></MudCheckBox>
+                            <MudText Typo="Typo.body1">@(_model.Message)</MudText>
                         </MudCardContent>
                         <MudCardActions Class="d-flex justify-end flex-grow-1 gap-4">
-                            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="onLoginClick">                                
+                            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="onLoginClick">
                                 @if (_processing)
                                 {
                                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
@@ -43,12 +46,14 @@
     public class LoginFormModel
     {
         [Required]
-        [StringLength(5, ErrorMessage = "Name length can't be more than 5.")]
+        [StringLength(30, ErrorMessage = "Name length can't be more than 30.")]
         public string Username { get; set; } = default!;
 
         [Required]
         [StringLength(30, ErrorMessage = "Password must be at least 5 characters long.", MinimumLength = 5)]
         public string Password { get; set; } = default!;
+
+        public string Message { get; set; } = default!;
     }
 
     private LoginFormModel _model = new LoginFormModel();
@@ -97,10 +102,40 @@
                 _processing = true;
                 StateHasChanged();
                 var resp = await UserService.LoginAsync(data);
-                if (resp.Status == 200)
+                switch (resp.Status)
                 {
-                    _model.Password = string.Empty;
-                    Navigation.NavigateTo("/");
+                    case 200:
+                        _model.Password = string.Empty;
+                        ArgumentNullException.ThrowIfNull(resp.User);
+                        if (resp.User.NeedPasswordChange == true)
+                        {
+
+                            DialogOptions opt = new DialogOptions()
+                            {
+                                Position = DialogPosition.Center,
+                                DisableBackdropClick = true,
+                                CloseOnEscapeKey = false
+                            };
+                            var d = DialogService.Show<ChangePasswordDialog>("ChangePassword", opt);
+                            var result = await d.Result;
+                            if (!result.Canceled)
+                            {
+                                var ok = bool.TryParse(result.Data.ToString(), out bool resultbool);
+                                if (ok)
+                                {
+                                    Navigation.NavigateTo("/");
+                                }
+                            }
+                        }
+                        else
+                            Navigation.NavigateTo("/");
+                        break;
+                    case 401:
+                        _model.Message = "Invalid username or password.";
+                        break;
+                    default:
+                        _model.Message = string.Concat(resp.StatusText, " ", resp.Message);
+                        break;
                 }
             }
             finally

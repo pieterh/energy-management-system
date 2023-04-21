@@ -3,6 +3,7 @@ using System;
 using EMS.DataStore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EMS.DataStore.Migrations
 {
     [DbContext(typeof(HEMSContext))]
-    partial class HEMSContextModelSnapshot : ModelSnapshot
+    [Migration("20230418193827_AddUsers")]
+    partial class AddUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.5");
@@ -77,10 +80,7 @@ namespace EMS.DataStore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("LastLogonDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("LastPasswordChangedDate")
+                    b.Property<DateTime>("LastLogon")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -96,9 +96,6 @@ namespace EMS.DataStore.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
-
-                    b.HasIndex("Username")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });
