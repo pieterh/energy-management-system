@@ -1,28 +1,29 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.IO.Compression;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.StaticFiles;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
-using EMS.WebHost.Helpers;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.AspNetCore.ResponseCompression;
-using System.IO.Compression;
-using EMS.WebHost.Controllers;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Diagnostics;
-using Microsoft.AspNetCore.MiddlewareAnalysis;
+
+using EMS.WebHost.Controllers;
+using EMS.WebHost.Helpers;
 
 namespace EMS.WebHost
 {
@@ -128,17 +129,17 @@ namespace EMS.WebHost
             services.AddCors(options =>
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
-                      builder =>
-                      {
+                      builder =>{                          
                           builder
                             .AllowAnyOrigin()
                             .AllowAnyHeader()
-                            .AllowAnyMethod();
+                            .AllowAnyMethod()
+                            ;
                       });
             });
 
             // insert the AnalysisStartupFilter as the first IStartupFilter in the container
-            services.Insert(0, ServiceDescriptor.Transient<IStartupFilter, AnalysisStartupFilter>());
+            services.Insert(0, ServiceDescriptor.Transient<IStartupFilter, Microsoft.AspNetCore.MiddlewareAnalysis.AnalysisStartupFilter>());
 #endif
         }
 
@@ -157,7 +158,7 @@ namespace EMS.WebHost
             // and ignoring the disposible subscription 
             _ = listener.SubscribeWithAdapter(observer);
 #endif
-            app.UseResponseCaching();
+
             app.UseResponseCompression();
 
             if (Env.IsDevelopment())
@@ -231,11 +232,15 @@ namespace EMS.WebHost
                 }
             });
 
-            app.UseCors(MyAllowSpecificOrigins);
+
 
             app.UseRouting();
 
             // put this between UseRouting and map of controllers / swagger
+            // and CORS needs to be before response caching
+            app.UseCors(MyAllowSpecificOrigins);
+            app.UseResponseCaching();
+
             app.UseAuthentication();
             app.UseAuthorization();
 

@@ -26,10 +26,14 @@ namespace EMS.BlazorWasm.Services.Auth
         //https://community.auth0.com/t/securing-blazor-webassembly-apps/46661/114
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var token = await _provider.RequestAccessToken();
-           if (token.TryGetToken(out var t)) {
-                var header = new AuthenticationHeaderValue("Bearer", t.Value);
-                request.Headers.Authorization = header;
+            if (request.RequestUri != null ? !request.RequestUri.AbsolutePath.EndsWith("authenticate", StringComparison.OrdinalIgnoreCase) : true)
+            {
+                var token = await _provider.RequestAccessToken();
+                if (token.TryGetToken(out var t))
+                {
+                    var header = new AuthenticationHeaderValue("Bearer", t.Value);
+                    request.Headers.Authorization = header;
+                }
             }
             return await base.SendAsync(request, cancellationToken);
         }

@@ -27,11 +27,13 @@
 		<Folder Include="Exceptions\" />
 		<Folder Include="dotNET\" />
 		<Folder Include="Files\" />
+		<Folder Include="PasswordQuality\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Adapter\PriceProvider\" />
 		<None Remove="Assembly\" />
 		<None Remove="Exceptions\" />
 		<None Remove="dotNET\" />
+		<None Remove="PasswordQuality\" />
 	</ItemGroup>
 </Project>
