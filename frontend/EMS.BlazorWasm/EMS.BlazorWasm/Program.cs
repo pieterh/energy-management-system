@@ -22,13 +22,18 @@ var baseAddres =  new Uri(builder.HostEnvironment.BaseAddress);
 #endif
 
 builder.Services.AddSingleton<EMS.BlazorWasm.Services.ILocalStorage, EMS.BlazorWasm.Services.LocalStorageService>();
-builder.Services.AddHttpClient<IUserService, UserService>(client =>
-{
-    client.BaseAddress = baseAddres;
-});
 
 builder.Services.AddScoped<IAccessTokenProvider, TokenProvider>();
 builder.Services.AddScoped<CustomAuthorizationMessageHandler>();
+
+
+builder.Services.AddHttpClient<IUserService, UserService>(client =>
+                    {
+                        client.BaseAddress = baseAddres;
+                    })
+                .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
+
+
 builder.Services.AddHttpClient("ServerAPI", client => client.BaseAddress = baseAddres)
     .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
 

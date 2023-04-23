@@ -21,6 +21,13 @@ namespace EMS.BlazorWasm.Client.Services.Auth
         public Guid Id { get; set; }
         public string Username { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public bool NeedPasswordChange { get; set; }
+    }
+
+    public record SetPasswordModel
+    {
+        public required string OldPassword { get; init; }
+        public required string NewPassword { get; init; }
     }
 
     public record LoginResponse : Response
@@ -35,6 +42,11 @@ namespace EMS.BlazorWasm.Client.Services.Auth
         }
     }
 
+    public record SetPasswordResponse : Response
+    {
+        public UserModel? User { get; set; }
+    }
+
     public record PingResponse : Response
     {
         public UserModel? User { get; set; }
@@ -43,7 +55,9 @@ namespace EMS.BlazorWasm.Client.Services.Auth
     public interface IUserService
     {
         Task<LoginResponse> LoginAsync(LoginModel model);
+        Task<LoginResponse> LoginAsync(LoginModel model, CancellationToken cancellationToken);
         void LogoutAsync();
+        Task<SetPasswordResponse> SetPasswordAsync(SetPasswordModel model, CancellationToken cancellationToken);
         Task<PingResponse> Ping();
     }
 }

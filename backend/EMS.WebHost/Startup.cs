@@ -1,24 +1,29 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.IO.Compression;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.StaticFiles;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
-using EMS.WebHost.Helpers;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.AspNetCore.ResponseCompression;
-using System.IO.Compression;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
 using EMS.WebHost.Controllers;
-using Microsoft.AspNetCore.Routing;
+using EMS.WebHost.Helpers;
 
 namespace EMS.WebHost
 {
@@ -53,20 +58,16 @@ namespace EMS.WebHost
 
         public void ConfigureServices(IServiceCollection services)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
             WebConfig wc = new();
             Configuration.GetSection("web").Bind(wc);
             WebConfig = wc;
 
             services.AddSingleton<IJwtService, JwtTokenService>();
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                        .AddJwtBearer();
 
             services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
@@ -78,26 +79,19 @@ namespace EMS.WebHost
 
             services.AddControllers().AddApplicationPart(typeof(UsersController).Assembly);
 
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
-            });
-
-            services.AddResponseCompression(options =>
-            {
-                options.Providers.Add<BrotliCompressionProvider>();
-                options.Providers.Add<GzipCompressionProvider>();
-
-                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] {
-                        "image/jpeg",
-                        "image/png",
-                        "application/font-woff2",
-                        "image/svg+xml",
-                        "application/octet-stream",
-                        "application/wasm"
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
                 });
-
-                options.EnableForHttps = true;
+                options.OperationFilter<SecurityRequirementsOperationFilter>();
             });
 
             services.Configure<BrotliCompressionProviderOptions>(options =>
@@ -110,23 +104,63 @@ namespace EMS.WebHost
                 options.Level = CompressionLevel.SmallestSize;
             });
 
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+                options.MimeTypes = new[] {
+                        "application/font-woff2",
+                        "application/javascript",
+                        "application/json",
+                        "application/octet-stream",
+                        "application/wasm",
+                        "application/xml",
+                        "text/css",
+                        "text/javascript",
+                        "text/json",
+                        "text/html",
+                        "text/plain",
+                };
+
+                options.EnableForHttps = true;
+            });
+
 #if DEBUG
             services.AddCors(options =>
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
-                      builder =>
-                      {
+                      builder =>{                          
                           builder
                             .AllowAnyOrigin()
                             .AllowAnyHeader()
-                            .AllowAnyMethod();
+                            .AllowAnyMethod()
+                            ;
                       });
             });
+
+            // insert the AnalysisStartupFilter as the first IStartupFilter in the container
+            services.Insert(0, ServiceDescriptor.Transient<IStartupFilter, Microsoft.AspNetCore.MiddlewareAnalysis.AnalysisStartupFilter>());
 #endif
         }
 
         public void Configure(WebApplication app)
         {
+            ArgumentNullException.ThrowIfNull(app);
+
+#if DEBUG
+            // Grab the "Microsoft.AspNetCore" DiagnosticListener from DI
+            var listener = app.Services.GetRequiredService<DiagnosticListener>();
+
+            // Create an instance of the AnalysisDiagnosticAdapter using the IServiceProvider
+            var observer = ActivatorUtilities.CreateInstance<AnalysisDiagnosticAdapter>(app.Services);
+
+            // Subscribe to the listener with the SubscribeWithAdapter() extension method
+            // and ignoring the disposible subscription 
+            _ = listener.SubscribeWithAdapter(observer);
+#endif
+
+            app.UseResponseCompression();
+
             if (Env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -161,10 +195,9 @@ namespace EMS.WebHost
 
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
-
+            
             app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
-            app.UseResponseCompression();
 
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings.Clear();
@@ -191,14 +224,23 @@ namespace EMS.WebHost
                 RequestPath = string.Empty,
                 ContentTypeProvider = provider,
                 DefaultContentType = "application/octet-stream",
-                ServeUnknownFileTypes = true
+                ServeUnknownFileTypes = true,
+                OnPrepareResponse = ctx =>
+                {
+                    ctx.Context.Response.Headers.Append(
+                         "Cache-Control", $"public, max-age={1}");
+                }
             });
 
-            app.UseCors(MyAllowSpecificOrigins);
+
 
             app.UseRouting();
 
             // put this between UseRouting and map of controllers / swagger
+            // and CORS needs to be before response caching
+            app.UseCors(MyAllowSpecificOrigins);
+            app.UseResponseCaching();
+
             app.UseAuthentication();
             app.UseAuthorization();
 

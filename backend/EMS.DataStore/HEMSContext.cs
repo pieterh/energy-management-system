@@ -12,6 +12,7 @@ namespace EMS.DataStore
         // https://www.codeproject.com/Articles/5281767/Scalable-Scenario-to-Configuring-Entity-Framework
         public static string DbPath { get; set; } = default!;
         public DbSet<ChargingTransaction> ChargingTransactions { get; set; } = default!;
+        public DbSet<User> Users { get; set; } = default!;
 
         public HEMSContext()
         {
@@ -29,6 +30,8 @@ namespace EMS.DataStore
         // special "local" folder for your platform.
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             => optionsBuilder.UseSqlite($"Data Source={DbPath}");
+
+
     }
 }
 
