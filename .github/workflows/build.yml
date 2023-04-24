@@ -85,6 +85,15 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies outdated packages scan - Backend
+      shell: bash
+      run: |
+        dotnet list package --outdated 2>&1 | tee -a outdated_scan.log
+        outdated=true
+        grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
+        [ $outdated = true ] && echo "Outdated packages found on the log output"
+        exit 0
+      working-directory: backend      
     - name: Dependencies vulnerability scan - Backend
       shell: bash
       run: |
@@ -103,6 +112,15 @@ jobs:
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies outdated packages scan - Blazor WASM frontend
+      shell: bash
+      run: |
+        dotnet list package --outdated 2>&1 | tee -a outdated_scan.log
+        outdated=true
+        grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
+        [ $outdated = true ] && echo "Outdated packages found on the log output"
+        exit 0
+      working-directory: frontend/EMS.BlazorWasm        
     - name: Dependencies vulnerability scan - Blazor WASM frontend
       shell: bash
       run: |
