@@ -9,7 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="NLog" Version="5.1.3" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-		<PackageReference Include="JsonSchema.Net" Version="4.0.5" />
+		<PackageReference Include="JsonSchema.Net" Version="4.0.6" />
 		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.56.0.67649">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
