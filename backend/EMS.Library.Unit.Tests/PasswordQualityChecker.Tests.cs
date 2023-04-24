@@ -2,7 +2,7 @@
 using FluentAssertions;
 using EMS.Library.Passwords;
 
-namespace EMS.Library.Unit.Tests
+namespace PasswordQualityCheckerUnitTest
 {
     public class PasswordQualityCheckerTests
     {
@@ -34,9 +34,10 @@ namespace EMS.Library.Unit.Tests
         [InlineData("12345678901!aQ0", true)]
         [InlineData("", false)]
         [InlineData("fietsen!", false)]
-        [InlineData("00000000000", false)]        
-        [InlineData("12345678901aaqq", false)]
+        [InlineData("00000000000", false)]
+        [InlineData("12345678901!AQQ", false)]
         [InlineData("12345678901!aqq", false)]
+        [InlineData("ABCDEFGHIJK!aqq", false)]
         public void Isvalid(string password, bool expected)
         {
             PasswordQualityChecker.IsValidPassword(password).Should().Be(expected);
