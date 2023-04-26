@@ -35,11 +35,13 @@
 		<Folder Include="Telegram\" />
 		<Folder Include="Properties\" />
 		<Folder Include="Reading\" />
+		<Folder Include="Connection\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="System.Text.RegularExpressions" />
 		<None Remove="System.Net.Http" />
 		<None Remove="Properties\" />
 		<None Remove="Reading\" />
+		<None Remove="Connection\" />
 	</ItemGroup>
 </Project>
