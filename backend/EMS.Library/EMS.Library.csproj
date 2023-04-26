@@ -28,6 +28,7 @@
 		<Folder Include="dotNET\" />
 		<Folder Include="Files\" />
 		<Folder Include="PasswordQuality\" />
+		<Folder Include="Tasks\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Adapter\PriceProvider\" />
@@ -35,5 +36,6 @@
 		<None Remove="Exceptions\" />
 		<None Remove="dotNET\" />
 		<None Remove="PasswordQuality\" />
+		<None Remove="Tasks\" />
 	</ItemGroup>
 </Project>

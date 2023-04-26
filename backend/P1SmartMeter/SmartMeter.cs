@@ -167,6 +167,7 @@ namespace P1SmartMeter
 
                 if (_relayServer != null)
                 {
+                    Logger.LogDebug("Setup RelayServer");
                     _relayBlock = new ActionBlock<string>(input =>
                     {
                         _relayServer.Relay(input);

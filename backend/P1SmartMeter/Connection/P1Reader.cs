@@ -1,5 +1,4 @@
-﻿using System;
-using EMS.Library;
+﻿using EMS.Library;
 using static P1SmartMeter.Connection.IP1Reader;
 
 namespace P1SmartMeter.Connection

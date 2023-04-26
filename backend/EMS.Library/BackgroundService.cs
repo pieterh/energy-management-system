@@ -1,10 +1,12 @@
 ﻿using EMS.Library.Exceptions;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EMS.Library
 {
+    [SuppressMessage("", "S3881")]
     public abstract class BackgroundService : IBackgroundService
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -15,19 +17,22 @@ namespace EMS.Library
         private CancellationTokenSource _tokenSource = new();
         public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
 
-
         protected abstract Task Start();
         protected abstract void Stop();
 
+        [SuppressMessage("", "CA1063")]
         public void Dispose()
         {
+            Logger.Trace("Dispose()");
             Dispose(true);
             GC.SuppressFinalize(this);  // Suppress finalization.
+            Disposed = true;
+            Logger.Trace("Dispose() done => _disposed {Disposed}", Disposed);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            Logger.Trace($"Dispose({disposing}) _disposed {Disposed}");
+            Logger.Trace("Dispose({Disposing}) _disposed {Disposed}", disposing, Disposed);
 
             if (Disposed) return;
 
@@ -36,8 +41,7 @@ namespace EMS.Library
                 DisposeTokenSource();
             }
 
-            Disposed = true;
-            Logger.Trace($"Dispose({disposing}) done => _disposed {Disposed}");
+            Logger.Trace("Dispose({Disposing}) done.", disposing);
         }
 
         private void DisposeTokenSource()
@@ -68,6 +72,7 @@ namespace EMS.Library
             _parentToken = cancellationToken;
             await StartAsync().ConfigureAwait(false);
         }
+
         protected Task StartAsync()
         {
             if (_parentToken == null) throw new Exceptions.ApplicationException("Missing parent token");
