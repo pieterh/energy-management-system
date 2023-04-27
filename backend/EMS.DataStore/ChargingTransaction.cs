@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
+﻿namespace EMS.DataStore;
 
-namespace EMS.DataStore;
 public record ChargingTransaction
 {
-	[Key]
+    [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ID { get; set; }
     public DateTime Timestamp { get; set; }
@@ -14,9 +11,11 @@ public record ChargingTransaction
     public double Price { get; set; }
 
     private ICollection<CostDetail>? _costDetails;
-    public virtual ICollection<CostDetail> CostDetails {
-        get { 
-            if (_costDetails == null) _costDetails = new List<CostDetail>() ;
+    public virtual ICollection<CostDetail> CostDetails
+    {
+        get
+        {
+            if (_costDetails == null) _costDetails = new List<CostDetail>();
             return _costDetails;
         }
     }
@@ -33,4 +32,3 @@ public record ChargingTransaction
         return true;
     }
 }
-

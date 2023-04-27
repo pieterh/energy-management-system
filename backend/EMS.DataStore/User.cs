@@ -1,9 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Security.Cryptography;
 
 namespace EMS.DataStore;
 
@@ -38,8 +33,7 @@ public record User
 
         stringBuilder.Append($"ID = {ID}, ");
         stringBuilder.Append($"Username = {Username}, ");
-        stringBuilder.Append($"Name = {Name} kWh, ");
-        stringBuilder.Append($"Password = *****, ");
+        stringBuilder.Append($"Name = {Name}, ");
         stringBuilder.Append($"LastPasswordChangedDate = {LastPasswordChangedDate.ToLocalTime():0}, ");
         stringBuilder.Append($"LastLogon = {LastLogonDate.ToLocalTime():O}, ");
         return true;
