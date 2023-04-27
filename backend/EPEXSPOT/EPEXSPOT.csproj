@@ -23,7 +23,7 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
 		<PackageReference Include="System.Text.Json" Version="7.0.2" />
 		<PackageReference Include="JsonSchema.Net" Version="4.0.6" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.56.0.67649">
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.0.68202">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
