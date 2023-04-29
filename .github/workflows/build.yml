@@ -120,7 +120,7 @@ jobs:
         grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
         [ $outdated = true ] && echo "Outdated packages found on the log output"
         exit 0
-      working-directory: frontend/EMS.BlazorWasm        
+      working-directory: frontend        
     - name: Dependencies vulnerability scan - Blazor WASM frontend
       shell: bash
       run: |
@@ -129,7 +129,7 @@ jobs:
         grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
-      working-directory: frontend/EMS.BlazorWasm      
+      working-directory: frontend     
     - name: Dependencies deprecation scan - Blazor WASM frontend
       shell: bash
       run: |
@@ -138,7 +138,7 @@ jobs:
         grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
-      working-directory: frontend/EMS.BlazorWasm
+      working-directory: frontend
     - name: Install CycloneDX .NET
       if: ${{ env.generate-sbom == true }}
       shell: bash
@@ -171,27 +171,33 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs" /d:"sonar.cs.roslyn.ignoreIssues=false"
-      working-directory: backend
+      run: .sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs" /d:"sonar.cs.roslyn.ignoreIssues=false"
+      working-directory: .
+    - name: Build - shared
+      run: dotnet msbuild shared /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
+      working-directory: .
+    - name: Test - shared
+      run: dotnet test shared --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: .      
     - name: Build - backend
-      run: dotnet msbuild /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
-      working-directory: backend
+      run: dotnet msbuild backend /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
+      working-directory: .
     - name: Test - backend
-      run: dotnet test --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-      working-directory: backend
+      run: dotnet test backend --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: .
     - name: Build - Blazor WASM frontend
-      run: dotnet msbuild /p:Configuration=Release /p:RestorePackages=false
-      working-directory: frontend/EMS.BlazorWasm      
+      run: dotnet msbuild frontend /p:Configuration=Release /p:RestorePackages=false
+      working-directory: .
     - name: Test - Blazor WASM frontend
-      run: dotnet test --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-      working-directory: frontend/EMS.BlazorWasm
+      run: dotnet test frontend --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: .
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner end
-      working-directory: backend
+      run: .sonar/scanner/dotnet-sonarscanner end
+      working-directory: .
     - name: Publish - backend
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
@@ -208,7 +214,7 @@ jobs:
         path: ${{ runner.temp }}/ems.zip
     - name: Publish - Blazor WASM frontend
       run: |
-        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazorWasm
+        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm
     - name: Zip Release - Blazor WASM frontend
       uses: TheDoctor0/zip-release@0.7.1
       with:

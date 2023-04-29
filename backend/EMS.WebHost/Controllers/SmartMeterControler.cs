@@ -1,14 +1,16 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json.Serialization;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 
 using EMS.Library;
+using EMS.Library.Adapter.SmartMeterAdapter;
+using EMS.Library.Shared.DTO;
+using EMS.Library.Shared.DTO.EVSE;
+using EMS.Library.Shared.DTO.SmartMeter;
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
-using EMS.Library.Adapter.SmartMeterAdapter;
 
 namespace EMS.WebHosts;
 
@@ -31,7 +33,7 @@ public class SmartMeterController : ControllerBase
     {
         var t = SmartMeter.LastMeasurement;
         if (t == null)
-            return new JsonResult(new Response() { Status = 204, StatusText = "No measurement available"});
+            return new JsonResult(new Response() { Status = 204, StatusText = "No measurement available" });
         var retval = new SmartMeterInfoModel()
         {
             CurrentL1 = PrepareDouble(t.CurrentL1, 1, "A"),
@@ -58,28 +60,4 @@ public class SmartMeterController : ControllerBase
         retval = (retval < 0.01) ? 0.0f : retval;
         return string.Format(new NumberFormatInfo() { NumberDecimalDigits = digits }, "{0:F} {1}", retval, unitOfMeasurement);
     }
-}
-
-public class SmartMeterInfoResponse : Response
-{
-    public required SmartMeterInfoModel Info { get; init; }
-}
-
-public class SmartMeterInfoModel
-{
-    public required string CurrentL1 { get; init; }
-    public required string CurrentL2 { get; init; }
-    public required string CurrentL3 { get; init; }
-
-    public required string VoltageL1 { get; init; }
-    public required string VoltageL2 { get; init; }
-    public required string VoltageL3 { get; init; }
-
-    public required int TariffIndicator { get; init; }
-
-    public required string Electricity1FromGrid { get; init; }
-    public required string Electricity1ToGrid { get; init; }
-
-    public required string Electricity2FromGrid { get; init; }
-    public required string Electricity2ToGrid { get; init; }
 }

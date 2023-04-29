@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-
-namespace EMS.DataStore;
+﻿namespace EMS.DataStore;
 
 [Index(nameof(Username), IsUnique = true)]
 public record User
@@ -25,7 +23,6 @@ public record User
 
     public DateTime LastPasswordChangedDate { get; set; }
     public DateTime LastLogonDate { get; set; }
-
 
     protected virtual bool PrintMembers(StringBuilder stringBuilder)
     {

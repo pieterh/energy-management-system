@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
+using EMS.Library.Shared.DTO.Users;
 using EMS.WebHost.Controllers;
 using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;

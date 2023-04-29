@@ -1,0 +1,149 @@
+﻿@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+@using System.ComponentModel.DataAnnotations
+@using EMS.Library.Shared.DTO.Users
+
+<MudDialog>
+    <DialogContent>
+        <EditForm EditContext="@_editContext">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem>
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Username" For="@(() => _model.Username)" Label="Username" Variant="Variant.Outlined" AutoFocus="true"></MudTextField>
+                            <MudTextField OnlyValidateIfDirty="true" @bind-Value="_model.Password" For="@(() => _model.Password)" Label="Password" InputType="@_passwordInput" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" AdornmentAriaLabel="Show Password" OnAdornmentClick="onShowPasswordClick"></MudTextField>
+                            <MudCheckBox @bind-Checked="@_isRememberMe" Label="Remember me"></MudCheckBox>
+                            <MudText Typo="Typo.body1">@(_model.Message)</MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-end flex-grow-1 gap-4">
+                            <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="onLoginClick">
+                                @if (_processing)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                    <MudText Class="ms-2">Login</MudText>
+                                }
+                                else
+                                {
+                                    <MudText>Login</MudText>
+                                }
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Inject]
+    public IUserService UserService { get; set; } = default!;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; } = default!;
+
+    public class LoginFormModel
+    {
+        [Required]
+        [StringLength(30, ErrorMessage = "Name length can't be more than 30.")]
+        public string Username { get; set; } = default!;
+
+        [Required]
+        [StringLength(30, ErrorMessage = "Password must be at least 5 characters long.", MinimumLength = 5)]
+        public string Password { get; set; } = default!;
+
+        public string Message { get; set; } = default!;
+    }
+
+    private LoginFormModel _model = new LoginFormModel();
+    private EditContext _editContext = default!;
+
+    private bool _processing = false;
+
+    private bool _isRememberMe = false;
+
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private bool _isShowLoginPassword = false;
+    private InputType _passwordInput = InputType.Password;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new(_model);
+    }
+
+    void onShowPasswordClick()
+    {
+        if (_isShowLoginPassword)
+        {
+            _isShowLoginPassword = false;
+            _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+            _passwordInput = InputType.Password;
+        }
+        else
+        {
+            _isShowLoginPassword = true;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            _passwordInput = InputType.Text;
+        }
+    }
+
+    private async Task onLoginClick()
+    {
+        if (_editContext.Validate())
+        {
+            var data = new LoginModel()
+            {
+                Username = _model.Username,
+                Password = _model.Password
+            };
+            try
+            {
+                _processing = true;
+                StateHasChanged();
+                var resp = await UserService.LoginAsync(data);
+                switch (resp.Status)
+                {
+                    case 200:
+                        _model.Password = string.Empty;
+                        ArgumentNullException.ThrowIfNull(resp.User);
+                        if (resp.User.NeedPasswordChange == true)
+                        {
+
+                            DialogOptions opt = new DialogOptions()
+                            {
+                                Position = DialogPosition.Center,
+                                DisableBackdropClick = true,
+                                CloseOnEscapeKey = false
+                            };
+                            var d = DialogService.Show<ChangePasswordDialog>("ChangePassword", opt);
+                            var result = await d.Result;
+                            if (!result.Canceled)
+                            {
+                                var ok = bool.TryParse(result.Data.ToString(), out bool resultbool);
+                                if (ok)
+                                {
+                                    Navigation.NavigateTo("/");
+                                }
+                            }
+                        }
+                        else
+                            Navigation.NavigateTo("/");
+                        break;
+                    case 401:
+                        _model.Message = "Invalid username or password.";
+                        break;
+                    default:
+                        _model.Message = string.Concat(resp.StatusText, " ", resp.Message);
+                        break;
+                }
+            }
+            finally
+            {
+                _processing = false;
+                StateHasChanged();
+            }
+        }
+    }
+}

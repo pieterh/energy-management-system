@@ -2,14 +2,15 @@ using System;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.Logging;
 
 using EMS.Library;
 using EMS.Library.Adapter.EVSE;
+using EMS.Library.Shared.DTO.EVSE;
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
-using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.WebHosts;
 
@@ -30,12 +31,17 @@ public class EVSEController : ControllerBase
 
     [HttpGet("station")]
     [Produces("application/json")]
-    public ActionResult<StationInfoModel> GetStationInfo()
+    public ActionResult<StationInfoResponse> GetStationInfo()
     {
         var pis = ChargePoint.ReadProductInformation();
         var sss = ChargePoint.ReadStationStatus();
-
-        var retval = StationInfoModel.Factory(pis, sss);
+        var retval = new StationInfoResponse()
+        {
+            Status = 200,
+            StatusText = "OK",
+            ProductInfo = pis.CreateModel(),
+            StationStatus = sss.CreateModel()
+        };
 
         return new JsonResult(retval);
     }
@@ -45,9 +51,6 @@ public class EVSEController : ControllerBase
     public ActionResult<SocketInfoResponse> GetSocketInfo(int id)
     {
         SocketMeasurementBase? sm = ChargePoint.LastSocketMeasurement;
-
-
-
 
         SocketInfoModel? socket = null;
 
@@ -70,8 +73,8 @@ public class EVSEController : ControllerBase
                 MaxCurrent = sm.MaxCurrent,
                 ActiveLBSafeCurrent = sm.ActiveLBSafeCurrent,
                 SetPointAccountedFor = sm.SetPointAccountedFor,
-                Phases = sm.Phases,
-                PowerAvailableFormatted = PrepareDouble(((sm.Phases == Phases.One ? 1 : 3) * sm.Voltage * (sm.VehicleIsCharging ? sm.AppliedMaxCurrent : sm.MaxCurrent)) / 1000, 1, "kW"),
+                Phases = sm.Phases.CreateModel(),
+                PowerAvailableFormatted = PrepareDouble(((sm.Phases == Library.Adapter.EVSE.Phases.One ? 1 : 3) * sm.Voltage * (sm.VehicleIsCharging ? sm.AppliedMaxCurrent : sm.MaxCurrent)) / 1000, 1, "kW"),
                 PowerUsingFormatted = PrepareDouble((sm.Voltage * sm.CurrentSum) / 1000, 1, "kW")
             };
 
@@ -99,70 +102,9 @@ public class EVSEController : ControllerBase
     }
 }
 
-public class SocketInfoResponse : Response
+static class Extensions
 {
-    public required SocketInfoModel? SocketInfo { get; init; }
-    public required SessionInfoModel? SessionInfo { get; init; }
-}
-
-public class SocketInfoModel
-{
-    public int Id { get; set; }
-
-    public required string VoltageFormatted { get; init; }
-    public required string CurrentFormatted { get; init; }
-
-    public required string RealPowerSumFormatted { get; init; }                 // kW
-    public required string RealEnergyDeliveredFormatted { get; init; }          // kWh
-
-
-    public required bool Availability { get; init; }
-    public required string Mode3State { get; init; }
-    public required string Mode3StateMessage { get; init; }
-    public required DateTime LastChargingStateChanged { get; init; }
-    public required bool VehicleIsConnected { get; init; }
-    public required bool VehicleIsCharging { get; init; }
-
-    [JsonConverter(typeof(FloatConverterP1))]
-    public required float AppliedMaxCurrent { get; init; }
-    public required UInt32 MaxCurrentValidTime { get; init; }
-    [JsonConverter(typeof(FloatConverterP1))]
-    public required float MaxCurrent { get; init; }
-
-    [JsonConverter(typeof(FloatConverterP0))]
-    public required float ActiveLBSafeCurrent { get; init; }
-    public required bool SetPointAccountedFor { get; init; }
-    public required Phases Phases { get; init; }
-
-    public required string PowerAvailableFormatted { get; init; }                 // kW
-    public required string PowerUsingFormatted { get; init; }                     // kW
-}
-
-public class SessionInfoModel
-{
-    public required DateTime Start { get; init; }
-    public required UInt32 ChargingTime { get; init; }
-    public required string EnergyDeliveredFormatted { get; init; }                // kWh
-}
-
-public record StationInfoModel
-{
-    public static StationInfoModel Factory(ProductInformation productInfo, StationStatus stationStatus)
-    {
-        return new StationInfoModel()
-        {
-            ProductInfo = ProductInfoModel.Factory(productInfo),
-            StationStatus = StationStatusInfoModel.Factory(stationStatus)
-        };
-    }
-
-    public required ProductInfoModel ProductInfo { get; init; }
-    public required StationStatusInfoModel StationStatus { get; init; }
-}
-
-public record ProductInfoModel
-{
-    public static ProductInfoModel Factory(ProductInformation pi)
+    public static ProductInfoModel CreateModel(this ProductInformation pi)
     {
         ArgumentNullException.ThrowIfNull(pi);
         return new ProductInfoModel()
@@ -177,18 +119,7 @@ public record ProductInfoModel
         };
     }
 
-    public required string Name { get; init; }
-    public required string Manufacturer { get; init; }
-    public required string FirmwareVersion { get; init; }
-    public required string Model { get; init; }
-    public required string StationSerial { get; init; }
-    public required long Uptime { get; init; }
-    public required DateTime DateTimeUtc { get; init; }
-}
-
-public record StationStatusInfoModel
-{
-    public static StationStatusInfoModel Factory(StationStatus ss)
+    public static StationStatusInfoModel CreateModel(this StationStatus ss)
     {
         ArgumentNullException.ThrowIfNull(ss);
         return new StationStatusInfoModel()
@@ -200,8 +131,11 @@ public record StationStatusInfoModel
         };
     }
 
-    public required float ActiveMaxCurrent { get; init; }
-    public required float Temperature { get; init; }
-    public required string OCCPState { get; init; }
-    public required uint NrOfSockets { get; init; }
+    public static Library.Shared.DTO.EVSE.Phases CreateModel(this Library.Adapter.EVSE.Phases p) => p switch
+    {
+        Library.Adapter.EVSE.Phases.Unknown => Library.Shared.DTO.EVSE.Phases.Unknown,
+        Library.Adapter.EVSE.Phases.One => Library.Shared.DTO.EVSE.Phases.One,
+        Library.Adapter.EVSE.Phases.Three => Library.Shared.DTO.EVSE.Phases.One,
+        _ => throw new ArgumentOutOfRangeException(nameof(p))
+    };
 }

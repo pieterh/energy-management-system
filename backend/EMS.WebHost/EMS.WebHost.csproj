@@ -37,6 +37,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
 		<ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
+		<ProjectReference Include="..\..\shared\EMS.Library.Shared\EMS.Library.Shared.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="ExampleRequests\" />
