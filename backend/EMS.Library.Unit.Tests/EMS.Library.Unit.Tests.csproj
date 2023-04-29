@@ -1,13 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<IsPackable>false</IsPackable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
 		<AssemblyName>EMS.Library.Unit.Tests</AssemblyName>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="FluentAssertions" Version="6.11.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
 		<PackageReference Include="xunit" Version="2.4.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -22,26 +23,27 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.56.0.67649">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 		<PackageReference Include="Moq" Version="4.18.4" />
+		<PackageReference Include="FluentAssertions" Version="6.11.0" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.56.0.67649">
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		  <PrivateAssets>all</PrivateAssets>
-		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Remove="System.Net.Http" />
-	  <None Remove="System.Text.RegularExpressions" />
-	  <None Remove="Assembly\" />
-	  <None Remove="Properties\" />
+		<None Remove="System.Net.Http" />
+		<None Remove="System.Text.RegularExpressions" />
+		<None Remove="Assembly\" />
+		<None Remove="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Assembly\" />
-	  <Folder Include="Properties\" />
+		<Folder Include="Assembly\" />
+		<Folder Include="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="ResourcesHelper.Resource.txt" LogicalName="ResourcesHelper.Resource.txt" />

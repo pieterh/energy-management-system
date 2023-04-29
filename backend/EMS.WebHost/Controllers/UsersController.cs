@@ -6,77 +6,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-using EMS.DataStore;
-using EMS.Library;
 using EMS.Library.Passwords;
 using EMS.WebHost.Helpers;
+using EMS.Library.Shared.DTO;
+using EMS.Library.Shared.DTO.Users;
+using EMS.DataStore;
+using System.Xml.Linq;
 
 namespace EMS.WebHost.Controllers;
-
-public class Response
-{
-    public required int Status { get; set; }
-    public required string StatusText { get; init; }
-    public string? Message { get; init; }
-}
-
-public class LoginResponse : Response
-{
-    public required string Token { get; init; }
-    public required UserModelLogon User { get; init; }
-}
-
-public class PingResponse : Response
-{
-    public required UserModelBasic User { get; init; }
-}
-
-public class LoginModel
-{
-    public required string Username { get; init; }
-    public required string Password { get; init; }
-}
-
-public class UserModelBasic
-{
-    public Guid Id { get; set; }
-    public required string Username { get; init; }
-    public required string Name { get; init; }
-
-    public UserModelBasic() { }
-
-    [SetsRequiredMembers]
-    public UserModelBasic(User user)
-    {
-        ArgumentNullException.ThrowIfNull(user);
-        Id = user.ID;
-        Username = user.Username;
-        Name = user.Name;
-    }
-}
-
-public class UserModelLogon : UserModelBasic
-{
-    public required bool NeedPasswordChange { get; init; }
-
-    [SetsRequiredMembers]
-    public UserModelLogon(User user) : base(user)
-    {
-        ArgumentNullException.ThrowIfNull(user);
-        NeedPasswordChange = (user.LastPasswordChangedDate.Ticks <= 0) || (DateTime.UtcNow - user.LastPasswordChangedDate).TotalDays > 3;
-    }
-}
-
-public class SetPasswordModel
-{
-    public required string OldPassword { get; init; }
-    public required string NewPassword { get; init; }
-}
-
-public class SetPasswordResponse : Response
-{
-    public UserModelBasic? User { get; init; }
-}
 
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -137,7 +74,7 @@ public class UsersController : ControllerBase
                 switch (VerifyPassword(userFromDb, userFromDb.Password, model.OldPassword))
                 {
                     case PasswordVerificationResult.Failed:
-                        return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "Old password is wrong.", User = new UserModelBasic(userFromDb) });
+                        return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "Old password is wrong.", User = userFromDb.CreateUserModelBasic() });
 
                     case PasswordVerificationResult.Success:
                     case PasswordVerificationResult.SuccessRehashNeeded:
@@ -151,11 +88,11 @@ public class UsersController : ControllerBase
 
                             db.SaveChanges();
 
-                            return new JsonResult(new SetPasswordResponse() { Status = 200, StatusText = "", User = new UserModelBasic(userFromDb) });
+                            return new JsonResult(new SetPasswordResponse() { Status = 200, StatusText = "", User = userFromDb.CreateUserModelBasic() });
                         }
                         else
                         {
-                            return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "New password is to week.", User = new UserModelBasic(userFromDb) });
+                            return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "New password is to week.", User = userFromDb.CreateUserModelBasic() });
                         }
 
                     default:
@@ -193,8 +130,8 @@ public class UsersController : ControllerBase
 
         using (HEMSContext db = new HEMSContext())
         {
-            User? userFromDb = null;
-            User? found = db.FindUserByUsername(model.Username);
+            DataStore.User? userFromDb = null;
+            DataStore.User? found = db.FindUserByUsername(model.Username);
 
             if (found == null)
             {
@@ -203,11 +140,11 @@ public class UsersController : ControllerBase
                 {
                     StaticLogger.Warn("The user 'admin' doesn't exist yet. Creating it with a default password.");
 #pragma warning disable S2068
-                    userFromDb = new User() { Username = "admin", Name = "Administrator", LastLogonDate = DateTime.UtcNow, Password = "tbd" };
+                    userFromDb = new DataStore.User() { Username = "admin", Name = "Administrator", LastLogonDate = DateTime.UtcNow, Password = "tbd" };
 #pragma warning restore
                     var passwordHashed = HashPasword(userFromDb, "admin");
                     userFromDb.Password = passwordHashed;
-                    db.Add<User>(userFromDb);
+                    db.Add<DataStore.User>(userFromDb);
                     db.SaveChanges();
                 }
             }
@@ -235,24 +172,21 @@ public class UsersController : ControllerBase
 
                 db.SaveChanges();
 
-                var user = new UserModelLogon(userFromDb);
-                return user;
-
+                return userFromDb.CreateUserModelLogon();
             }
             else
                 return null;
-
         }
     }
 
-    private static PasswordHasher<User> _passwordHasher = new PasswordHasher<User>();
-    public static string HashPasword(User user, string password)
+    private static PasswordHasher<DataStore.User> _passwordHasher = new PasswordHasher<DataStore.User>();
+    public static string HashPasword(DataStore.User user, string password)
     {
         string hash = _passwordHasher.HashPassword(user, password);
         return hash;
     }
 
-    public static PasswordVerificationResult VerifyPassword(User user, string hashedPassword, string providedPassword)
+    public static PasswordVerificationResult VerifyPassword(DataStore.User user, string hashedPassword, string providedPassword)
     {
         var result = _passwordHasher.VerifyHashedPassword(user, hashedPassword, providedPassword);
         return result;
@@ -261,7 +195,7 @@ public class UsersController : ControllerBase
 
 public static class UserExtension
 {
-    public static User? FindUserByUsername(this HEMSContext db, string username)
+    public static DataStore.User? FindUserByUsername(this HEMSContext db, string username)
     {
         ArgumentNullException.ThrowIfNull(db);
         ArgumentNullException.ThrowIfNullOrEmpty(username);
@@ -270,10 +204,25 @@ public static class UserExtension
 
     }
 
-    public static User? FindUserById(this HEMSContext db, Guid id)
+    public static DataStore.User? FindUserById(this HEMSContext db, Guid id)
     {
         ArgumentNullException.ThrowIfNull(db);
         ArgumentNullException.ThrowIfNull(id);
         return db.Users.Where((x) => x.ID.Equals(id)).FirstOrDefault();
+    }
+
+    public static UserModelBasic CreateUserModelBasic(this DataStore.User user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        var umd = new UserModelBasic(user.ID, user.Username, user.Name);
+        return umd;
+    }
+
+    public static UserModelLogon CreateUserModelLogon(this DataStore.User user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        bool needPasswordChange = (user.LastPasswordChangedDate.Ticks <= 0) || (DateTime.UtcNow - user.LastPasswordChangedDate).TotalDays > 3;
+        var uml = new UserModelLogon(user.ID, user.Username, user.Name, needPasswordChange);
+        return uml;        
     }
 }

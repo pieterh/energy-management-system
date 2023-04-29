@@ -1,19 +1,18 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 
+using EMS.DataStore;
 using EMS.Library;
+using EMS.Library.Core;
+using EMS.Library.Adapter.PriceProvider;
+using EMS.Library.Shared.DTO.HEMS;
+using EMS.Library.Shared.DTO.EVSE;
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
-using EMS.Library.Core;
-using System.Collections.Generic;
-using EMS.DataStore;
-using System.Linq;
-using EMS.Library.Adapter.PriceProvider;
-using System.Diagnostics.CodeAnalysis;
 
 namespace EMS.WebHosts;
 
@@ -46,11 +45,11 @@ public class HEMSController : ControllerBase
             CurrentAvailableL3Formatted = PrepareDouble(t.CurrentAvailableL1, 1, "A")
         };
         
-        var measurements = new List<Measurement>();
+        var measurements = new List<Library.Shared.DTO.HEMS.Measurement>();
 
         foreach (var m in t.Measurements)
         {
-            measurements.Add(new Measurement()
+            measurements.Add(new Library.Shared.DTO.HEMS.Measurement()
             {
                 Received = m.Received,
                 L1 = m.L1,
@@ -102,46 +101,4 @@ public class HEMSController : ControllerBase
         retval = (retval < 0.01) ? 0.0f : retval;
         return string.Format(new NumberFormatInfo() { NumberDecimalDigits = digits }, "{0:F} {1}", retval, unitOfMeasurement);
     }
-}
-
-public class HemsInfoResponse : Response
-{
-    public required HemsInfoModel Info { get; init; }
-    public required IEnumerable<Measurement> Measurements { get; init; }
-}
-
-public class HemsInfoModel
-{
-    public required string Mode { get; init; }
-    public required string State { get; init; }
-    public required DateTime LastStateChange { get; init; }
-    public required string CurrentAvailableL1Formatted { get; init; }
-    public required string CurrentAvailableL2Formatted { get; init; }
-    public required string CurrentAvailableL3Formatted { get; init; }
-}
-
-public class Measurement
-{
-    public DateTime Received { get; init; }
-    public double L1 { get; init; }
-    public double L2 { get; init; }
-    public double L3 { get; init; }
-    public double L { get; init; }
-
-    public double CL1 { get; init; }
-    public double CL2 { get; init; }
-    public double CL3 { get; init; }
-}
-
-public class HemsLastSessionsResponse : Response
-{
-    public required IEnumerable<ChargingSession> Sessions { get; init; }
-}
-
-public class ChargingSession
-{
-    public required DateTime Timestamp { get; init; }
-    public required decimal EnergyDelivered { get; init; }
-    public required decimal Cost { get; init; }
-    public required decimal Price { get; init; }
 }

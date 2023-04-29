@@ -2,6 +2,7 @@
 using EMS.WebHost.Controllers;
 using System.Net.Http.Json;
 using System.Diagnostics.CodeAnalysis;
+using EMS.Library.Shared.DTO.Users;
 
 namespace EMS.WebHost.Integration.Tests
 {
