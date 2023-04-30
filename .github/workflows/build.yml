@@ -41,7 +41,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Environment information
-        path: ${{ runner.temp }}/environment.txt      
+        path: ${{ runner.temp }}/environment.txt  
+    - name: Cache nuget packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: ${{ runner.os }}-nuget-            
     - name: Cache SonarQube scanner
       id: cache-sonar-scanner
       uses: actions/cache@v3
