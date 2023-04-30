@@ -61,7 +61,7 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             return loginResponse;
         }
 
-        public async void LogoutAsync()
+        public async Task LogoutAsync()
         {
             await _localStorage.RemoveAsync("user");
             await _localStorage.RemoveAsync("token");
