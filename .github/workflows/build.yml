@@ -41,7 +41,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Environment information
-        path: ${{ runner.temp }}/environment.txt      
+        path: ${{ runner.temp }}/environment.txt  
+    - name: Cache nuget packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: ${{ runner.os }}-nuget-            
     - name: Cache SonarQube scanner
       id: cache-sonar-scanner
       uses: actions/cache@v3
@@ -85,6 +91,33 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies outdated packages scan - Shared
+      shell: bash
+      run: |
+        dotnet list package --outdated 2>&1 | tee -a outdated_scan.log
+        outdated=true
+        grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
+        [ $outdated = true ] && echo "Outdated packages found on the log output"
+        exit 0
+      working-directory: shared      
+    - name: Dependencies vulnerability scan - Shared
+      shell: bash
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
+        vulnerabilities=true
+        grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
+        [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
+        exit 0
+      working-directory: shared
+    - name: Dependencies deprecation scan - Shared
+      shell: bash
+      run: |
+        dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
+        deprecations=true
+        grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
+        [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
+        exit 0
+      working-directory: shared
     - name: Dependencies outdated packages scan - Backend
       shell: bash
       run: |
@@ -139,33 +172,6 @@ jobs:
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
       working-directory: frontend
-    - name: Install CycloneDX .NET
-      if: ${{ env.generate-sbom == true }}
-      shell: bash
-      run: |  
-        dotnet tool install CycloneDX --global
-    - name: CycloneDX .NET Generate SBOM - backend
-      if: ${{ env.generate-sbom == true }}
-      shell: bash
-      run: |  
-        dotnet CycloneDX backend/ems.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-backend-ems.json
-    - name: CycloneDX .NET Generate SBOM - frontend
-      if: ${{ env.generate-sbom == true }}
-      shell: bash
-      run: |  
-        dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
-    - name: Upload SBOM Artifact
-      uses: actions/upload-artifact@v3
-      if: ${{ env.generate-sbom == true }}
-      with:
-        name: SBOM
-        path: ${{ runner.temp }}\sbom\*
-    - name: SBOM submission action
-      uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
-      if: ${{ env.generate-sbom == true }}
-      with:
-        sbom-files: ${{ runner.temp }}\sbom\sbom-backend-ems.json
-        token: ${{ secrets.GH_TOKEN }}
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}      
       env:
