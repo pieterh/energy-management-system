@@ -7,9 +7,17 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-	  <PackageReference Include="SonarAnalyzer.CSharp" Version="8.56.0.67649">
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	    <PrivateAssets>all</PrivateAssets>
-	  </PackageReference>
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.0.68202">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Model\" />
+		<None Remove="Model\UsersController\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Model\" />
+		<Folder Include="Model\Users\" />
 	</ItemGroup>
 </Project>

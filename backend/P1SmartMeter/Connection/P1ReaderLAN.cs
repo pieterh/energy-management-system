@@ -1,30 +1,41 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
+using EMS.Library.Tasks;
+using P1SmartMeter.Connection.Proxies;
 
 namespace P1SmartMeter.Connection
 {
+    enum ConnectionStatus
+    {
+        Connecting,
+        Connected,
+        Disconnected
+    };
+
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
     internal sealed class P1ReaderLAN : P1Reader
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
+        private const int RECEIVE_BUFFER_SIZE = 2048;
+
         private readonly string _host;
         private readonly int _port;
-        private const int RECEIVE_BUFFER_SIZE = 2048;
+        private readonly ISocketFactory _socketFactory;
+
         private Task? _backgroundTask;
 
-        private Socket? _socket;
+        private ISocket? _socket;
+        private ISocketAsyncEventArgs? _receiveEventArgs;
         private NetworkStream? _stream;
-        private SocketAsyncEventArgs? _receiveEventArgs;
 
-        public P1ReaderLAN(string host, int port)
+        public ConnectionStatus Status { get; internal set; } = ConnectionStatus.Disconnected;
+
+        public P1ReaderLAN(string host, int port, ISocketFactory? socketFactory = null)
         {
             _host = host;
             _port = port;
+            _socketFactory = socketFactory ?? new SocketFactory();
         }
 
         protected override void Dispose(bool disposing)
@@ -39,7 +50,7 @@ namespace P1SmartMeter.Connection
 
         private void DisposeBackgroundTask()
         {
-            _backgroundTask?.Wait(5000);
+            TaskTools.Wait(_backgroundTask, 5000);
             _backgroundTask?.Dispose();
             _backgroundTask = null;
         }
@@ -93,36 +104,44 @@ namespace P1SmartMeter.Connection
 
         protected override void Stop()
         {
-            TokenSource.Cancel();
-            /* wait a bit for the background task in the case that it still is trying to connect */
-            _backgroundTask?.Wait(750);
+            TokenSource.Cancel(false);      // NET 8 has CancelAsync...need to check that out
 
+            /* wait a bit for the background task in the case that it still is trying to connect */
+            TaskTools.Wait(_backgroundTask, 750);
+            
             DisposeStream();
             DisposeBackgroundTask();
+            Status = ConnectionStatus.Disconnected;
         }
 
-        private bool Connect()
+        /// <summary>
+        /// Returns true if the connection setup is started
+        /// </summary>
+        /// <returns></returns>
+        internal bool Connect()
         {
-            bool isConnected = false;
+            bool isConnecting = false;
             try
             {
                 Logger.Info($"Connecting {_host}:{_port}");
 
-                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _receiveEventArgs = new SocketAsyncEventArgs();
+                _socket = _socketFactory.CreateSocket(SocketType.Stream, ProtocolType.Tcp);
+                _receiveEventArgs = _socketFactory.CreateSocketAsyncEventArgs();
                 _receiveEventArgs.SetBuffer(new Byte[RECEIVE_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
-                _receiveEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnCompleted);
+                _receiveEventArgs.Completed += new EventHandler<ISocketAsyncEventArgs>(OnCompleted);
                 _receiveEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Parse(_host), _port);
+
+                Status = ConnectionStatus.Connecting;
+
                 if (!_socket.ConnectAsync(_receiveEventArgs))
                 {
                     Logger.Info($"Data {_receiveEventArgs.BytesTransferred},{_socket.Connected}");
                     OnCompleted(this, _receiveEventArgs);
                 }
 
-                isConnected = true;
                 var port = _socket != null && _socket.LocalEndPoint != null ? ((IPEndPoint)_socket.LocalEndPoint).Port : -1;
-                var connected = _socket?.Connected;
-                Logger.Trace($"Connected {isConnected},{connected},{port}");
+                isConnecting = true;
+                Logger.Trace($"Connecting from local port {port}");
             }
             catch (SocketException se1)
                 when (se1.SocketErrorCode == SocketError.TimedOut ||
@@ -137,11 +156,11 @@ namespace P1SmartMeter.Connection
                 Logger.Error(se2, $"Unexpected socket exception while connecting.");
             }
 
-            return isConnected;
+            return isConnecting;
         }
 
         [SuppressMessage("Code Analysis", "CA1031")]
-        private async void OnCompleted(object? sender, SocketAsyncEventArgs eventArgs)
+        private async void OnCompleted(object? sender, ISocketAsyncEventArgs eventArgs)
         {
             try
             {
@@ -165,7 +184,7 @@ namespace P1SmartMeter.Connection
             }
         }
 
-        private async Task ProcesConnect(SocketAsyncEventArgs connectEventArgs)
+        private async Task ProcesConnect(ISocketAsyncEventArgs connectEventArgs)
         {
             var socket = connectEventArgs.ConnectSocket;
             switch (connectEventArgs.SocketError)
@@ -174,6 +193,8 @@ namespace P1SmartMeter.Connection
                     var port = socket != null && socket.LocalEndPoint != null ? ((IPEndPoint)socket.LocalEndPoint).Port : -1;
                     var connected = socket?.Connected;
                     Logger.Info($"{connectEventArgs.LastOperation}, port={port}, connected={connected}, socketError={connectEventArgs.SocketError}");
+                    Status = ConnectionStatus.Connected;
+
                     var willRaiseEvent = socket?.ReceiveAsync(connectEventArgs);
                     if (willRaiseEvent.HasValue && !willRaiseEvent.Value)
                     {
@@ -182,9 +203,12 @@ namespace P1SmartMeter.Connection
                     break;
                 case SocketError.ConnectionRefused:
                     Logger.Error("Connection refused");
+                    Status = ConnectionStatus.Disconnected;
                     await RestartConnection().ConfigureAwait(false);
                     break;
                 case SocketError.OperationAborted:
+                    Status = ConnectionStatus.Disconnected;
+                    await RestartConnection().ConfigureAwait(false);
                     Logger.Info("Socket operation aborted");
                     break;
                 default:
@@ -192,12 +216,12 @@ namespace P1SmartMeter.Connection
             }
         }
 
-        private async Task ProcesReceive(SocketAsyncEventArgs receiveEventArgs)
+        private async Task ProcesReceive(ISocketAsyncEventArgs receiveEventArgs)
         {
             if (await StopRequested(0).ConfigureAwait(false)) { return; }
             var socket = receiveEventArgs.ConnectSocket;
 
-            if (receiveEventArgs.BytesTransferred <= 0 || socket == null || !socket.Connected )
+            if (receiveEventArgs.BytesTransferred <= 0 || socket == null || !socket.Connected)
             {
                 var port = socket != null && socket.LocalEndPoint != null ? ((IPEndPoint)socket.LocalEndPoint).Port : -1;
                 var connected = socket?.Connected;
@@ -226,4 +250,6 @@ namespace P1SmartMeter.Connection
             await StartAsync().ConfigureAwait(false);
         }
     }
+
+
 }

@@ -9,15 +9,23 @@
 	<ItemGroup>
 		<Folder Include="Connection\" />
 		<Folder Include="Reading\" />
+		<Folder Include="Connection\FactoryLAN\Proxies\" />
+		<Folder Include="Connection\FactoryTTY\" />
+		<Folder Include="Connection\FactoryTTY\Proxies\" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="System.IO.Ports" Version="7.0.0" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.56.0.67649">
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.0.68202">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Connection\FactoriesAndProxies\Proxies\" />
+	  <None Remove="Connection\FactoryTTY\" />
+	  <None Remove="Connection\FactoryTTY\Proxies\" />
 	</ItemGroup>
 </Project>

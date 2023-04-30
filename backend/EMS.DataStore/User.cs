@@ -1,11 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
-
-namespace EMS.DataStore;
+﻿namespace EMS.DataStore;
 
 [Index(nameof(Username), IsUnique = true)]
 public record User
@@ -31,15 +24,13 @@ public record User
     public DateTime LastPasswordChangedDate { get; set; }
     public DateTime LastLogonDate { get; set; }
 
-
     protected virtual bool PrintMembers(StringBuilder stringBuilder)
     {
         if (stringBuilder == null) throw new ArgumentNullException(nameof(stringBuilder));
 
         stringBuilder.Append($"ID = {ID}, ");
         stringBuilder.Append($"Username = {Username}, ");
-        stringBuilder.Append($"Name = {Name} kWh, ");
-        stringBuilder.Append($"Password = *****, ");
+        stringBuilder.Append($"Name = {Name}, ");
         stringBuilder.Append($"LastPasswordChangedDate = {LastPasswordChangedDate.ToLocalTime():0}, ");
         stringBuilder.Append($"LastLogon = {LastLogonDate.ToLocalTime():O}, ");
         return true;

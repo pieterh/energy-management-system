@@ -1,12 +1,9 @@
-﻿using System;
-namespace EMS.DataStore
+﻿namespace EMS.DataStore;
+
+public record DbConfig
 {
-    public record DbConfig
-    {
-        public enum DbType { sqlite };
+    public enum DbType { sqlite };
 
-        public DbType type { get; set; }
-        public string name { get; set; } = default!;
-    }
+    public DbType type { get; set; }
+    public string name { get; set; } = default!;
 }
-
