@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Authorization;
 
 using EMS.BlazorWasm.Services;
+using EMS.Library.Shared.DTO;
 using EMS.Library.Shared.DTO.Users;
 
 namespace EMS.BlazorWasm.Client.Services.Auth
@@ -35,22 +36,22 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             _localStorage = localStorage;
         }
 
-        public async Task<LoginResponse?> LoginAsync(LoginModel model)
+        public async Task<Response?> LoginAsync(LoginModel model)
         {
             return await LoginAsync(model, CancellationToken.None);
         }
 
-        public async Task<LoginResponse?> LoginAsync(LoginModel model, CancellationToken cancellationToken)
+        public async Task<Response?> LoginAsync(LoginModel model, CancellationToken cancellationToken)
         {
             var content = JsonContent.Create<LoginModel>(model);
             var r = await _httpClient.PostAsync("api/users/authenticate", content, cancellationToken);
             if (r == null) throw new InvalidOperationException("Oeps");
-            var loginResponse = await r.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
+            var loginResponse = await r.Content.ReadFromJsonAsync<Response>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
             if (loginResponse == null) throw new InvalidOperationException("Oeps3");
 
             if (loginResponse.Status == 200)
             {
-                var (user, token) = loginResponse;
+                var (user, token) = (LoginResponse)loginResponse;
                 if (user == null) throw new InvalidOperationException("Oeps3");
 
                 await _localStorage.SaveObjectAsync("user", user);

@@ -106,9 +106,10 @@
                 switch (resp.Status)
                 {
                     case 200:
+                        var loginResponse = (LoginResponse)resp;
                         _model.Password = string.Empty;
-                        ArgumentNullException.ThrowIfNull(resp.User);
-                        if (resp.User.NeedPasswordChange == true)
+                        ArgumentNullException.ThrowIfNull(loginResponse.User);
+                        if (loginResponse.User.NeedPasswordChange == true)
                         {
 
                             DialogOptions opt = new DialogOptions()
