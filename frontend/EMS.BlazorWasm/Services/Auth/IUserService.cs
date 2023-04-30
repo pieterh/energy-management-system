@@ -7,8 +7,8 @@ namespace EMS.BlazorWasm.Client.Services.Auth
 {
     public interface IUserService
     {
-        Task<LoginResponse?> LoginAsync(LoginModel model);
-        Task<LoginResponse?> LoginAsync(LoginModel model, CancellationToken cancellationToken);
+        Task<Response?> LoginAsync(LoginModel model);
+        Task<Response?> LoginAsync(LoginModel model, CancellationToken cancellationToken);
         void LogoutAsync();
         Task<SetPasswordResponse> SetPasswordAsync(SetPasswordModel model, CancellationToken cancellationToken);
         Task<PingResponse> Ping();

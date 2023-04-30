@@ -50,11 +50,17 @@ public class UsersController : ControllerBase
                 Token = token,
                 User = user
             };
-            return new JsonResult(result);
+            return Ok((Response)result);
         }
         else
         {
-            return Unauthorized();
+            var result = new Response
+            {
+                Status = 401,
+                StatusText = "Je mag er niet in",
+                Message = "Helaas ;-)"
+            };
+            return Unauthorized(result);
         }
     }
 
@@ -223,6 +229,6 @@ public static class UserExtension
         ArgumentNullException.ThrowIfNull(user);
         bool needPasswordChange = (user.LastPasswordChangedDate.Ticks <= 0) || (DateTime.UtcNow - user.LastPasswordChangedDate).TotalDays > 3;
         var uml = new UserModelLogon(user.ID, user.Username, user.Name, needPasswordChange);
-        return uml;        
+        return uml;
     }
 }

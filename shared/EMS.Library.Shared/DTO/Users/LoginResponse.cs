@@ -1,5 +1,8 @@
-﻿namespace EMS.Library.Shared.DTO.Users;
+﻿using System.Text.Json.Serialization;
 
+namespace EMS.Library.Shared.DTO.Users;
+
+[JsonDerivedType(typeof(LoginResponse), typeDiscriminator: "LoginResponse")]
 public class LoginResponse : Response
 {
     public required string Token { get; init; }
