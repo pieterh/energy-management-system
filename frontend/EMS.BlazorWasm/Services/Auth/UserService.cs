@@ -27,7 +27,7 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             if (httpClient == null) throw new ArgumentNullException(nameof(httpClient));
             _httpClient = httpClient;
 
-            if (authenticationStateProvider == null || !(authenticationStateProvider is CustomAuthenticationProvider))
+            if (!(authenticationStateProvider is CustomAuthenticationProvider))
                 throw new ArgumentOutOfRangeException(nameof(authenticationStateProvider));
             _authenticationStateProvider = (CustomAuthenticationProvider)authenticationStateProvider;
 
@@ -35,23 +35,23 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             _localStorage = localStorage;
         }
 
-        public async Task<LoginResponse> LoginAsync(LoginModel model)
+        public async Task<LoginResponse?> LoginAsync(LoginModel model)
         {
             return await LoginAsync(model, CancellationToken.None);
         }
 
-        public async Task<LoginResponse> LoginAsync(LoginModel model, CancellationToken cancellationToken)
+        public async Task<LoginResponse?> LoginAsync(LoginModel model, CancellationToken cancellationToken)
         {
             var content = JsonContent.Create<LoginModel>(model);
             var r = await _httpClient.PostAsync("api/users/authenticate", content, cancellationToken);
-            if (r == null) throw new NullReferenceException("Oeps");
+            if (r == null) throw new InvalidOperationException("Oeps");
             var loginResponse = await r.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
-            if (loginResponse == null) throw new NullReferenceException("Oeps2");
+            if (loginResponse == null) throw new InvalidOperationException("Oeps3");
 
             if (loginResponse.Status == 200)
             {
                 var (user, token) = loginResponse;
-                if (user == null) throw new NullReferenceException("Oeps3");
+                if (user == null) throw new InvalidOperationException("Oeps3");
 
                 await _localStorage.SaveObjectAsync("user", user);
                 await _localStorage.SaveStringAsync("token", token);
@@ -71,16 +71,16 @@ namespace EMS.BlazorWasm.Client.Services.Auth
         {
             var content = JsonContent.Create<SetPasswordModel>(model);
             var r = await _httpClient.PostAsync("api/users/setpassword", content, cancellationToken);
-            if (r == null) throw new NullReferenceException("Oeps");
+            if (r == null) throw new InvalidOperationException("Oeps");
             var setPasswordResponse = await r.Content.ReadFromJsonAsync<SetPasswordResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }, cancellationToken);
-            if (setPasswordResponse == null) throw new NullReferenceException("Oeps2");
+            if (setPasswordResponse == null) throw new InvalidOperationException("Oeps2");
             return setPasswordResponse;
         }
 
         public async Task<PingResponse> Ping()
         {
             var r = await _httpClient.GetFromJsonAsync<PingResponse>("api/users/ping");
-            if (r == null) throw new NullReferenceException("Oeps");
+            if (r == null) throw new InvalidOperationException("Oeps");
             return r;
         }
     }    

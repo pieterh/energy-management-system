@@ -37,7 +37,8 @@ builder.Services.AddHttpClient<IUserService, UserService>(client =>
 builder.Services.AddHttpClient("ServerAPI", client => client.BaseAddress = baseAddres)
     .AddHttpMessageHandler<CustomAuthorizationMessageHandler>();
 
-builder.Services.AddScoped<IChargepointService, ChargepointService>((sp) => {
+builder.Services.AddScoped<IChargepointService, ChargepointService>((sp) =>
+{
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
     var httpClient = httpClientFactory.CreateClient("ServerAPI");
     var instance = ActivatorUtilities.CreateInstance<ChargepointService>(sp, httpClient);
