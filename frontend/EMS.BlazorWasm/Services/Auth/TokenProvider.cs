@@ -1,11 +1,10 @@
-﻿using System;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace EMS.BlazorWasm.Services.Auth
 {
     public class TokenProvider : IAccessTokenProvider
     {
-        private ILocalStorage _localStorage;
+        private readonly ILocalStorage _localStorage;
         public TokenProvider(ILocalStorage localStorage)
         {
             if (localStorage == null) throw new ArgumentNullException(nameof(localStorage));
@@ -18,7 +17,7 @@ namespace EMS.BlazorWasm.Services.Auth
             var token = new AccessToken() { Value = jwt };
             var op = new InteractiveRequestOptions() { Interaction = InteractionType.SignIn, ReturnUrl = "login" };
 
-            var accessTokenResult = new AccessTokenResult(AccessTokenResultStatus.Success, token, "login",op);
+            var accessTokenResult = new AccessTokenResult(AccessTokenResultStatus.Success, token, "login", op);
             return accessTokenResult;
         }
 
@@ -30,8 +29,6 @@ namespace EMS.BlazorWasm.Services.Auth
 
             var accessTokenResult = new AccessTokenResult(AccessTokenResultStatus.Success, token, "login", op);
             return accessTokenResult;
-
         }
     }
 }
-
