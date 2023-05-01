@@ -2,7 +2,7 @@
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.TestableDateTime;
 
-namespace EPEXSPOT.Tests;
+namespace EPEXSPOT.Unit.Tests;
 
 public class TariffTests
 {
