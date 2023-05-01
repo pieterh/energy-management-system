@@ -4,7 +4,7 @@ namespace EPEXSPOT.Integration.Tests;
 public class EPEXSPOTServiceTests
 {
     [Fact]
-    public async void IsAbleToRetrieveTheCurrentTariff()
+    public async Task IsAbleToRetrieveTheCurrentTariff()
     {
         using var client = new HttpClient();
         var getapxtariffsUri = new Uri(new Uri("https://mijn.easyenergy.com"), EPEXSPOTService.getapxtariffsMethod);
@@ -18,7 +18,7 @@ public class EPEXSPOTServiceTests
     }
 
     [Fact]
-    public async void IsAbleToRetrieveTariffForNext4Hours()
+    public async Task IsAbleToRetrieveTariffForNext4Hours()
     {
         using var client = new HttpClient();
         var getapxtariffsUri = new Uri(new Uri("https://mijn.easyenergy.com"), EPEXSPOTService.getapxtariffsMethod);
