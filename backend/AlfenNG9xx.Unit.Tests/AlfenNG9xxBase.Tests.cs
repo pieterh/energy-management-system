@@ -39,6 +39,7 @@ namespace AlfenNG9xxBase.Tests
             mock.Object.Dispose();
             GC.Collect();
             GC.WaitForPendingFinalizers();
+
             mock.Object.isDisposed.Should().BeTrue();
 
             // and for the second time

@@ -12,6 +12,7 @@
 		<Folder Include="Connection\FactoryLAN\Proxies\" />
 		<Folder Include="Connection\FactoryTTY\" />
 		<Folder Include="Connection\FactoryTTY\Proxies\" />
+		<Folder Include="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
@@ -27,5 +28,6 @@
 	  <None Remove="Connection\FactoriesAndProxies\Proxies\" />
 	  <None Remove="Connection\FactoryTTY\" />
 	  <None Remove="Connection\FactoryTTY\Proxies\" />
+	  <None Remove="Properties\" />
 	</ItemGroup>
 </Project>

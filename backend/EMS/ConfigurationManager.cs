@@ -1,7 +1,5 @@
-using System;
 using System.IO;
 using System.Text.Json;
-using Json.Schema;
 using EMS.Library.JSon;
 
 namespace EMS
@@ -9,22 +7,26 @@ namespace EMS
     public static class ConfigurationManager
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private static readonly JsonSerializerOptions Options = new();
-        private static readonly Uri schemaUri = new("https://github.com/pieterh/energy-management-system");
+        private static readonly Uri _schemaUri = new("https://github.com/pieterh/energy-management-system");
+        private const string _schemaResourceName = "config.schema.json";
+
+        static ConfigurationManager()
+        {
+            JsonHelpers.LoadAndRegisterSchema(_schemaUri, _schemaResourceName);
+        }
 
         public static JsonElement ReadConfig(string filename)
         {
             // read JSON directly from a file
             using var streamReader = GetConfigFile(filename);
             var result = JsonSerializer.Deserialize<JsonElement>(streamReader.BaseStream, Options);
-            var schema = JsonHelpers.GetSchema("config.schema.json");
-            SchemaRegistry.Global.Register(schemaUri, schema);
-            var validationResult = schema.Evaluate(result, new EvaluationOptions() { OutputFormat = OutputFormat.Hierarchical });
+            var isValid = JsonHelpers.Evaluate(_schemaResourceName, result);
 
-            if (!validationResult.IsValid)
+            if (!isValid)
             {
                 Logger.Error("There was an error in the format of the configuration file {FileName}", filename);
-                JsonHelpers.ShowEvaluationDetails(validationResult.Details);
                 throw new ArgumentException("The configuration file has not a valid format.", nameof(filename));
             }
             return result;
@@ -35,7 +37,7 @@ namespace EMS
             try
             {
                 if (string.IsNullOrWhiteSpace(filename)) return false;
-                var r = ReadConfig(filename);                
+                var r = ReadConfig(filename);
                 return !string.IsNullOrWhiteSpace(r.GetRawText());
             }
             catch (System.Text.Json.JsonException e)

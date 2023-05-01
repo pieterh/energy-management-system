@@ -24,6 +24,8 @@
 		<None Remove="System.Net.Http" />
 		<None Remove="System.Text.RegularExpressions" />
 		<None Remove="Properties\" />
+		<None Remove="TestData\" />
+		<None Remove="TestData\TestData1.json" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
@@ -44,11 +46,25 @@
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 		<PackageReference Include="FluentAssertions" Version="6.11.0" />
 		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.0.68202">
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		  <PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="Moq" Version="4.18.4" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Properties\" />
 	</ItemGroup>
+	<ItemGroup>
+		<Content Include="TestData\TestData1.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <AssetsSourceFiles Include="TestData\TestData1.json" />
+	  <AssetsSourceFiles Include="TestData\TestData_wrong_schema.json" />
+	  <AssetsSourceFiles Include="TestData\TestData_invalid_json.json" />
+	</ItemGroup>
+	<Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+		<Copy SourceFiles="@(AssetsSourceFiles)" DestinationFolder="$(OutputPath)\TestData" SkipUnchangedFiles="true" />
+	</Target>
 </Project>
