@@ -31,16 +31,18 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             return new AuthenticationState(_claimsPrincipal);
         }
 
-        public async void LoginNotify()
+        public async Task LoginNotify()
         {
             _claimsPrincipal = await GetClaimsFromToken();
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            await Task.FromResult<bool>(true);
         }
 
-        public void LogoutNotify()
+        public async Task LogoutNotify()
         {            
             _claimsPrincipal = _anonymousPrincipal;
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            await Task.FromResult<bool>(true);
         }
 
         private async Task<ClaimsPrincipal> GetClaimsFromToken()

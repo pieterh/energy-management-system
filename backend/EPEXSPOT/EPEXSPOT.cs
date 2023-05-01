@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.JSon;
 using EMS.Library.TestableDateTime;
+using System.Buffers;
 
 namespace EPEXSPOT
 {
@@ -27,6 +28,8 @@ namespace EPEXSPOT
         private const Decimal EB = 0.04452m;         // energie belasting per kWh (incl. btw)
 
         private Tariff[] _tariffs = Array.Empty<Tariff>();   // time sorted array of tariffs that where fetched
+
+        public bool isDisposed { get => _disposed; }
 
         public static void ConfigureServices(IServiceCollection services, AdapterInstance instance)
         {
@@ -119,7 +122,7 @@ namespace EPEXSPOT
             catch (TaskCanceledException) { /* ignoring */ }
         }
 
-        private void HandleWork()
+        internal void HandleWork()
         {
             _tariffs = RemoveOld(_tariffs);
 
@@ -175,7 +178,18 @@ namespace EPEXSPOT
             ArgumentNullException.ThrowIfNull(client);
             ArgumentNullException.ThrowIfNull(getapxtariffsUri);
 
-            Tariff[] resultArray;
+            var rawTariffData = await GetRawTariffData(client, getapxtariffsUri, start, end).ConfigureAwait(false);
+
+            Tariff[] resultArray = GetTariffFromRaw(rawTariffData);
+
+            return resultArray;
+        }
+
+        internal static async Task<byte[]> GetRawTariffData(HttpClient client, Uri getapxtariffsUri, DateTime start, DateTime end)
+        {
+            ArgumentNullException.ThrowIfNull(client);
+            ArgumentNullException.ThrowIfNull(getapxtariffsUri);
+
             var startUtc = start.ToUniversalTime();
             var endUtc = end.ToUniversalTime();
 
@@ -188,12 +202,28 @@ namespace EPEXSPOT
             Uri uri = new(Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(getapxtariffsUri.ToString(), queryString));
 
             var httpResponseMessage = await client.GetAsync(uri).ConfigureAwait(false);
+
+            byte[] resultArray;
             if (httpResponseMessage.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var resp = await httpResponseMessage.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                resultArray = await httpResponseMessage.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                Logger.Error("There was an error reading from the tariff service. {StatusCode}", httpResponseMessage.StatusCode);
+                resultArray = Array.Empty<byte>();
+            }
 
+            return resultArray;
+        }
 
-                using var jsondocument = JsonDocument.Parse(resp);
+        internal static Tariff[] GetTariffFromRaw(byte[] rawTariffData)
+        {
+            Tariff[] resultArray;
+
+            try
+            {
+                using var jsondocument = JsonDocument.Parse(rawTariffData);
                 var jsonResult = jsondocument.RootElement;
                 var isValid = JsonHelpers.Evaluate(_schemaResourceName, jsonResult);
 
@@ -203,7 +233,7 @@ namespace EPEXSPOT
 
                     // calculate consumer price by adding the 'opslag duurzame energie', 'energie belasting' and 'inkoopkosten'
                     var r = from x in result
-                            select new Tariff(x.Timestamp, x.TariffUsage + ODE + EB + INKOOP, 0);
+                            select new Tariff(x.Timestamp, x.TariffUsage + ODE + EB + INKOOP, x.TariffReturn);
 
                     // create array to return and make sure it is sorted
                     resultArray = r.ToArray();
@@ -215,11 +245,12 @@ namespace EPEXSPOT
                     resultArray = Array.Empty<Tariff>();
                 }
             }
-            else
+            catch (JsonException je)
             {
-                Logger.Error("There was an error reading from the tariff service. {StatusCode}", httpResponseMessage.StatusCode);
+                Logger.Error(je, "There was an error parsing the supplied data as json.");
                 resultArray = Array.Empty<Tariff>();
             }
+
             return resultArray;
         }
 
@@ -248,9 +279,9 @@ namespace EPEXSPOT
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        private static Tariff[] RemoveOld(IEnumerable<Tariff> t)
+        internal static Tariff[] RemoveOld(IEnumerable<Tariff> t)
         {
-            var t2 = t.Where((x) => x.Timestamp > DateTime.UtcNow.AddHours(-2)).ToArray();
+            var t2 = t.Where((x) => x.Timestamp > DateTimeProvider.Now.ToUniversalTime().AddHours(-2)).ToArray();
             Array.Sort(t2, (x, y) => { return x.Timestamp.CompareTo(y.Timestamp); });
             return t2;
         }

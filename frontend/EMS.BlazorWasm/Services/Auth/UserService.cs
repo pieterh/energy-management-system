@@ -56,7 +56,7 @@ namespace EMS.BlazorWasm.Client.Services.Auth
 
                 await _localStorage.SaveObjectAsync("user", user);
                 await _localStorage.SaveStringAsync("token", token);
-                _authenticationStateProvider.LoginNotify();
+                await _authenticationStateProvider.LoginNotify();
             }
             return loginResponse;
         }
@@ -65,7 +65,7 @@ namespace EMS.BlazorWasm.Client.Services.Auth
         {
             await _localStorage.RemoveAsync("user");
             await _localStorage.RemoveAsync("token");
-            _authenticationStateProvider.LogoutNotify();
+            await _authenticationStateProvider.LogoutNotify();
         }
 
         public async Task<SetPasswordResponse> SetPasswordAsync(SetPasswordModel model, CancellationToken cancellationToken)        
