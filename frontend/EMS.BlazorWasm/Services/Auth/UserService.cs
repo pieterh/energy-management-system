@@ -36,12 +36,12 @@ namespace EMS.BlazorWasm.Client.Services.Auth
             _localStorage = localStorage;
         }
 
-        public async Task<Response?> LoginAsync(LoginModel model)
+        public async Task<Response> LoginAsync(LoginModel model)
         {
             return await LoginAsync(model, CancellationToken.None);
         }
 
-        public async Task<Response?> LoginAsync(LoginModel model, CancellationToken cancellationToken)
+        public async Task<Response> LoginAsync(LoginModel model, CancellationToken cancellationToken)
         {
             var content = JsonContent.Create<LoginModel>(model);
             var r = await _httpClient.PostAsync("api/users/authenticate", content, cancellationToken);
