@@ -1,8 +1,10 @@
 FROM mcr.microsoft.com/dotnet/aspnet:7.0.5
 
 COPY build/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod ugo+x /usr/local/bin/entrypoint.sh \
- && chmod ugo+r /usr/local/bin/entrypoint.sh \
+COPY build/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN \ 
+    chmod ugo+x+r-w /usr/local/bin/entrypoint.sh \
+ && chmod ugo+x+r-w /usr/local/bin/healthcheck.sh \
  && mkdir /app \
  && mkdir /app/ems 
  
@@ -12,13 +14,13 @@ EXPOSE 8080/tcp
 ARG BACKEND
 COPY $BACKEND/ /app/ems/
 
-RUN chmod -R ugo+X /app \
- && chmod -R ugo+r /app \
+RUN \
+    chmod -R ugo+X+r-w /app \
  && ls -la /app/ems \
  && ls -la /app/ems/runtimes \
  && ls -la /app/ems/wwwroot 
 
 RUN adduser --disabled-password app
 USER app
-
+HEALTHCHECK --interval=5m --timeout=30s --start-period=10s --retries=3 CMD [ /usr/local/bin/healthcheck.sh --config ${EMS_PATHS_CONFIG} --nlogcfg ${EMS_PATHS_NLOG} ]
 ENTRYPOINT /usr/local/bin/entrypoint.sh --config ${EMS_PATHS_CONFIG} --nlogcfg ${EMS_PATHS_NLOG}

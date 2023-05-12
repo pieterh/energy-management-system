@@ -12,13 +12,6 @@ namespace P1ReaderUnitTests
 {
     public class P1ReaderLANTests
     {
-        private readonly ITestOutputHelper _output;
-
-        public P1ReaderLANTests(ITestOutputHelper output)
-        {
-            _output = output;
-        }
-
         [Fact]
         public void CreateAndDispose()
         {
