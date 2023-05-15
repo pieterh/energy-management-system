@@ -15,9 +15,11 @@
 	<ItemGroup>
 		<None Remove="Model\" />
 		<None Remove="Model\UsersController\" />
+		<None Remove="DTO\Health\" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Model\" />
 		<Folder Include="Model\Users\" />
+		<Folder Include="DTO\Health\" />
 	</ItemGroup>
 </Project>

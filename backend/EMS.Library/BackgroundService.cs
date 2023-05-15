@@ -13,11 +13,13 @@ namespace EMS.Library
 
         public bool Disposed { get; protected set; }
 
-        private CancellationToken? _parentToken;
+        private CancellationToken _parentToken = CancellationToken.None;
         private CancellationTokenSource _tokenSource = new();
         public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
 
-        protected abstract Task Start();
+        protected abstract Task Start()
+            ;
+        [SuppressMessage("", "CA1716")] // no problem with this 'reserved' keyword
         protected abstract void Stop();
 
         [SuppressMessage("", "CA1063")]
@@ -75,11 +77,10 @@ namespace EMS.Library
 
         protected Task StartAsync()
         {
-            if (_parentToken == null) throw new Exceptions.ApplicationException("Missing parent token");
-            _parentToken.Value.ThrowIfCancellationRequested(); // not starting anymore
+            _parentToken.ThrowIfCancellationRequested(); // not starting anymore
 
             DisposeTokenSource();
-            TokenSource = CancellationTokenSource.CreateLinkedTokenSource(_parentToken.Value);
+            TokenSource = CancellationTokenSource.CreateLinkedTokenSource(_parentToken);
 
             var task = Start();
             if (task.IsCompleted)

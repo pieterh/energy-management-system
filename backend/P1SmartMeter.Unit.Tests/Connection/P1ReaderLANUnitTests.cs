@@ -5,6 +5,7 @@ using System.Text;
 using Moq;
 using Moq.Protected;
 using P1SmartMeter.Connection;
+using Xunit.Abstractions;
 using static P1ReaderUnitTests.P1ReaderLANTests;
 
 namespace P1ReaderUnitTests
@@ -70,12 +71,20 @@ namespace P1ReaderUnitTests
             var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
             var token = new CancellationToken();
             await r.StartAsync(token).ConfigureAwait(false);
-            await Task.Delay(1000).ConfigureAwait(false);
+
+            // wait a bit until the service is connecting
+            for (int i = 0; i < 50 && r.Status != ConnectionStatus.Connecting; i++)
+                Thread.Sleep(100);
+            r.Status.Should().Be(ConnectionStatus.Connecting);
+
             await r.StopAsync(token).ConfigureAwait(false);
 
+            // after the stop, the connection status should be disconnected
+            r.Status.Should().Be(ConnectionStatus.Disconnected);
+
             // and verify if the factory created objects are properly disposed of...
-            socketMock.Verify(x => x.Dispose(), Times.Once);
-            socketAsyncEventArgsMock.Verify(x => x.Dispose(), Times.Once);
+            socketMock.Verify(x => x.Dispose(), Times.AtLeastOnce);
+            socketAsyncEventArgsMock.Verify(x => x.Dispose(), Times.AtLeastOnce);
 
             r.Dispose();
             r.Disposed.Should().BeTrue();
@@ -175,7 +184,7 @@ namespace P1ReaderUnitTests
             // ConnectAsync and ReceiveAsync will indicate no data pending => expecting later an event
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(false);
             socketMock.Setup<bool>(s => s.ReceiveAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
-            
+
             using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
             DataArrivedEventArgs? lastEvent = null;
             r.DataArrived += (object? sender, DataArrivedEventArgs e) =>
@@ -233,7 +242,7 @@ namespace P1ReaderUnitTests
             using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
             r.Connect().Should().BeFalse();
         }
-        
+
         [Fact]
         public void HandlesSocketExceptionWhenConnectingHostUnreachable()
         {

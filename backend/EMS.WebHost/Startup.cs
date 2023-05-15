@@ -30,8 +30,26 @@ namespace EMS.WebHost
         public string? WebRootPath { get; set; }
         public JwtConfig? Jwt { get; set; }
     }
+    public record KestrelConfig
+    {
+        public EndPoints? EndPoints { get; set; }
+    }
+    public record EndPoints
+    {
+        public Http? Http { get; set; }
+    }
+    [SuppressMessage("", "CA1056")]
+    [SuppressMessage("", "CA1724")]
+    public record Http
+    {
+        public string? Url { get; set; }
+    }
 
-    public class Startup
+    public interface IWebHost {
+        DateTime UpSince { get; }
+    }
+
+    public class Startup : IWebHost
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
         private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -39,6 +57,9 @@ namespace EMS.WebHost
         private IConfiguration Configuration { get; init; }
 
         public WebConfig? WebConfig { get; set; }
+
+        private readonly DateTime _upSince = DateTime.Now;
+        public DateTime UpSince => _upSince;
 
         [SuppressMessage("Code Analysis", "CA1810")]
         static Startup()
@@ -61,6 +82,7 @@ namespace EMS.WebHost
             Configuration.GetSection("web").Bind(wc);
             WebConfig = wc;
 
+            services.AddSingleton(typeof(IWebHost), this);
             services.AddSingleton<IJwtService, JwtTokenService>();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -228,8 +250,6 @@ namespace EMS.WebHost
                          "Cache-Control", $"public, max-age={1}");
                 }
             });
-
-
 
             app.UseRouting();
 

@@ -27,7 +27,6 @@ namespace P1SmartMeter.Connection
 
         private ISocket? _socket;
         private ISocketAsyncEventArgs? _receiveEventArgs;
-        private NetworkStream? _stream;
 
         public ConnectionStatus Status { get; internal set; } = ConnectionStatus.Disconnected;
 
@@ -40,30 +39,32 @@ namespace P1SmartMeter.Connection
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
-            if (disposing)
+            if (disposing && !Disposed)
             {
-                DisposeStream();
+                DisposeSocket();
                 DisposeBackgroundTask();
             }
+
+            base.Dispose(disposing);
         }
 
         private void DisposeBackgroundTask()
         {
-            TaskTools.Wait(_backgroundTask, 5000);
-            _backgroundTask?.Dispose();
-            _backgroundTask = null;
+            if (_backgroundTask is not null)
+            {
+                // we need atleast a minimal wait for the background task to finish.
+                // but we extend it when we are not beeing canceled
+                TaskTools.Wait(_backgroundTask, 500);
+                TaskTools.Wait(_backgroundTask, 4500, TokenSource.Token);
+                _backgroundTask.Dispose();
+                _backgroundTask = null;
+            }
         }
 
-        private void DisposeStream()
+        private void DisposeSocket()
         {
-            Logger.Trace($"DisposeStream {_stream?.Socket?.LocalEndPoint?.ToString()}");
             _receiveEventArgs?.Dispose();
             _receiveEventArgs = null;
-
-            _stream?.Close();
-            _stream?.Dispose();
-            _stream = null;
 
             if (_socket is not null)
             {
@@ -96,7 +97,7 @@ namespace P1SmartMeter.Connection
                     Logger.Error(ex, "Unhandled exception in BackgroundTask");
                     throw;
                 }
-                Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
+                Logger.Trace("BackgroundTask stopped -> stop requested {StopRequested}", StopRequested(0));
             }, TokenSource.Token);
 
             return _backgroundTask;
@@ -104,12 +105,12 @@ namespace P1SmartMeter.Connection
 
         protected override void Stop()
         {
-            TokenSource.Cancel(false);      // NET 8 has CancelAsync...need to check that out
+            TokenSource.Cancel();      // NET 8 has CancelAsync...need to check that out
 
             /* wait a bit for the background task in the case that it still is trying to connect */
-            TaskTools.Wait(_backgroundTask, 750);
-            
-            DisposeStream();
+            TaskTools.Wait(_backgroundTask, 10000);
+
+            DisposeSocket();
             DisposeBackgroundTask();
             Status = ConnectionStatus.Disconnected;
         }
@@ -147,12 +148,12 @@ namespace P1SmartMeter.Connection
                 when (se1.SocketErrorCode == SocketError.TimedOut ||
                       se1.SocketErrorCode == SocketError.ConnectionRefused)
             {
-                DisposeStream();
+                DisposeSocket();
                 Logger.Error($"Socket error {se1.SocketErrorCode} while connecting.");
             }
             catch (SocketException se2)
             {
-                DisposeStream();
+                DisposeSocket();
                 Logger.Error(se2, $"Unexpected socket exception while connecting.");
             }
 
