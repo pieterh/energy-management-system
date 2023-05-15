@@ -52,6 +52,11 @@ namespace EMS.Library
             _tokenSource.Dispose();
         }
 
+        /// <summary>
+        /// Delays the task
+        /// </summary>
+        /// <param name="ms"></param>
+        /// <returns>true if a stop was requested, false otherwise</returns>
         public async Task<bool> StopRequested(int ms)
         {
             if (_tokenSource.Token.IsCancellationRequested)
@@ -93,6 +98,7 @@ namespace EMS.Library
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            // NET 8 has CancelAsync...need to check that out
             TokenSource.Cancel();
 
             Stop();

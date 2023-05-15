@@ -25,6 +25,7 @@
 		<ProjectReference Include="..\EMS.WebHost\EMS.WebHost.csproj" />
 		<ProjectReference Include="..\EPEXSPOT\EPEXSPOT.csproj" />
 		<ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
+		<ProjectReference Include="..\Enphase\Enphase.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="NLog" Version="5.1.5" />

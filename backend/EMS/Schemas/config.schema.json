@@ -13,7 +13,7 @@
             },
             "type": {
               "type": "string",
-              "enum": [ "chargepoint", "smartmeter", "priceprovider" ]
+              "enum": [ "chargepoint", "smartmeter", "priceprovider", "solar" ]
             },
             "name": {
               "type": "string"

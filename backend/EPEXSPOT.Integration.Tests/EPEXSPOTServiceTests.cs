@@ -32,4 +32,38 @@ public class EPEXSPOTServiceTests
 
         t[3].Timestamp.Should().BeCloseTo(now.AddHours(3), new TimeSpan(1, 0, 0));
     }
+
+    [Fact]
+    public async Task IsAbleToRetrieveTariffForNext4HoursNegative1()
+    {
+        using var client = new HttpClient();
+        var getapxtariffsUri = new Uri(new Uri("https://mijn.easyenergy.com"), EPEXSPOTService.getapxtariffsMethod);
+        var now = new DateTime(2023, 5, 13, 6, 00, 00, DateTimeKind.Utc);
+        var t = await EPEXSPOTService.GetTariff(client, getapxtariffsUri, now, now.AddHours(16)).ConfigureAwait(false);
+        t.Should().NotBeNull();
+        t.Should().HaveCount(16);
+        t[0].Timestamp.Should().BeCloseTo(now, new TimeSpan(1, 0, 0));
+        t[0].TariffUsage.Should().BePositive();
+        t[0].TariffReturn.Should().BePositive();
+
+        t[4].Timestamp.Should().BeCloseTo(now.AddHours(4), new TimeSpan(1, 0, 0));
+        t[4].TariffReturn.Should().BeNegative();
+    }
+
+    [Fact]
+    public async Task IsAbleToRetrieveTariffForNext4HoursNegative2()
+    {
+        using var client = new HttpClient();
+        var getapxtariffsUri = new Uri(new Uri("https://mijn.easyenergy.com"), EPEXSPOTService.getapxtariffsMethod);
+        var now = new DateTime(2023, 5, 20, 8, 00, 00, DateTimeKind.Utc);
+        var t = await EPEXSPOTService.GetTariff(client, getapxtariffsUri, now, now.AddHours(8)).ConfigureAwait(false);
+        t.Should().NotBeNull();
+        t.Should().HaveCount(8);
+        t[0].Timestamp.Should().BeCloseTo(now, new TimeSpan(1, 0, 0));
+        t[0].TariffUsage.Should().BePositive();
+        t[0].TariffReturn.Should().BePositive();
+
+        t[4].Timestamp.Should().BeCloseTo(now.AddHours(4), new TimeSpan(1, 0, 0));
+        t[4].TariffReturn.Should().BeNegative();
+    }
 }
