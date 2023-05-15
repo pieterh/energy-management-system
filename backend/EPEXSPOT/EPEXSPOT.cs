@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Buffers;
+using System.Linq;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -6,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.JSon;
 using EMS.Library.TestableDateTime;
-using System.Buffers;
+using System.Text;
 
 namespace EPEXSPOT
 {
@@ -146,6 +147,14 @@ namespace EPEXSPOT
             return tariff;
         }
 
+        public Tariff? GetNextTariff()
+        {
+            DateTime d = DateTimeProvider.Now.ToUniversalTime();
+            var next = new DateTime(d.Year, d.Month, d.Day, d.Hour, 0, 0, DateTimeKind.Utc).AddHours(1);
+            var tariff = FindTariff(_tariffs, next);
+            return tariff;
+        }
+
         /// <summary>
         /// Gets the tarriffs in range
         /// Currently directly from the source
@@ -226,7 +235,13 @@ namespace EPEXSPOT
                 using var jsondocument = JsonDocument.Parse(rawTariffData);
                 var jsonResult = jsondocument.RootElement;
                 var isValid = JsonHelpers.Evaluate(_schemaResourceName, jsonResult);
-
+                using var stream = new MemoryStream();
+                using Utf8JsonWriter w = new Utf8JsonWriter(stream);
+                jsondocument.WriteTo(w);
+                w.Flush();
+                var str = Encoding.UTF8.GetString(stream.ToArray());
+                Console.WriteLine(str);
+                Logger.Info(str);
                 if (isValid)
                 {
                     var result = JsonSerializer.Deserialize<SpotTariff[]>(jsonResult, new JsonSerializerOptions());

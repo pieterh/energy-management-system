@@ -11,6 +11,12 @@ namespace EMS.Library.Adapter.PriceProvider
         /// </summary>
         /// <returns></returns>
         Tariff? GetTariff();
+
+        /// <summary>
+        /// Returns the tariff for the next hour
+        /// </summary>
+        /// <returns></returns>
+        Tariff? GetNextTariff();
     }
 }
 

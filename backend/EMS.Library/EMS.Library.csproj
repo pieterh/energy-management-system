@@ -14,6 +14,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="ncrontab" Version="3.3.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Adapter\" />
@@ -28,6 +29,9 @@
 		<Folder Include="dotNET\" />
 		<Folder Include="Files\" />
 		<Folder Include="Tasks\" />
+		<Folder Include="Adapter\Solar\" />
+		<Folder Include="Xml\" />
+		<Folder Include="Crontab\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Adapter\PriceProvider\" />
@@ -35,5 +39,8 @@
 		<None Remove="Exceptions\" />
 		<None Remove="dotNET\" />
 		<None Remove="Tasks\" />
+		<None Remove="Adapter\Solar\" />
+		<None Remove="Xml\" />
+		<None Remove="Crontab\" />
 	</ItemGroup>
 </Project>

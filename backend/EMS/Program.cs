@@ -54,6 +54,7 @@ static class Program
     {
         try
         {
+            Thread.CurrentThread.Name = "HEMS main thread";
             EnforceLogging();
 
             Options options = new();
@@ -120,7 +121,7 @@ static class Program
     [SuppressMessage("GeneratedRegex", "SYSLIB1045:Convert to 'GeneratedRegexAttribute'.", Justification = "Is executed only once for each run.")]
     private static int GetPortFromConfiguration(Options options)
     {
-        var regexPort = new Regex(":(?<port>[0-9]+)");
+        var regexPort = new Regex(":(?<port>[0-9]+)", RegexOptions.None, new TimeSpan(0,0,0,0,250));
         KestrelConfig cfg = ConfigurationManager.ReadConfigProperty<KestrelConfig>(options.ConfigFile, "Kestrel");
         var m = regexPort.Matches(cfg.EndPoints?.Http?.Url ?? "");
         var port = m.SelectMany(y => y.Groups.Values).FirstOrDefault((x) => x.Name.Equals("port", StringComparison.Ordinal));
