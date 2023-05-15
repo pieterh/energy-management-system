@@ -118,10 +118,21 @@ namespace P1SmartMeter
 
         private string? HandleMessageInBuffer(int msgLength)
         {
+            /* /xxx/ */
+            if (msgLength <= 7)
+            {
+                // There is more data in the buffer to process. Move it to the beginning of the buffer
+                _buffer.AsSpan(msgLength, _tailPosition - msgLength).CopyTo(_buffer.AsSpan());
+                _tailPosition -= msgLength;
+                RemovePartialMessage();
+                return string.Empty;
+            }
+
             var msg = new String(_buffer.AsSpan(0, msgLength));             // get message
 
+            // TODO: validate if checksumbytes contain valid checksum characters
             Span<char> checksumbytes = stackalloc char[4];                  // get checksum
-            checksumbytes[0] = _buffer[msgLength - 6];                      
+            checksumbytes[0] = _buffer[msgLength - 6];
             checksumbytes[1] = _buffer[msgLength - 5];
             checksumbytes[2] = _buffer[msgLength - 4];
             checksumbytes[3] = _buffer[msgLength - 3];

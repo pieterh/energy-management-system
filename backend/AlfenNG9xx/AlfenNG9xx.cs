@@ -28,7 +28,7 @@ namespace AlfenNG9xx
         internal IModbusMaster? ModbusMaster { get => _modbusMaster; private set => _modbusMaster = value; }
 
         private readonly string _alfenIp;
-        private readonly int _alfenPort;      
+        private readonly int _alfenPort;
 
         public static void ConfigureServices(IServiceCollection services, AdapterInstance instance)
         {
@@ -39,9 +39,8 @@ namespace AlfenNG9xx
 
         public Alfen(InstanceConfiguration config, IPriceProvider priceProvider) : base(config, priceProvider)
         {
-            dynamic cfg = config;
-            _alfenIp = cfg.Host;
-            _alfenPort = cfg.Port;
+            _alfenIp = config.Host;
+            _alfenPort = config.Port;
         }
 
         internal override void Dispose(bool disposing)
@@ -186,7 +185,7 @@ namespace AlfenNG9xx
 
                     return _modbusMaster.ReadHoldingRegisters(slave, address, count);
                 }
-                catch(System.IO.IOException ioe)
+                catch (System.IO.IOException ioe)
                 {
                     // The operation is not allowed on non-connected sockets
                     Logger.Error("Received an IOException, we try later again", ioe);
@@ -194,7 +193,7 @@ namespace AlfenNG9xx
                     DisposeModbusMaster();
                     throw new CommunicationException("IOException", ioe);
                 }
-                catch(System.InvalidOperationException ioe)
+                catch (System.InvalidOperationException ioe)
                 {
                     // The operation is not allowed on non-connected sockets
                     Logger.Error("Received an InvalidOperationException, we try later again", ioe);

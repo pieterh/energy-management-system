@@ -12,13 +12,14 @@ using EMS.Library.Adapter.SmartMeterAdapter;
 using EMS.Library.TestableDateTime;
 using EMS.DataStore;
 using System.Diagnostics.CodeAnalysis;
+using EMS.Library.Adapter.Solar;
+using EMS.Library.Adapter.PriceProvider;
 
 namespace EMS
 {
     [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
     public class HEMSCore : Microsoft.Extensions.Hosting.BackgroundService, IHEMSCore, IHostedService
     {
-
         private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
         private static readonly NLog.Logger LoggerChargingcost = NLog.LogManager.GetLogger("chargingcost");
         private readonly Compute _compute;
@@ -26,10 +27,15 @@ namespace EMS
         private readonly ILogger Logger;
         private readonly ISmartMeterAdapter _smartMeter;
         private readonly IChargePoint _chargePoint;
+        private readonly ISolar _solar;
+        private readonly IPriceProvider _priceProvider;
 
         private const int _interval = 10000; //ms
 
         public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
+
+        private bool _disposed;
+        private SolarOptimizer? _solarOptimizerService;
 
         public ChargingMode ChargingMode
         {
@@ -37,13 +43,15 @@ namespace EMS
             set => _compute.Mode = value;
         }
 
-        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint)
+        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint, ISolar solar, IPriceProvider priceProvider)
         {
             ArgumentNullException.ThrowIfNull(appLifetime);
             Logger = logger;
 
             _smartMeter = smartMeter;
             _chargePoint = chargePoint;
+            _solar = solar;
+            _priceProvider = priceProvider;
 
             _compute = new(logger, ChargingMode.MaxCharge);
 
@@ -52,19 +60,45 @@ namespace EMS
             appLifetime.ApplicationStopped.Register(OnStopped);
         }
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override void Dispose()
+        {
+            Dispose(true);
+            base.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        // Unfortunately the base class doesn't implement the dispose pattern
+        // properly, so there is no method Dispose(bool disposing) to override...
+        // https://github.com/dotnet/runtime/issues/34809
+        // Therefor we need to suppress the sonar message
+        [SuppressMessage("Sonar", "S2953")]
+        internal virtual void Dispose(bool disposing)
+        {
+            Logger.LogTrace("Dispose({Disposing}) _disposed {Disposed}", disposing, _disposed);
+
+            if (_disposed) return;
+
+            _solarOptimizerService?.Dispose();
+            _solarOptimizerService = null;
+
+            _disposed = true;
+            Logger.LogTrace("Dispose({Disposing}) done => _disposed {Disposed}", disposing, _disposed);
+        }
+
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("1. StartAsync has been called.");
             _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
             _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
             _compute.StateUpdate += Compute_StateUpdate;
 
-            base.StartAsync(cancellationToken);
+            _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar);
+            await _solarOptimizerService.StartAsync(cancellationToken).ConfigureAwait(false);
 
-            return Task.CompletedTask;
+            await base.StartAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        [SuppressMessage("Code Analysis","CA1031")]
+        [SuppressMessage("Code Analysis", "CA1031")]
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try
@@ -106,15 +140,17 @@ namespace EMS
                     await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
                 }
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException tce)
             {
                 Logger.LogInformation("Canceled");
+                Logger.LogError(tce, "did we expect this?");
+                Logger.LogError("did we expect this? {IsCancellationRequested}", stoppingToken.IsCancellationRequested);
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Unhandled exception");
             }
-
+            
             stoppingToken.ThrowIfCancellationRequested();
         }
 
@@ -132,12 +168,17 @@ namespace EMS
             _compute.StateUpdate -= Compute_StateUpdate;
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            base.StopAsync(cancellationToken);
-            Logger.LogInformation("4. StopAsync has been called.");
+            await base.StopAsync(cancellationToken).ConfigureAwait(false);
 
-            return Task.CompletedTask;
+            Logger.LogInformation("4. StopAsync has been called.");
+            if (_solarOptimizerService is not null)
+            {
+                await _solarOptimizerService.StopAsync(cancellationToken).ConfigureAwait(false);
+                _solarOptimizerService.Dispose();
+                _solarOptimizerService = null;
+            }
         }
 
         private void OnStopped()
@@ -185,7 +226,7 @@ namespace EMS
                         var detail = new CostDetail()
                         {
                             Timestamp = c.Timestamp,
-                            EnergyDelivered = (double)energy,  
+                            EnergyDelivered = (double)energy,
                         };
                         if (c.Tariff != null)
                         {

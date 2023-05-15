@@ -366,6 +366,11 @@ namespace AlfenNG9xx.Tests
             return tariff;
         }
 
+        public Tariff? GetNextTariff()
+        {
+            throw new NotImplementedException();
+        }
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();

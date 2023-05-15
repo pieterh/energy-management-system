@@ -87,7 +87,7 @@ namespace P1SmartMeter.Telegram
         protected T? GetValue<T>(string fieldCode)
         {
             var values = GetValues(fieldCode);
-            return values == null || values.Count == 0 ? default(T) : (T)values.First();
+            return values == null || values.Count == 0 ? default(T) : (T)values[0];
         }
 
         public override string ToString()

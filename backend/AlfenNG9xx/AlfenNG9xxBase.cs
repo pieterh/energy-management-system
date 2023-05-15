@@ -6,6 +6,7 @@ using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Configuration;
 using EMS.Library.Core;
 using EMS.Library.Exceptions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AlfenNG9xx
 {
@@ -28,6 +29,7 @@ namespace AlfenNG9xx
         public abstract ProductInformation ReadProductInformation();
         public abstract EMS.Library.StationStatus ReadStationStatus();
         public abstract SocketMeasurement ReadSocketMeasurement(byte socket);
+
 
         [SuppressMessage("", "CA1030")]
         protected void RaiseChargingStatusUpdateEvent(ChargingStatusUpdateEventArgs eventArgs)
@@ -265,6 +267,10 @@ namespace AlfenNG9xx
                 Logger.Error(se, $"{se.Message}");
             }
         }
+
+
+
+
 #endif
     }
 }
