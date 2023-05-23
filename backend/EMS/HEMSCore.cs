@@ -149,7 +149,8 @@ namespace EMS
         {
             Logger.LogTrace("- {Measurement}", e.Measurement);
 
-            _compute.AddMeasurement(e.Measurement, e.Measurement);
+            var chargePointSocketMeasurement = _chargePoint.LastSocketMeasurement ?? new SocketMeasurementBase();
+            _compute.AddMeasurement(e.Measurement, chargePointSocketMeasurement);
         }
 
         private void ChargePoint_ChargingStateUpdate(object? sender, ChargingStateEventArgs e)
