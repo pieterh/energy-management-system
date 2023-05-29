@@ -1,26 +1,18 @@
 version: 2
 updates:
 - package-ecosystem: nuget
-  directory: "/backend"
+  directory: "/"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
   target-branch: "develop"
-- package-ecosystem: nuget
-  directory: "/shared"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  target-branch: "develop"
-- package-ecosystem: nuget
-  directory: "/frontend/EMS.BlazorWasm"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  target-branch: "develop"  
 - package-ecosystem: docker
   directory: "/docker/build"
   schedule:
     interval: daily
   open-pull-requests-limit: 5
   target-branch: "develop"
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
