@@ -22,7 +22,7 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.5" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.0.0.68202">
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.1.0.70676">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
