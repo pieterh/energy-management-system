@@ -55,7 +55,7 @@ public class EnphaseServiceTests
         var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory);
         mock.CallBase = true;
 
-        mock.Setup(x => x.GetData<InfoResponse>(It.Is<string>(m => m.Equals("/info.xml", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<InfoResponse>>>()))
+        mock.Setup(x => x.GetData<InfoResponse>(It.Is<string>(m => m.Equals("/info.xml", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<InfoResponse>>>(), It.IsAny<CancellationToken>()))
                             .Returns(Task.FromResult(
                                 new InfoResponse()
                                 {
@@ -64,10 +64,10 @@ public class EnphaseServiceTests
                                 }
                             ));
 
-        mock.Setup(x => x.GetData<ProductionStatusResponse>(It.Is<string>(m => m.Equals("/ivp/mod/603980032/mode/power", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<ProductionStatusResponse>>>()))
+        mock.Setup(x => x.GetData<ProductionStatusResponse>(It.Is<string>(m => m.Equals("/ivp/mod/603980032/mode/power", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<ProductionStatusResponse>>>(), It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult<ProductionStatusResponse>(new ProductionStatusResponse()));
 
-        mock.Setup(x => x.GetData<Inverter[]>(It.Is<string>(m => m.Equals("/api/v1/production/inverters", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<Inverter[]>>>()))
+        mock.Setup(x => x.GetData<Inverter[]>(It.Is<string>(m => m.Equals("/api/v1/production/inverters", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<Inverter[]>>>(), It.IsAny<CancellationToken>()))
                     .Returns(Task.FromResult<Inverter[]>(Array.Empty<Inverter>()));
 
         await mock.Object.StartAsync(CancellationToken.None).ConfigureAwait(false);
@@ -76,7 +76,6 @@ public class EnphaseServiceTests
         await mock.Object.StopAsync(CancellationToken.None).ConfigureAwait(false);
         mock.Object.Dispose();
         mock.Object.Disposed.Should().BeTrue();
-
     }
 
     internal sealed class HttpClientFactoryMock : IHttpClientFactory

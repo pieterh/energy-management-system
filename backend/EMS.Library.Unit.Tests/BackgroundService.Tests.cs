@@ -52,7 +52,7 @@ namespace EMS.Library.Unit.Tests
         {
             var mock = new Mock<BackgroundService>();
             var start =  DateTime.Now;
-            mock.Object.TokenSource.CancelAfter(250);
+            mock.Object.TokenSource?.CancelAfter(250);
             await Task.Run(async () =>
             {
                 Assert.True(await mock.Object.StopRequested(7000).ConfigureAwait(false));
@@ -72,7 +72,7 @@ namespace EMS.Library.Unit.Tests
         async Task AlreadyStoppped()
         {
             var mock = new Mock<BackgroundService>();
-            mock.Object.TokenSource.Cancel();
+            mock.Object.TokenSource?.Cancel();
             Assert.True(await mock.Object.StopRequested(0).ConfigureAwait(false));
         }
     }

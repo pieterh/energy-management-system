@@ -55,7 +55,7 @@ internal sealed class P1ReaderLAN : P1Reader
             // we need atleast a minimal wait for the background task to finish.
             // but we extend it when we are not beeing canceled
             TaskTools.Wait(_backgroundTask, 500);
-            TaskTools.Wait(_backgroundTask, 4500, TokenSource.Token);
+            TaskTools.Wait(_backgroundTask, 4500, CancellationToken);
             _backgroundTask.Dispose();
             _backgroundTask = null;
         }
@@ -98,11 +98,11 @@ internal sealed class P1ReaderLAN : P1Reader
                 throw;
             }
 
-            if (TokenSource.Token.IsCancellationRequested)
+            if (CancellationToken.IsCancellationRequested)
                 Logger.Info("Canceled");
 
             Logger.Trace("BackgroundTask stopped -> stop requested {StopRequested}", StopRequested(0));
-        }, TokenSource.Token);
+        }, CancellationToken);
 
         return _backgroundTask;
     }
@@ -135,6 +135,15 @@ internal sealed class P1ReaderLAN : P1Reader
             _receiveEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Parse(_host), _port);
 
             Status = ConnectionStatus.Connecting;
+
+            CancellationToken.Register(() =>
+            {
+                if (Status == ConnectionStatus.Connecting && _socket is not null)
+                {                    
+                    Logger.Info("Cancellation requested while connecting. Cancel the ConnectAsync.");
+                    _socket.CancelConnectAsync(_receiveEventArgs);
+                }
+            });
 
             if (!_socket.ConnectAsync(_receiveEventArgs))
             {
@@ -205,14 +214,18 @@ internal sealed class P1ReaderLAN : P1Reader
                 }
                 break;
             case SocketError.ConnectionRefused:
-                Logger.Error("Connection refused");
+            case SocketError.TimedOut:
+                Logger.Error("Connection {SocketError}", connectEventArgs.SocketError);
                 Status = ConnectionStatus.Disconnected;
                 await RestartConnection().ConfigureAwait(false);
                 break;
             case SocketError.OperationAborted:
-                Status = ConnectionStatus.Disconnected;
-                await RestartConnection().ConfigureAwait(false);
                 Logger.Info("Socket operation aborted");
+                Status = ConnectionStatus.Disconnected;
+                if (!TokenSource?.IsCancellationRequested ?? true)
+                    await RestartConnection().ConfigureAwait(false);
+                else
+                    Logger.Info("Cancellation requested. Not restarting.");
                 break;
             default:
                 throw new SocketException((int)connectEventArgs.SocketError);
@@ -245,7 +258,7 @@ internal sealed class P1ReaderLAN : P1Reader
     private async Task RestartConnection()
     {
         Logger.Info($"Restart connection...");
-        TokenSource.Cancel();      // NET 8 has CancelAsync...need to check that out
+        TokenSource?.Cancel();      // NET 8 has CancelAsync...need to check that out
         Stop();
 
         Logger.Trace($"and try again");

@@ -13,13 +13,18 @@ namespace P1SmartMeter.Connection
         }
 
         bool ISocket.ConnectAsync(ISocketAsyncEventArgs e)
-        {
+        {            
             return ConnectAsync((SocketAsyncEventArgs)e);
         }
 
         bool ISocket.ReceiveAsync(ISocketAsyncEventArgs e)
         {
             return ReceiveAsync((SocketAsyncEventArgs)e);
+        }
+
+        void ISocket.CancelConnectAsync(ISocketAsyncEventArgs e)
+        {
+            CancelConnectAsync((SocketAsyncEventArgs)e);
         }
     }
 }

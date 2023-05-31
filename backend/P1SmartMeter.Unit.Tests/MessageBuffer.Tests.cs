@@ -25,6 +25,9 @@ namespace P1SmartMeter.MessageBufferUnitTests
         private const string tc13 = "13 - Overflowing buffer with random data";
         private const string tc14 = "14 - Overflowing buffer with new complete message";
         private const string tc15 = "15 - Currupt data followed by two complete fake messages";
+        private const string tc16 = "16 - Currupt data 1";
+        private const string tc17 = "17 - Currupt data 2";
+        private const string tc18 = "18 - invalid crc value";
 
         private readonly Dictionary<string, TestItem[]> dataSet = new Dictionary<string, TestItem[]>();
         public MessageBufferTests()
@@ -146,6 +149,24 @@ namespace P1SmartMeter.MessageBufferUnitTests
                     new TestItem() { Data = string.Empty , ExpectMessage = false, ExpectError = false }
                 }
             );
+            dataSet.Add(tc16, new TestItem[]
+                {
+                    new TestItem() { Data = "AA/blabla!B243" , ExpectMessage = false, ExpectError = true },
+                    new TestItem() { Data = string.Empty , ExpectMessage = false, ExpectError = false }
+                }
+            );
+            dataSet.Add(tc17, new TestItem[]
+                            {
+                    new TestItem() { Data = "blabla/blabla!B243" , ExpectMessage = false, ExpectError = true },
+                    new TestItem() { Data = string.Empty , ExpectMessage = false, ExpectError = false }
+                            }
+                        );
+            dataSet.Add(tc18, new TestItem[]
+                            {
+                    new TestItem() { Data = "/blabla!.;%$ab" , ExpectMessage = false, ExpectError = true },
+                    new TestItem() { Data = string.Empty , ExpectMessage = false, ExpectError = false }
+                            }
+                        );
         }
 
         [Theory]
@@ -164,6 +185,9 @@ namespace P1SmartMeter.MessageBufferUnitTests
         [InlineData(tc13)]
         [InlineData(tc14)]
         [InlineData(tc15)]
+        [InlineData(tc16)]
+        [InlineData(tc17)]
+        [InlineData(tc18)]
         public void Add(string testCase)
         {
             var items = dataSet[testCase];
@@ -362,11 +386,11 @@ namespace P1SmartMeter.MessageBufferUnitTests
                 errorRaised = true;
             };
 
-            mb.Add("/123!");
+            mb.Add("/xxxz\r\n\r\n!");
             mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
-            mb.Add("1D");
+            mb.Add("25");
             mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
-            mb.Add("AE");
+            mb.Add("BF");
             mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
             mb.Add("\r");
             mb.TryTake(out _).Should().BeFalse("There is no complete message in the buffer");
