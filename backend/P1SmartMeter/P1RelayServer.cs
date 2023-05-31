@@ -79,7 +79,7 @@ namespace P1SmartMeter
         {
             try
             {
-                TcpClient client = Task.Run(() => _listener?.AcceptTcpClientAsync(), TokenSource.Token).GetAwaiter().GetResult();
+                TcpClient client = Task.Run(() => _listener?.AcceptTcpClientAsync(), CancellationToken).GetAwaiter().GetResult();
                 Logger.Info($"Client connected!");
                 client.SendBufferSize = 2048;
                 lock (_clients)

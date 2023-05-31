@@ -154,8 +154,11 @@ namespace AlfenNG9xx
                 {
                     if (!stoppingToken.IsCancellationRequested)
                     {
+                        // TODO: what scenario?
                         Logger.Error("Exception: " + tce.Message);
                     }
+                    else
+                        throw;
                 }
                 catch (CommunicationException ce)
                 {
@@ -170,7 +173,6 @@ namespace AlfenNG9xx
             }
 
             Logger.Info("Canceled");
-            stoppingToken.ThrowIfCancellationRequested();
         }
 
         internal protected void HandleWork()

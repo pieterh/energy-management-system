@@ -324,6 +324,11 @@ namespace P1ReaderUnitTests
             {
                 throw new NotImplementedException();
             }
+
+            public void CancelConnectAsync(ISocketAsyncEventArgs e)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [SuppressMessage("", "S3881")]
