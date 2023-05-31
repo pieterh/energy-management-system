@@ -22,11 +22,11 @@
 		</PackageReference>
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.5" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.1.0.70676">
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.2.0.71021">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="NLog" Version="5.1.5" />
+		<PackageReference Include="NLog" Version="5.2.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="efbundle" />
