@@ -14,8 +14,9 @@ namespace EMS.Library
         public bool Disposed { get; protected set; }
 
         private CancellationToken _parentToken = CancellationToken.None;
-        private CancellationTokenSource _tokenSource = new();
-        public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
+        private CancellationTokenSource? _tokenSource = new();
+        public CancellationTokenSource? TokenSource { get => _tokenSource ; protected set => _tokenSource = value; }
+        public CancellationToken CancellationToken { get => _tokenSource?.Token ?? CancellationToken.None; }
 
         protected abstract Task Start()
             ;
@@ -48,8 +49,9 @@ namespace EMS.Library
 
         private void DisposeTokenSource()
         {
-            _tokenSource.Cancel();
-            _tokenSource.Dispose();
+            _tokenSource?.Cancel();
+            _tokenSource?.Dispose();
+            _tokenSource = null;
         }
 
         /// <summary>
@@ -59,17 +61,17 @@ namespace EMS.Library
         /// <returns>true if a stop was requested, false otherwise</returns>
         public async Task<bool> StopRequested(int ms)
         {
-            if (_tokenSource.Token.IsCancellationRequested)
+            if (CancellationToken.IsCancellationRequested)
                 return true;
             if (ms > 0)
             {
                 try
                 {
-                    await Task.Delay(ms, _tokenSource.Token).ConfigureAwait(false);
+                    await Task.Delay(ms, CancellationToken).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { /* nothing to do here */  }
             }
-            return (_tokenSource.Token.IsCancellationRequested);
+            return (CancellationToken.IsCancellationRequested);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -99,7 +101,7 @@ namespace EMS.Library
         public Task StopAsync(CancellationToken cancellationToken)
         {
             // NET 8 has CancelAsync...need to check that out
-            TokenSource.Cancel();
+            TokenSource?.Cancel();
 
             Stop();
 

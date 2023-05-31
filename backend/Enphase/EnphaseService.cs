@@ -29,7 +29,7 @@ public class EnphaseService : BackgroundService, ISolar
     private readonly Uri _baseUri;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    private static readonly TimeSpan TimeOut = new TimeSpan(0, 0, 120);
+    private static readonly TimeSpan TimeOut = new TimeSpan(0, 0, 0, 120, 0);
 
     private static string httpClientName = "Envoy";
 
@@ -82,7 +82,7 @@ public class EnphaseService : BackgroundService, ISolar
             // we need atleast a minimal wait for the background task to finish.
             // but we extend it when we are not beeing canceled
             TaskTools.Wait(_backgroundTask, 500);
-            TaskTools.Wait(_backgroundTask, 4500, TokenSource.Token);
+            TaskTools.Wait(_backgroundTask, 4500, CancellationToken);
             _backgroundTask.Dispose();
             _backgroundTask = null;
         }
@@ -96,24 +96,37 @@ public class EnphaseService : BackgroundService, ISolar
 
             try
             {
-                var i = await GetSystemInfo().ConfigureAwait(false);
-                Logger.Info("Serial number      {SerialNumber}", i.Device.SerialNumber);
-                Logger.Info("Part number        {PartNumber}", i.Device.PartNumber);
-                Logger.Info("Software           {Software}", i.Device.Software);
-                Logger.Info("API Version        {ApiVersion}", i.Device.ApiVersion);
-                Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
-                Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
+                try
+                {
+                    var i = await GetSystemInfo(CancellationToken).ConfigureAwait(false);
+                    Logger.Info("Serial number      {SerialNumber}", i.Device.SerialNumber);
+                    Logger.Info("Part number        {PartNumber}", i.Device.PartNumber);
+                    Logger.Info("Software           {Software}", i.Device.Software);
+                    Logger.Info("API Version        {ApiVersion}", i.Device.ApiVersion);
+                    Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
+                    Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
+                }
+                catch (CommunicationException ce)
+                {
+                    Logger.Warn("Unable to retrieve system information {message}", ce.Message);
+                }
 
                 bool run;
                 do
                 {
-                    var s = await GetProductionStatus().ConfigureAwait(false);
-                    Logger.Info("Production         {s}", s ? "Forced off" : "On");
+                    try
+                    {
+                        var s = await GetProductionStatus(CancellationToken).ConfigureAwait(false);
+                        Logger.Info("Production         {s}", s ? "Forced off" : "On");
 
-                    var inverters = await GetInverters().ConfigureAwait(false);
-                    var sum = inverters.Sum((x) => x.LastReportWatts);
-                    Logger.Info("Current production {Watts}", sum);
-
+                        var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
+                        var sum = inverters.Sum((x) => x.LastReportWatts);
+                        Logger.Info("Current production {Watts}", sum);
+                    }
+                    catch (CommunicationException ce)
+                    {
+                        Logger.Error("There was a problem communicating {message}", ce.Message);
+                    }
                     run = !await StopRequested(120000).ConfigureAwait(false);
                 }
                 while (run);
@@ -121,7 +134,7 @@ public class EnphaseService : BackgroundService, ISolar
             catch (OperationCanceledException e)
             {
                 /* We expecting the cancelation exception and don't need to act on it */
-                if (!TokenSource.IsCancellationRequested)
+                if (!CancellationToken.IsCancellationRequested)
                 {
                     Logger.Error(e, "Unexpected error");
                 }
@@ -132,11 +145,11 @@ public class EnphaseService : BackgroundService, ISolar
                 throw;
             }
 
-            if (TokenSource.Token.IsCancellationRequested)
+            if (CancellationToken.IsCancellationRequested)
                 Logger.Info("Canceled");
 
             Logger.Trace("BackgroundTask stopped -> stop requested {StopRequested}", StopRequested(0));
-        }, TokenSource.Token);
+        }, CancellationToken);
 
         return _backgroundTask;
     }
@@ -150,7 +163,7 @@ public class EnphaseService : BackgroundService, ISolar
     }
 
     #region ISolar
-    public async Task<bool> StopProduction()
+    public async Task<bool> StopProduction(CancellationToken cancellationToken)
     {
         try
         {
@@ -159,7 +172,7 @@ public class EnphaseService : BackgroundService, ISolar
             var str = JsonSerializer.Serialize<ProductionSwitchResponse>(p);
             var buffer = System.Text.Encoding.UTF8.GetBytes(str);
             using var byteContent = new ByteArrayContent(buffer);
-            var r = await PutData("/ivp/mod/603980032/mode/power", byteContent).ConfigureAwait(false);
+            var r = await PutData("/ivp/mod/603980032/mode/power", byteContent, cancellationToken).ConfigureAwait(false);
             Logger.Info(r);
             return true;
         }
@@ -170,7 +183,7 @@ public class EnphaseService : BackgroundService, ISolar
         }
     }
 
-    public async Task<bool> StartProduction()
+    public async Task<bool> StartProduction(CancellationToken cancellationToken)
     {
         try
         {
@@ -179,7 +192,7 @@ public class EnphaseService : BackgroundService, ISolar
             var str = JsonSerializer.Serialize<ProductionSwitchResponse>(p);
             var buffer = System.Text.Encoding.UTF8.GetBytes(str);
             using var byteContent = new ByteArrayContent(buffer);
-            var r = await PutData("/ivp/mod/603980032/mode/power", byteContent).ConfigureAwait(false);
+            var r = await PutData("/ivp/mod/603980032/mode/power", byteContent, cancellationToken).ConfigureAwait(false);
             Logger.Info(r);
             return true;
         }
@@ -194,65 +207,85 @@ public class EnphaseService : BackgroundService, ISolar
     /// Gets the production status
     /// </summary>
     /// <returns>true the production is forced off </returns>
-    public async Task<bool> GetProductionStatus()
+    public async Task<bool> GetProductionStatus(CancellationToken cancellationToken)
     {
         try
         {
-            var productionStatusResponse = await GetJSonData<ProductionStatusResponse>("/ivp/mod/603980032/mode/power").ConfigureAwait(false);
+            var productionStatusResponse = await GetJSonData<ProductionStatusResponse>("/ivp/mod/603980032/mode/power", cancellationToken).ConfigureAwait(false);
             return productionStatusResponse?.PowerForcedOff ?? true;
+        }
+        catch (CommunicationException ce)
+        {
+            Logger.Warn("GetProductionStatus => unable to retrieve status due to communication exception {message}", ce.Message);
+            throw;
         }
         catch (TaskCanceledException)
         {
             Logger.Warn("GetProductionStatus => failed due task cancelation");
-            return false;
+            throw;
         }
     }
     #endregion
 
-    internal async Task<HomeResponse?> GetHomeInfo()
+    internal async Task<HomeResponse?> GetHomeInfo(CancellationToken cancellationToken)
     {
         try
         {
-            var home = await GetJSonData<HomeResponse>("/home.json").ConfigureAwait(false);
+            var home = await GetJSonData<HomeResponse>("/home.json", cancellationToken).ConfigureAwait(false);
             return home;
         }
+        catch (CommunicationException ce)
+        {
+            Logger.Warn("GetHomeInfo => unable to retrieve info due to communication exception {message}", ce.Message);
+            throw;
+        }
         catch (TaskCanceledException)
         {
-            Logger.Warn("GetProductionStatus => failed due task cancelation");
-            return new HomeResponse();
+            Logger.Warn("GetHomeInfo => failed due task cancelation");
+            throw;
         }
     }
 
-    internal async Task<InfoResponse> GetSystemInfo()
+    internal async Task<InfoResponse> GetSystemInfo(CancellationToken cancellationToken)
     {
         try
         {
-            var sysInfo = await GetXmlData<InfoResponse>("/info.xml").ConfigureAwait(false);
+            var sysInfo = await GetXmlData<InfoResponse>("/info.xml", cancellationToken).ConfigureAwait(false);
             return sysInfo ?? new InfoResponse();
         }
+        catch (CommunicationException ce)
+        {
+            Logger.Warn("GetSystemInfo => unable to retrieve info due to communication exception {message}", ce.Message);
+            throw;
+        }
         catch (TaskCanceledException)
         {
-            Logger.Warn("GetProductionStatus => failed due task cancelation");
-            return new InfoResponse();
+            Logger.Warn("GetSystemInfo => failed due task cancelation");
+            throw;
         }
     }
 
-    internal async Task<Inverter[]> GetInverters()
+    internal async Task<Inverter[]> GetInverters(CancellationToken cancellationToken)
     {
         try
         {
-            var inverters = await GetJSonData<Inverter[]>("/api/v1/production/inverters").ConfigureAwait(false);
+            var inverters = await GetJSonData<Inverter[]>("/api/v1/production/inverters", cancellationToken).ConfigureAwait(false);
             return inverters ?? Array.Empty<Inverter>();
+        }
+        catch (CommunicationException ce)
+        {
+            Logger.Warn("GetInverters => unable to retrieve inverters due to communication exception {message}", ce.Message);
+            throw;
         }
         catch (TaskCanceledException)
         {
-            Logger.Warn("GetProductionStatus => failed due task cancelation");
-            return Array.Empty<Inverter>();
+            Logger.Warn("GetInverters => failed due task cancelation");
+            throw;
         }
     }
 
     #region Helpers
-    internal async Task<T?> GetJSonData<T>(string endpoint)
+    internal async Task<T?> GetJSonData<T>(string endpoint, CancellationToken cancellationToken)
     {
         var data = await GetData<T?>(endpoint, requestHeaderAcceptJson, async (response, cancellationToken) =>
         {
@@ -266,12 +299,12 @@ public class EnphaseService : BackgroundService, ISolar
                 Logger.Error("Error retrieving inverter information status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
                 return default(T);
             }
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
         return data;
     }
 
-    internal async Task<T?> GetXmlData<T>(string endpoint)
+    internal async Task<T?> GetXmlData<T>(string endpoint, CancellationToken cancellationToken)
     {
         var data = await GetData<T?>(endpoint, requestHeaderAcceptXml, async (response, cancellationToken) =>
         {
@@ -286,7 +319,7 @@ public class EnphaseService : BackgroundService, ISolar
                 Logger.Error("Error retrieving inverter information status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
                 return default(T);
             }
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
         return data;
     }
@@ -298,32 +331,51 @@ public class EnphaseService : BackgroundService, ISolar
     /// <param name="endpoint"></param>
     /// <param name="responseHandler">responsible for retrieving the content and transforming to the result data object</param>
     /// <returns></returns>
-    internal virtual async Task<T> GetData<T>(string endpoint, MediaTypeWithQualityHeaderValue acceptMediaTypes, Func<HttpResponseMessage, CancellationToken, Task<T>> responseHandler)
+    internal virtual async Task<T> GetData<T>(string endpoint, MediaTypeWithQualityHeaderValue acceptMediaTypes, Func<HttpResponseMessage, CancellationToken, Task<T>> responseHandler, CancellationToken cancellationToken)
     {
         using var cancellationTokenSource = new CancellationTokenSource(TimeOut);
-        using CancellationTokenSource linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, TokenSource.Token);
+        using CancellationTokenSource linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, cancellationToken);
+        try
+        {
+            using var client = CreateClient();
+            client.DefaultRequestHeaders.Accept.Add(acceptMediaTypes);
+            var requestUri = new Uri(_baseUri, endpoint);
 
-        using var client = CreateClient();
-        client.DefaultRequestHeaders.Accept.Add(acceptMediaTypes);
-        var requestUri = new Uri(_baseUri, endpoint);
+            using var response = await client.GetAsync(requestUri, linkedTokenSource.Token).ConfigureAwait(false);
 
-        using var response = await client.GetAsync(requestUri, linkedTokenSource.Token).ConfigureAwait(false);
-
-        T retval = await responseHandler(response, linkedTokenSource.Token).ConfigureAwait(false);
-        return retval;
+            T retval = await responseHandler(response, linkedTokenSource.Token).ConfigureAwait(false);
+            return retval;
+        }
+        catch (TaskCanceledException tce)
+        {
+            if (cancellationTokenSource.IsCancellationRequested)
+                throw new CommunicationException("Timeout while getting data from enphase.", tce);
+            else
+                throw; // parent task cancelled... bubble up
+        }
     }
 
-    internal virtual async Task<string> PutData(string endpoint, HttpContent content)
+    internal virtual async Task<string> PutData(string endpoint, HttpContent content, CancellationToken cancellationToken)
     {
         using var cancellationTokenSource = new CancellationTokenSource(TimeOut);
-        using CancellationTokenSource linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token, TokenSource.Token);
+        using CancellationTokenSource linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource.Token);
 
-        using var client = CreateClient();
-        var requestUri = new Uri(_baseUri, endpoint);
+        try
+        {
+            using var client = CreateClient();
+            var requestUri = new Uri(_baseUri, endpoint);
 
-        using var response = await client.PutAsync(requestUri, content, linkedTokenSource.Token).ConfigureAwait(false);
-        var r = await response.Content.ReadAsStringAsync(linkedTokenSource.Token).ConfigureAwait(false);
-        return r;
+            using var response = await client.PutAsync(requestUri, content, linkedTokenSource.Token).ConfigureAwait(false);
+            var r = await response.Content.ReadAsStringAsync(linkedTokenSource.Token).ConfigureAwait(false);
+            return r;
+        }
+        catch (TaskCanceledException tce)
+        {
+            if (cancellationTokenSource.IsCancellationRequested)
+                throw new CommunicationException("Timeout while sending data to enphase.", tce);
+            else
+                throw; // parent task cancelled... bubble up
+        }
     }
 
     private HttpClient CreateClient()

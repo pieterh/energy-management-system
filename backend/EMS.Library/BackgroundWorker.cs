@@ -33,7 +33,7 @@ namespace EMS.Library
 
                 try
                 {
-                    TokenSource.Cancel();
+                    TokenSource?.Cancel();
                     WaitForBackgroundTaskToFinish();
                 }
                 catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */}
@@ -94,7 +94,7 @@ namespace EMS.Library
                     throw;
                 }
                 Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
-            }, TokenSource.Token);
+            }, CancellationToken);
             return _backgroundTask;
         }
 

@@ -3,6 +3,7 @@ using EMS.Library;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Adapter.Solar;
 using EMS.Library.Cron;
+using EMS.Library.Exceptions;
 using EMS.Library.Tasks;
 
 namespace EMS;
@@ -37,12 +38,23 @@ public class SolarOptimizer : BackgroundService
     {
         if (_backgroundTask is not null)
         {
+            // store the task in local variable and set the member variable already to null
+            // this prevents interference with an other thread
+            var bgTask = _backgroundTask;
+            _backgroundTask = null;
+
             // we need atleast a minimal wait for the background task to finish.
             // but we extend it when we are not beeing canceled
-            TaskTools.Wait(_backgroundTask, 500);
-            TaskTools.Wait(_backgroundTask, 4500, TokenSource.Token);
-            _backgroundTask.Dispose();
-            _backgroundTask = null;
+            TaskTools.Wait(bgTask, 500);
+            TaskTools.Wait(bgTask, 4500, TokenSource is not null ? TokenSource.Token : CancellationToken.None);
+            if (!bgTask.IsCompleted)
+            {
+                Logger.Error("_backgroundTask is not completed");
+            }
+            else
+            {
+                bgTask.Dispose();
+            }
         }
     }
 
@@ -57,7 +69,14 @@ public class SolarOptimizer : BackgroundService
                 bool run;
                 do
                 {
-                    await PerformCheck().ConfigureAwait(false);
+                    try
+                    {
+                        await PerformCheck().ConfigureAwait(false);
+                    }
+                    catch (CommunicationException ce)
+                    {
+                        Logger.Error("There was a problem communicating {message}", ce.Message);
+                    }
 
                     var now = DateTimeOffset.Now;
                     var nextRun = _cron.GetNextOccurrence(now);
@@ -73,11 +92,11 @@ public class SolarOptimizer : BackgroundService
                 throw;
             }
 
-            if (TokenSource.Token.IsCancellationRequested)
+            if (CancellationToken.IsCancellationRequested)
                 Logger.Info("Canceled");
 
             Logger.Trace("BackgroundTask stopped -> stop requested {StopRequested}", StopRequested(0));
-        }, TokenSource.Token)
+        }, CancellationToken)
             .ContinueWith((c, e) =>
                 {
                     Logger.Error(c.Exception, "Task ended with an ignored exception" + Environment.NewLine);
@@ -104,7 +123,7 @@ public class SolarOptimizer : BackgroundService
     protected override void Stop()
     {
         /* wait a bit for the background task in the case that it still is trying to connect */
-        TaskTools.Wait(_backgroundTask, 10000);
+        TaskTools.Wait(_backgroundTask, 1000);
         DisposeBackgroundTask();
     }
 
@@ -116,22 +135,22 @@ public class SolarOptimizer : BackgroundService
         if (tariff is not null && tariff.TariffReturn <= _minTariffCutOff)
         {
             Logger.Warn("Solar production => {TariffReturn}", tariff.TariffReturn);
-            var isForcedOff = await _solar.GetProductionStatus().ConfigureAwait(false);
+            var isForcedOff = await _solar.GetProductionStatus(CancellationToken).ConfigureAwait(false);
             if (!isForcedOff)
             {
                 Logger.Warn("Solar production => switch off");
-                await _solar.StopProduction().ConfigureAwait(false);
+                await _solar.StopProduction(CancellationToken).ConfigureAwait(false);
             }
             else
                 Logger.Warn("Solar production => already off");
         }
         else
         {
-            var isForcedOff = await _solar.GetProductionStatus().ConfigureAwait(false);
+            var isForcedOff = await _solar.GetProductionStatus(CancellationToken).ConfigureAwait(false);
             if (isForcedOff)
             {
                 Logger.Warn("Solar production => switch on");
-                await _solar.StartProduction().ConfigureAwait(false);
+                await _solar.StartProduction(CancellationToken).ConfigureAwait(false);
             }
             else
                 Logger.Warn("Solar production => already on");
