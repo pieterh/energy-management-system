@@ -25,6 +25,8 @@ namespace EMS
         private readonly Compute _compute;
 
         private readonly ILogger Logger;
+
+        private readonly IWatchdog _watchdog;
         private readonly ISmartMeterAdapter _smartMeter;
         private readonly IChargePoint _chargePoint;
         private readonly ISolar _solar;
@@ -43,11 +45,12 @@ namespace EMS
             set => _compute.Mode = value;
         }
 
-        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint, ISolar solar, IPriceProvider priceProvider)
+        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, IWatchdog watchdog, ISmartMeterAdapter smartMeter, IChargePoint chargePoint, ISolar solar, IPriceProvider priceProvider)
         {
             ArgumentNullException.ThrowIfNull(appLifetime);
             Logger = logger;
 
+            _watchdog = watchdog;
             _smartMeter = smartMeter;
             _chargePoint = chargePoint;
             _solar = solar;
@@ -92,7 +95,9 @@ namespace EMS
             _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
             _compute.StateUpdate += Compute_StateUpdate;
 
-            _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar);
+            await _watchdog.StartAsync(cancellationToken).ConfigureAwait(false);
+
+            _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar, _watchdog);
             await _solarOptimizerService.StartAsync(cancellationToken).ConfigureAwait(false);
 
             await base.StartAsync(cancellationToken).ConfigureAwait(false);
@@ -150,7 +155,7 @@ namespace EMS
             {
                 Logger.LogError(ex, "Unhandled exception");
             }
-            
+
             stoppingToken.ThrowIfCancellationRequested();
         }
 
@@ -171,6 +176,8 @@ namespace EMS
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
             await base.StopAsync(cancellationToken).ConfigureAwait(false);
+
+            await _watchdog.StopAsync(cancellationToken).ConfigureAwait(false);
 
             Logger.LogInformation("4. StopAsync has been called.");
             if (_solarOptimizerService is not null)
