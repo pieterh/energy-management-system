@@ -251,6 +251,7 @@ static class Program
             .PersistKeysToDbContext<DataProtectionKeyContext>();
 
         builder.Services.AddHttpClient();
+        builder.Services.AddSingleton(typeof(IWatchdog), typeof(Watchdog));
 
         builder.ConfigureInstances();
 

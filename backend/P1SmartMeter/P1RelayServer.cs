@@ -38,7 +38,6 @@ namespace P1SmartMeter
         [SuppressMessage("Code Analysis", "CA1031")]
         public void Relay(string data2relay)
         {
-            
             var bytes = Encoding.ASCII.GetBytes(data2relay);
             List<TcpClient> clients;
             lock (_clients)
@@ -75,7 +74,7 @@ namespace P1SmartMeter
         }
 
         [SuppressMessage("Code Analysis", "CA1031")]
-        protected override void DoBackgroundWork()
+        protected override Task DoBackgroundWork()
         {
             try
             {
@@ -92,6 +91,8 @@ namespace P1SmartMeter
             {
                 Logger.Error("Exception: " + e.Message);
             }
+
+            return Task.CompletedTask;
         }
     }
 }

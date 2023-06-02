@@ -226,9 +226,9 @@ namespace BackgroundWorker
     public class BGTester : EMS.Library.BackgroundWorker
     {
 
-        protected override void DoBackgroundWork()
+        protected override Task DoBackgroundWork()
         {
-
+            return Task.CompletedTask;
         }
 
         protected override Task Start()

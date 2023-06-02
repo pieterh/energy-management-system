@@ -346,13 +346,18 @@ public class EnphaseService : BackgroundService, ISolar
             T retval = await responseHandler(response, linkedTokenSource.Token).ConfigureAwait(false);
             return retval;
         }
-        catch (TaskCanceledException tce)
+        catch (HttpRequestException hre)
+        {
+            throw new CommunicationException($"HttpRequestException while getting data from enphase. {hre.Message}", hre);
+        }
+        catch (OperationCanceledException oce)
         {
             if (cancellationTokenSource.IsCancellationRequested)
-                throw new CommunicationException("Timeout while getting data from enphase.", tce);
+                throw new CommunicationException("Timeout while getting data from enphase.", oce);
             else
                 throw; // parent task cancelled... bubble up
         }
+
     }
 
     internal virtual async Task<string> PutData(string endpoint, HttpContent content, CancellationToken cancellationToken)
@@ -369,10 +374,14 @@ public class EnphaseService : BackgroundService, ISolar
             var r = await response.Content.ReadAsStringAsync(linkedTokenSource.Token).ConfigureAwait(false);
             return r;
         }
-        catch (TaskCanceledException tce)
+        catch (HttpRequestException hre)
+        {
+            throw new CommunicationException($"HttpRequestException while sending data to enphase. {hre.Message}", hre);
+        }
+        catch (OperationCanceledException oce)
         {
             if (cancellationTokenSource.IsCancellationRequested)
-                throw new CommunicationException("Timeout while sending data to enphase.", tce);
+                throw new CommunicationException("Timeout while sending data to enphase.", oce);
             else
                 throw; // parent task cancelled... bubble up
         }
@@ -380,7 +389,12 @@ public class EnphaseService : BackgroundService, ISolar
 
     private HttpClient CreateClient()
     {
-        return _httpClientFactory.CreateClient(httpClientName);
+        var client = _httpClientFactory.CreateClient(httpClientName);
+
+        // set the httpclient timeout just a bit longer then the timeout we use with the cancellation token.
+        // this will make sure there is consistent behavior when there is a timeout
+        client.Timeout = TimeOut.Duration().Add(new TimeSpan(0, 0, 2));
+        return client;
     }
     #endregion
 }
