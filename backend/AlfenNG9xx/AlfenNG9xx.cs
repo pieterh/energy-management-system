@@ -37,13 +37,13 @@ namespace AlfenNG9xx
             BackgroundServiceHelper.CreateAndStart<IChargePoint, Alfen>(services, instance.Config);
         }
 
-        public Alfen(InstanceConfiguration config, IPriceProvider priceProvider) : base(config, priceProvider)
+        public Alfen(InstanceConfiguration config, IPriceProvider priceProvider, IWatchdog watchdog) : base(config, priceProvider, watchdog)
         {
             _alfenIp = config.Host;
             _alfenPort = config.Port;
         }
 
-        internal override void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
 
