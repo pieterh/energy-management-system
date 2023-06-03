@@ -13,6 +13,7 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     private Task? _backgroundTask;
     public Task? BackgroundTask { get { return _backgroundTask; } }
+    public Task? ExecuteTask { get { return _backgroundTask; } }
 
     protected abstract Task DoBackgroundWork();
     protected override void Dispose(bool disposing)
@@ -84,10 +85,13 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
                 throw;
             }
 
-            if (CancellationToken.IsCancellationRequested)
-                Logger.Info("Canceled - {name}", this.GetType().Name);
-
             Logger.Trace("BackgroundWorker {name} stopped -> stop requested {StopRequested}", this.GetType().Name, StopRequested(0));
+            if (CancellationToken.IsCancellationRequested)
+            {
+                Logger.Info("Canceled - {name}", this.GetType().Name);
+            }
+
+
         }, CancellationToken)
         .ContinueWith((c, e) =>
             {
@@ -97,15 +101,6 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
             null,
             CancellationToken.None,
             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Current
-        )
-        .ContinueWith((c, e) =>
-            {
-                Logger.Warn("BackgroundWorker {name} - done 2 => {status}", this.GetType().Name, c.Status);
-            },
-            null,
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Current
         );
         return _backgroundTask;

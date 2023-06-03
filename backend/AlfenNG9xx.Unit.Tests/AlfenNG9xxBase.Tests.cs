@@ -13,45 +13,48 @@ namespace AlfenNG9xxBase.Tests
         [SuppressMessage("", "S1215")]
         public void DisposesProperly()
         {
-            var mock = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mock = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider(), w.Object);
             mock.CallBase = true;
 
-            mock.Object.isDisposed.Should().BeFalse();
+            mock.Object.Disposed.Should().BeFalse();
             _ = mock.Object.ReadProductInformation();
 
             mock.Object.Dispose();
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            mock.Object.isDisposed.Should().BeTrue();
+            mock.Object.Disposed.Should().BeTrue();
         }
 
         [Fact]
         [SuppressMessage("", "S1215")]
         public void DisposesCanSafelyCalledTwice()
         {
-            var mock = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mock = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider(), w.Object);
             mock.CallBase = true;
 
-            mock.Object.isDisposed.Should().BeFalse();
+            mock.Object.Disposed.Should().BeFalse();
             _ = mock.Object.ReadProductInformation();
 
             mock.Object.Dispose();
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            mock.Object.isDisposed.Should().BeTrue();
+            mock.Object.Disposed.Should().BeTrue();
 
             // and for the second time
             mock.Object.Dispose();
-            mock.Object.isDisposed.Should().BeTrue();
+            mock.Object.Disposed.Should().BeTrue();
         }
 
 
         [Fact]
         public void HandleWorkShouldStopProperly()
         {
-            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ReadProductInformation()).Returns(new EMS.Library.ProductInformation());
             mockAlfen.Setup((x) => x.ReadStationStatus()).Returns(new EMS.Library.StationStatus());
@@ -69,21 +72,23 @@ namespace AlfenNG9xxBase.Tests
 #pragma warning disable CS8601       
             var action = () => { Task.WaitAll(new Task[] { mockAlfen.Object.ExecuteTask }, 2000); };
 #pragma warning restore
-
+            
             action.Should().Throw<AggregateException>().WithMessage("One or more errors occurred. (A task was canceled.)").WithInnerException<TaskCanceledException>();
+            
 
             mockAlfen.Object.ExecuteTask?.IsCompleted.Should().BeTrue();
             mockAlfen.Object.ExecuteTask?.IsCanceled.Should().BeTrue();
 
             mockAlfen.Object.Dispose();
-            mockAlfen.Object.isDisposed.Should().BeTrue();
+            mockAlfen.Object.Disposed.Should().BeTrue();
 
         }
 
         [Fact]
         public void HandleWorkRaisesEvents()
         {
-            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ReadProductInformation()).Returns(new EMS.Library.ProductInformation());
             mockAlfen.Setup((x) => x.ReadStationStatus()).Returns(new EMS.Library.StationStatus());
@@ -115,7 +120,7 @@ namespace AlfenNG9xxBase.Tests
             lastChargingStateEventArgs.Should().NotBeNull();
 
             mockAlfen.Object.Dispose();
-            mockAlfen.Object.isDisposed.Should().BeTrue();
+            mockAlfen.Object.Disposed.Should().BeTrue();
 #pragma warning restore CA1508
         }
 
@@ -124,7 +129,8 @@ namespace AlfenNG9xxBase.Tests
         {
             var socketMeasurement = new AlfenNG9xx.Model.SocketMeasurement();
 
-            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ReadProductInformation()).Returns(new EMS.Library.ProductInformation());
             mockAlfen.Setup((x) => x.ReadStationStatus()).Returns(new EMS.Library.StationStatus());
@@ -169,7 +175,7 @@ namespace AlfenNG9xxBase.Tests
             chargingStateUpdateRaised.Should().Be(2);
 
             mockAlfen.Object.Dispose();
-            mockAlfen.Object.isDisposed.Should().BeTrue();
+            mockAlfen.Object.Disposed.Should().BeTrue();
 #pragma warning restore CA1508
         }
 
