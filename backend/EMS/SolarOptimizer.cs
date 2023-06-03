@@ -34,8 +34,8 @@ public class SolarOptimizer : BackgroundWorker
 
     protected override void Stop()
     {
-        _watchdog.Unregister(this);
         base.Stop();
+        _watchdog.Unregister(this);
     }
 
     protected override DateTimeOffset GetNextOccurrence()
