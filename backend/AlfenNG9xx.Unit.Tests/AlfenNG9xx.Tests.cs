@@ -42,12 +42,12 @@ namespace AlfenNG9xx.Tests
             mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
-            mockAlfen.Object.isDisposed.Should().BeFalse();
+            mockAlfen.Object.Disposed.Should().BeFalse();
             var pi = mockAlfen.Object.ReadProductInformation();
 
             mockAlfen.Object.ModbusMaster.Should().NotBeNull();
@@ -57,7 +57,7 @@ namespace AlfenNG9xx.Tests
             GC.WaitForPendingFinalizers();
 
             pi.Should().NotBeNull();
-            mockAlfen.Object.isDisposed.Should().BeTrue();
+            mockAlfen.Object.Disposed.Should().BeTrue();
             mockAlfen.Object.ModbusMaster.Should().BeNull();
         }
 
@@ -84,12 +84,12 @@ namespace AlfenNG9xx.Tests
             mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
-            mockAlfen.Object.isDisposed.Should().BeFalse();
+            mockAlfen.Object.Disposed.Should().BeFalse();
             var pi = mockAlfen.Object.ReadProductInformation();
 
             mockAlfen.Object.ModbusMaster.Should().NotBeNull();
@@ -99,12 +99,12 @@ namespace AlfenNG9xx.Tests
             GC.WaitForPendingFinalizers();
 
             pi.Should().NotBeNull();
-            mockAlfen.Object.isDisposed.Should().BeTrue();
+            mockAlfen.Object.Disposed.Should().BeTrue();
             mockAlfen.Object.ModbusMaster.Should().BeNull();
 
             // and for the second time
             mockAlfen.Object.Dispose();
-            mockAlfen.Object.isDisposed.Should().BeTrue();
+            mockAlfen.Object.Disposed.Should().BeTrue();
             mockAlfen.Object.ModbusMaster.Should().BeNull();
         }
 
@@ -130,8 +130,8 @@ namespace AlfenNG9xx.Tests
             mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
@@ -167,8 +167,8 @@ namespace AlfenNG9xx.Tests
             mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
               .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
@@ -195,8 +195,8 @@ namespace AlfenNG9xx.Tests
             mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
               .Returns<byte, ushort, ushort>((slave, address, count) => { return (address == 300) ? piRegisters_300 : piRegisters_1200; });
 
-
-            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider());
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
