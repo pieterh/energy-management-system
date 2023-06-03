@@ -15,6 +15,7 @@ using EMS.Library.Adapter.Solar;
 using EMS.Library.Configuration;
 using EMS.Library.Exceptions;
 using EMS.Library.Tasks;
+using EMS.Library.TestableDateTime;
 using EMS.Library.Xml;
 using Enphase.DTO;
 using Enphase.DTO.Home;
@@ -22,12 +23,13 @@ using Enphase.DTO.Info;
 
 namespace Enphase;
 
-public class EnphaseService : BackgroundService, ISolar
+public class EnphaseService : BackgroundWorker, ISolar
 {
     private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
     private readonly Uri _baseUri;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IWatchdog _watchdog;
 
     private static readonly TimeSpan TimeOut = new TimeSpan(0, 0, 0, 120, 0);
 
@@ -55,111 +57,53 @@ public class EnphaseService : BackgroundService, ISolar
         BackgroundServiceHelper.CreateAndStart<ISolar, EnphaseService>(services, instance.Config);
     }
 
-    public EnphaseService(InstanceConfiguration config, IHttpClientFactory httpClientFactory)
+    public EnphaseService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(httpClientFactory);
+        ArgumentNullException.ThrowIfNull(watchdog);
 
         _baseUri = new Uri(config.EndPoint);
 
         _httpClientFactory = httpClientFactory;
+        _watchdog = watchdog;
     }
 
-    protected override void Dispose(bool disposing)
+    protected override DateTimeOffset GetNextOccurrence()
     {
-        if (disposing && !Disposed)
-        {
-            DisposeBackgroundTask();
-        }
-
-        base.Dispose(disposing);
+        return DateTimeOffsetProvider.Now.AddMilliseconds(120000);
     }
 
-    private void DisposeBackgroundTask()
+    protected override async Task DoBackgroundWork()
     {
-        if (_backgroundTask is not null)
-        {
-            // we need atleast a minimal wait for the background task to finish.
-            // but we extend it when we are not beeing canceled
-            TaskTools.Wait(_backgroundTask, 500);
-            TaskTools.Wait(_backgroundTask, 4500, CancellationToken);
-            _backgroundTask.Dispose();
-            _backgroundTask = null;
-        }
+        var s = await GetProductionStatus(CancellationToken).ConfigureAwait(false);
+        Logger.Info("Production         {s}", s ? "Forced off" : "On");
+
+        var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
+        var sum = inverters.Sum((x) => x.LastReportWatts);
+        Logger.Info("Current production {Watts}", sum);
+
+        _watchdog.Tick(this);
     }
 
-    protected override Task Start()
+    protected override async Task Start()
     {
-        _backgroundTask = Task.Run(async () =>
-        {
-            Logger.Trace("BackgroundTask running");
+        var i = await GetSystemInfo(CancellationToken).ConfigureAwait(false);
+        Logger.Info("Serial number      {SerialNumber}", i.Device.SerialNumber);
+        Logger.Info("Part number        {PartNumber}", i.Device.PartNumber);
+        Logger.Info("Software           {Software}", i.Device.Software);
+        Logger.Info("API Version        {ApiVersion}", i.Device.ApiVersion);
+        Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
+        Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
 
-            try
-            {
-                try
-                {
-                    var i = await GetSystemInfo(CancellationToken).ConfigureAwait(false);
-                    Logger.Info("Serial number      {SerialNumber}", i.Device.SerialNumber);
-                    Logger.Info("Part number        {PartNumber}", i.Device.PartNumber);
-                    Logger.Info("Software           {Software}", i.Device.Software);
-                    Logger.Info("API Version        {ApiVersion}", i.Device.ApiVersion);
-                    Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
-                    Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
-                }
-                catch (CommunicationException ce)
-                {
-                    Logger.Warn("Unable to retrieve system information {message}", ce.Message);
-                }
-
-                bool run;
-                do
-                {
-                    try
-                    {
-                        var s = await GetProductionStatus(CancellationToken).ConfigureAwait(false);
-                        Logger.Info("Production         {s}", s ? "Forced off" : "On");
-
-                        var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
-                        var sum = inverters.Sum((x) => x.LastReportWatts);
-                        Logger.Info("Current production {Watts}", sum);
-                    }
-                    catch (CommunicationException ce)
-                    {
-                        Logger.Error("There was a problem communicating {message}", ce.Message);
-                    }
-                    run = !await StopRequested(120000).ConfigureAwait(false);
-                }
-                while (run);
-            }
-            catch (OperationCanceledException e)
-            {
-                /* We expecting the cancelation exception and don't need to act on it */
-                if (!CancellationToken.IsCancellationRequested)
-                {
-                    Logger.Error(e, "Unexpected error");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Unhandled exception in BackgroundTask");
-                throw;
-            }
-
-            if (CancellationToken.IsCancellationRequested)
-                Logger.Info("Canceled");
-
-            Logger.Trace("BackgroundTask stopped -> stop requested {StopRequested}", StopRequested(0));
-        }, CancellationToken);
-
-        return _backgroundTask;
+        _watchdog.Register(this, 120);
+        await base.Start().ConfigureAwait(false);
     }
 
     protected override void Stop()
-    {
-        /* wait a bit for the background task in the case that it still is trying to connect */
-        TaskTools.Wait(_backgroundTask, 15000);
-
-        DisposeBackgroundTask();
+    {        
+        base.Stop();
+        _watchdog.Unregister(this);
     }
 
     #region ISolar
