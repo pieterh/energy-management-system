@@ -4,6 +4,7 @@ using EMS.Library.Configuration;
 using System.Net.Http.Headers;
 using Enphase.DTO;
 using Enphase.DTO.Info;
+using EMS.Library;
 
 namespace Enphase.Unit.Tests;
 
@@ -14,7 +15,8 @@ public class EnphaseServiceTests
     public void DisposesProperly()
     {
         var mockFactory = new HttpClientFactoryMock();
-        var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory);
+        var w = new Mock<IWatchdog>();
+        var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory, w.Object);
         mock.CallBase = true;
 
         mock.Object.Disposed.Should().BeFalse();
@@ -31,7 +33,8 @@ public class EnphaseServiceTests
     public void DisposesCanSafelyCalledTwice()
     {
         var mockFactory = new HttpClientFactoryMock();
-        var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory);
+        var w = new Mock<IWatchdog>();
+        var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory, w.Object);
         mock.CallBase = true;
 
         mock.Object.Disposed.Should().BeFalse();
@@ -52,7 +55,8 @@ public class EnphaseServiceTests
     public async Task CanStartStop()
     {
         var mockFactory = new HttpClientFactoryMock();
-        var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory);
+        var w = new Mock<IWatchdog>();
+        var mock = new Mock<EnphaseService>(new InstanceConfiguration() { EndPoint = "http://127.0.0.1" }, mockFactory, w.Object);
         mock.CallBase = true;
 
         mock.Setup(x => x.GetData<InfoResponse>(It.Is<string>(m => m.Equals("/info.xml", StringComparison.Ordinal)), It.IsAny<MediaTypeWithQualityHeaderValue>(), It.IsAny<Func<HttpResponseMessage, CancellationToken, Task<InfoResponse>>>(), It.IsAny<CancellationToken>()))
@@ -71,7 +75,7 @@ public class EnphaseServiceTests
                     .Returns(Task.FromResult<Inverter[]>(Array.Empty<Inverter>()));
 
         await mock.Object.StartAsync(CancellationToken.None).ConfigureAwait(false);
-        mock.Object._backgroundTask.Should().NotBeNull();
+        mock.Object.BackgroundTask.Should().NotBeNull();
         await Task.Delay(250).ConfigureAwait(false);
         await mock.Object.StopAsync(CancellationToken.None).ConfigureAwait(false);
         mock.Object.Dispose();

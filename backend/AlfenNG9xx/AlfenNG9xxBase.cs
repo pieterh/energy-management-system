@@ -117,9 +117,9 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
     }
 
     protected override void Stop()
-    {
-        _watchdog.Unregister(this);
+    {        
         base.Stop();
+        _watchdog.Unregister(this);
     }
 
     protected static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
