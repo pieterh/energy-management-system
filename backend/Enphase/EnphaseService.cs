@@ -96,7 +96,7 @@ public class EnphaseService : BackgroundWorker, ISolar
         Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
         Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
 
-        _watchdog.Register(this, 120);
+        _watchdog.Register(this, 200);
         await base.Start().ConfigureAwait(false);
     }
 
