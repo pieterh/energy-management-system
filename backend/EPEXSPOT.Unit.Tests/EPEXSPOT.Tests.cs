@@ -4,6 +4,7 @@ using EMS.Library.TestableDateTime;
 using EMS.Library.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using Moq;
+using EMS.Library;
 
 namespace EPEXSPOT.Unit.Tests;
 
@@ -14,17 +15,19 @@ public class TariffTests
     [SuppressMessage("", "S1215")]
     public void DisposesProperly()
     {
+
         var mockFactory = new HttpClientFactoryMock();
-        var mock = new Mock<EPEXSPOTService>(new InstanceConfiguration(), mockFactory);
+        var w = new Mock<IWatchdog>();
+        var mock = new Mock<EPEXSPOTService>(new InstanceConfiguration(), mockFactory, w.Object);
         mock.CallBase = true;
 
-        mock.Object.isDisposed.Should().BeFalse();
+        mock.Object.Disposed.Should().BeFalse();
         
         mock.Object.Dispose();
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        mock.Object.isDisposed.Should().BeTrue();
+        mock.Object.Disposed.Should().BeTrue();
     }
 
     [Fact]
@@ -32,20 +35,21 @@ public class TariffTests
     public void DisposesCanSafelyCalledTwice()
     {
         var mockFactory = new HttpClientFactoryMock();
-        var mock = new Mock<EPEXSPOTService>(new InstanceConfiguration(), mockFactory);
+        var w = new Mock<IWatchdog>();
+        var mock = new Mock<EPEXSPOTService>(new InstanceConfiguration(), mockFactory, w.Object);
         mock.CallBase = true;
 
-        mock.Object.isDisposed.Should().BeFalse();
+        mock.Object.Disposed.Should().BeFalse();
 
         mock.Object.Dispose();
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        mock.Object.isDisposed.Should().BeTrue();
+        mock.Object.Disposed.Should().BeTrue();
 
         // and for the second time
         mock.Object.Dispose();
-        mock.Object.isDisposed.Should().BeTrue();
+        mock.Object.Disposed.Should().BeTrue();
     }
 
     [Theory]

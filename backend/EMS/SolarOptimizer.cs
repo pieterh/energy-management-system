@@ -17,7 +17,7 @@ public class SolarOptimizer : BackgroundWorker
     private readonly IWatchdog _watchdog;
 
     private readonly Crontab _cron = new Crontab("55 * * * *");
-    private readonly int _intervalSeconds = 55 * 60;
+    private readonly int _intervalSeconds = 62 * 60;
 
     public SolarOptimizer(IPriceProvider priceProvider, ISolar solar, IWatchdog watchdog)
     {
