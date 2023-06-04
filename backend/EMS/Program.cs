@@ -184,7 +184,7 @@ static class Program
                 LogManager.ThrowConfigExceptions = true;
                 LogManager.ThrowExceptions = true;
             }
-            LogManager.LoadConfiguration(options.NLogConfig);
+            LogManager.Setup().LoadConfigurationFromFile(options.NLogConfig);
             LogManager.ReconfigExistingLoggers();
             if (!Logger.IsFatalEnabled || !Logger.IsErrorEnabled)
             {
