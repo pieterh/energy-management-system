@@ -31,7 +31,6 @@
 		<Folder Include="Tasks\" />
 		<Folder Include="Adapter\Solar\" />
 		<Folder Include="Xml\" />
-		<Folder Include="Crontab\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Adapter\PriceProvider\" />
@@ -41,6 +40,5 @@
 		<None Remove="Tasks\" />
 		<None Remove="Adapter\Solar\" />
 		<None Remove="Xml\" />
-		<None Remove="Crontab\" />
 	</ItemGroup>
 </Project>

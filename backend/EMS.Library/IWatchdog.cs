@@ -1,4 +1,6 @@
-﻿namespace EMS.Library;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace EMS.Library;
 
 public interface IWatchdog
 {
@@ -14,3 +16,6 @@ public interface IWatchdog
     Task StartAsync(CancellationToken cancellationToken);
     Task StopAsync(CancellationToken cancellationToken);
 }
+
+
+

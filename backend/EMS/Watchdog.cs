@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using EMS.Library;
 using EMS.Library.TestableDateTime;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace EMS;
 
@@ -18,7 +20,7 @@ public class Watchdog : BackgroundWorker, IWatchdog
                         (bg) =>
                         {
                             var now = DateTimeOffsetProvider.Now;
-                            return new Info(now, interval);
+                            return new Info(now, interval, (int)Math.Round((interval * 1.05) + 5, MidpointRounding.AwayFromZero));
                         },
                         (bg, existingInfo) =>
                         {
@@ -60,19 +62,19 @@ public class Watchdog : BackgroundWorker, IWatchdog
         var silentWorkers = _workersToWatch.Where((x) => (now - x.Value.LastSeen).TotalSeconds > x.Value.ExpectedIntervalSeconds).ToArray();
 
         if (silentWorkers.Any())
-            Logger.Warn("Watchdog found faulty tasks. Restarting them.");
+            Logger.Error("Watchdog found faulty tasks. Restarting them.");
 
         foreach (IBackgroundWorker worker in silentWorkers.Select((x) => x.Key))
         {
             _workersToWatch.Remove(worker, out _);
-
+            Logger.Error("Watchdog restarting => {worker}", worker.GetType().Name);
             await worker.Restart().ConfigureAwait(false);
         }
         _lastCheck = now;
     }
 }
 
-internal record Info(DateTimeOffset FirstSeen, int ExpectedIntervalSeconds)
+internal record Info(DateTimeOffset FirstSeen, int RequestedIntervalSeconds, int ExpectedIntervalSeconds)
 {
     internal DateTimeOffset LastSeen { get; set; } = FirstSeen;
 }
