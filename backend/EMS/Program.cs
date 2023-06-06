@@ -29,6 +29,7 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Options;
+using System.Threading;
 
 namespace EMS;
 
@@ -251,16 +252,18 @@ static class Program
             .PersistKeysToDbContext<DataProtectionKeyContext>();
 
         builder.Services.AddHttpClient();
-        builder.Services.AddSingleton(typeof(IWatchdog), typeof(Watchdog));
+
+        BackgroundServiceHelper.CreateAndStart<IWatchdog, Watchdog>(builder.Services);
 
         builder.ConfigureInstances();
-
-        BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(builder.Services);
+        
+        BackgroundServiceHelper.CreateAndStart<IHEMSCore, HEMSCore>(builder.Services);              
 
         // Create and configure startup
         var startup = new Startup(builder.Environment, builder.Configuration);
         startup.ConfigureServices(builder.Services);
         var app = builder.Build();
+
         startup.Configure(app);
 
         return app;
