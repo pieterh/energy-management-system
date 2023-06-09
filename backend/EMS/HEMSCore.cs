@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -26,13 +27,12 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
 
     private readonly ILogger Logger;
 
-    private readonly IWatchdog _watchdog;
     private readonly ISmartMeterAdapter _smartMeter;
     private readonly IChargePoint _chargePoint;
     private readonly ISolar _solar;
     private readonly IPriceProvider _priceProvider;
 
-    private const int _interval = 10000; //ms
+    private const int _intervalms = 10000; //ms
 
     public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
 
@@ -45,12 +45,11 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
         set => _compute.Mode = value;
     }
 
-    public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, IWatchdog watchdog, ISmartMeterAdapter smartMeter, IChargePoint chargePoint, ISolar solar, IPriceProvider priceProvider)
+    public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, IWatchdog watchdog, ISmartMeterAdapter smartMeter, IChargePoint chargePoint, ISolar solar, IPriceProvider priceProvider) : base(watchdog)
     {
         ArgumentNullException.ThrowIfNull(appLifetime);
         Logger = logger;
 
-        _watchdog = watchdog;
         _smartMeter = smartMeter;
         _chargePoint = chargePoint;
         _solar = solar;
@@ -81,16 +80,15 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
 
     protected override async Task Start()
     {
-        Logger.LogInformation("1. Start has been called.");        
+        Logger.LogInformation("1. Start has been called.");
 
         _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
         _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
         _compute.StateUpdate += Compute_StateUpdate;
 
-        _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar, _watchdog);
+        _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar, Watchdog);
         await _solarOptimizerService.StartAsync(CancellationToken).ConfigureAwait(false);
 
-        _watchdog.Register(this, _interval / 1000);
         await base.Start().ConfigureAwait(false);
     }
 
@@ -103,13 +101,17 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
             _solarOptimizerService.Dispose();
             _solarOptimizerService = null;
         }
-        _watchdog.Unregister(this);
         base.Stop();
     }
 
     protected override DateTimeOffset GetNextOccurrence()
     {
-        return DateTimeOffsetProvider.Now.AddMilliseconds(_interval);
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
+    }
+
+    protected override int GetInterval()
+    {
+        return _intervalms;
     }
 
     protected override Task DoBackgroundWork()
@@ -118,11 +120,10 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
         try
         {
             _chargePoint.UpdateMaxCurrent(l1, l2, l3);
-            _watchdog.Tick(this);
         }
         catch (CommunicationException ce)
         {
-            Logger.LogError(ce, "while update max current");
+            Logger.LogError("CommunicationException {Message}, while update max current", ce.Message);
         }
         return Task.CompletedTask;
     }
@@ -168,10 +169,13 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
             {
 
                 var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
+                var sortedCosts = e.Costs.OrderBy((c) => c.Timestamp).ToArray();                
 
                 var transaction = new ChargingTransaction
                 {
                     Timestamp = DateTimeProvider.Now,
+                    Start = e.Start,
+                    End = e.End,
                     EnergyDelivered = (double)energyDelivered,
                     Cost = (double)e.Cost,
                     Price = (double)(e.Cost / energyDelivered)
@@ -179,7 +183,7 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
 
                 LoggerChargingcost.Debug(transaction.ToString());
 
-                foreach (var c in e.Costs)
+                foreach (var c in sortedCosts)
                 {
                     var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.01m;
                     var detail = new CostDetail()

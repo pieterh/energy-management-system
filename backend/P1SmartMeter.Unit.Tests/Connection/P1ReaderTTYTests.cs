@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO.Ports;
+using EMS.Library;
 using Moq;
 using P1SmartMeter.Connection;
 using P1SmartMeter.Connection.Factories;
@@ -13,7 +14,9 @@ namespace P1ReaderUnitTests
         [Fact]
         public void CreateAndDispose()
         {
-            var r = new P1ReaderTTY("/dev/usb");
+            var mock = SetupMock();
+            var watchdockMock = mock.watchdog;
+            var r = new P1ReaderTTY("/dev/usb", watchdockMock.Object);
             r.Disposed.Should().BeFalse();
             r.Dispose();
             r.Disposed.Should().BeTrue();
@@ -23,7 +26,10 @@ namespace P1ReaderUnitTests
         [SuppressMessage("", "S3966")]
         public void CreateAndDoubleDispose()
         {
-            var r = new P1ReaderTTY("/dev/usb");
+            var mock = SetupMock();
+            var watchdockMock = mock.watchdog;
+
+            var r = new P1ReaderTTY("/dev/usb", watchdockMock.Object);
             r.Disposed.Should().BeFalse();
             r.Dispose();
             r.Disposed.Should().BeTrue();
@@ -37,8 +43,9 @@ namespace P1ReaderUnitTests
             var mock = SetupMock();
             var serialPortFactoryMock = mock.serialPortFactory;
             var serialPortMock = mock.serialPort;
+            var watchdockMock = mock.watchdog;
 
-            var r = new P1ReaderTTY("/dev/usb", serialPortFactoryMock.Object);
+            var r = new P1ReaderTTY("/dev/usb", watchdockMock.Object, serialPortFactoryMock.Object);
             var token = new CancellationToken();
             await r.StartAsync(token).ConfigureAwait(false);
 
@@ -55,8 +62,9 @@ namespace P1ReaderUnitTests
             var mock = SetupMock();
             var serialPortFactoryMock = mock.serialPortFactory;
             var serialPortMock = mock.serialPort;
+            var watchdockMock = mock.watchdog;
 
-            var r = new P1ReaderTTY("/dev/usb", serialPortFactoryMock.Object);
+            var r = new P1ReaderTTY("/dev/usb", watchdockMock.Object, serialPortFactoryMock.Object);
             var token = new CancellationToken();
             await r.StartAsync(token).ConfigureAwait(false);
             await Task.Delay(500).ConfigureAwait(false);
@@ -76,8 +84,9 @@ namespace P1ReaderUnitTests
             var mock = SetupMock();
             var serialPortFactoryMock = mock.serialPortFactory;
             var serialPortMock = mock.serialPort;
+            var watchdockMock = mock.watchdog;
 
-            var r = new P1ReaderTTY("/dev/usb", serialPortFactoryMock.Object);
+            var r = new P1ReaderTTY("/dev/usb", watchdockMock.Object, serialPortFactoryMock.Object);
             var token = new CancellationToken();
             await r.StartAsync(token).ConfigureAwait(false);
 
@@ -98,13 +107,15 @@ namespace P1ReaderUnitTests
             r.Disposed.Should().BeTrue();
         }
 
-        private static (Mock<ISerialPortFactory> serialPortFactory, Mock<ISerialPort> serialPort) SetupMock()
+        private static (Mock<ISerialPortFactory> serialPortFactory, Mock<ISerialPort> serialPort, Mock<IWatchdog> watchdog) SetupMock()
         {
             Mock<ISerialPortFactory> serialPortFactory = new Mock<ISerialPortFactory>();
             Mock<ISerialPort> serialPort = new Mock<ISerialPort>();
+            Mock<IWatchdog> watchdog = new Mock<IWatchdog>();
 
             serialPortFactory.As<ISerialPortFactory>().Setup<ISerialPort>(s => s.CreateSerialPort(It.IsAny<string>())).Returns(serialPort.Object);
-            return (serialPortFactory, serialPort);
+
+            return (serialPortFactory, serialPort, watchdog);
         }
     }
 }

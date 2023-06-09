@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using EMS.Library;
 using Moq;
 using Moq.Protected;
 using P1SmartMeter.Connection;
@@ -15,7 +16,8 @@ namespace P1ReaderUnitTests
         [Fact]
         public void CreateAndDispose()
         {
-            var r = new P1ReaderLAN("localhost", 8080);
+            var w = new Mock<IWatchdog>();
+            var r = new P1ReaderLAN("localhost", 8080, w.Object);
             r.Disposed.Should().BeFalse();
             r.Dispose();
             r.Disposed.Should().BeTrue();
@@ -25,7 +27,8 @@ namespace P1ReaderUnitTests
         [SuppressMessage("", "S3966")]
         public void CreateAndDoubleDispose()
         {
-            var r = new P1ReaderLAN("localhost", 8080);
+            var w = new Mock<IWatchdog>();
+            var r = new P1ReaderLAN("localhost", 8080, w.Object);
             r.Disposed.Should().BeFalse();
             r.Dispose();
             r.Disposed.Should().BeTrue();
@@ -44,7 +47,8 @@ namespace P1ReaderUnitTests
             // ConnectAsync will indicate no data pending
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
 
-            var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
 
             r.Disposed.Should().BeFalse();
             r.Connect().Should().BeTrue();
@@ -68,7 +72,8 @@ namespace P1ReaderUnitTests
             // ConnectAsync will indicate no data pending
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
 
-            var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             var token = new CancellationToken();
             await r.StartAsync(token).ConfigureAwait(false);
 
@@ -104,7 +109,8 @@ namespace P1ReaderUnitTests
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
             socketMock.Setup<bool>(s => s.ReceiveAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
 
-            using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            using var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             DataArrivedEventArgs? lastEvent = null;
             r.DataArrived += (object? sender, DataArrivedEventArgs e) =>
             {
@@ -137,7 +143,8 @@ namespace P1ReaderUnitTests
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(false);
             socketMock.Setup<bool>(s => s.ReceiveAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
 
-            using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            using var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             DataArrivedEventArgs? lastEvent = null;
             r.DataArrived += (object? sender, DataArrivedEventArgs e) =>
             {
@@ -185,7 +192,8 @@ namespace P1ReaderUnitTests
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(false);
             socketMock.Setup<bool>(s => s.ReceiveAsync(It.IsAny<ISocketAsyncEventArgs>())).Returns(true);
 
-            using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            using var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             DataArrivedEventArgs? lastEvent = null;
             r.DataArrived += (object? sender, DataArrivedEventArgs e) =>
             {
@@ -239,7 +247,8 @@ namespace P1ReaderUnitTests
 
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Throws<SocketException>(() => { throw new SocketException((int)SocketError.TimedOut); });
 
-            using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            using var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             r.Connect().Should().BeFalse();
         }
 
@@ -252,7 +261,8 @@ namespace P1ReaderUnitTests
 
             socketMock.Setup<bool>(s => s.ConnectAsync(It.IsAny<ISocketAsyncEventArgs>())).Throws<SocketException>(() => { throw new SocketException((int)SocketError.HostUnreachable); });
 
-            using var r = new P1ReaderLAN("127.0.0.1", 8080, socketFactory.Object);
+            var w = new Mock<IWatchdog>();
+            using var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             r.Connect().Should().BeFalse();
         }
 
@@ -278,10 +288,19 @@ namespace P1ReaderUnitTests
 
         internal class P1ReaderTester : P1Reader
         {
+            public P1ReaderTester(IWatchdog watchdog) : base(watchdog)
+            {
+            }
+
             public void SomeData(string data)
             {
                 var dae = new DataArrivedEventArgs(data);
                 this.OnDataArrived(dae);
+            }
+
+            protected override Task DoBackgroundWork()
+            {
+                throw new NotImplementedException();                
             }
 
             protected override Task Start()

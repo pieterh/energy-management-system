@@ -8,6 +8,7 @@ using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Cron;
 using EMS.Library.JSon;
 using EMS.Library.TestableDateTime;
+using EMS.Library.Exceptions;
 
 namespace EPEXSPOT;
 
@@ -20,11 +21,10 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
     private const string _schemaResourceName = "getapxtariffs.schema.json";
 
     private readonly Crontab _cron = new("05 * * * *");
-    private readonly int _intervalSeconds = 62 * 60;
+    private const int _intervalms = 60 * 60 * 1000;
 
     private readonly string _endpoint;              // ie. https://mijn.easyenergy.com
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IWatchdog _watchdog;
 
     internal const string getapxtariffsMethod = "/nl/api/tariff/getapxtariffs";
     private const Decimal INKOOP = 0.01331m;     // inkoopkosten per kWh (incl. btw)
@@ -45,7 +45,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
         JsonHelpers.LoadAndRegisterSchema(_schemaUri, _schemaResourceName);
     }
 
-    public EPEXSPOTService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog)
+    public EPEXSPOTService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog) : base(watchdog)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(httpClientFactory);
@@ -55,19 +55,6 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
 
         _endpoint = !string.IsNullOrWhiteSpace(config.EndPoint) ? config.EndPoint : string.Empty;
         _httpClientFactory = httpClientFactory;
-        _watchdog = watchdog;
-    }
-
-    protected override Task Start()
-    {
-        _watchdog.Register(this, _intervalSeconds);
-        return base.Start();
-    }
-
-    protected override void Stop()
-    {
-        base.Stop();
-        _watchdog.Unregister(this);
     }
 
     protected override DateTimeOffset GetNextOccurrence()
@@ -77,13 +64,24 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
         return nextRun;
     }
 
-    protected override Task DoBackgroundWork()
+    protected override int GetInterval()
     {
-        HandleWork();
-        return Task.CompletedTask;
+        return _intervalms;
     }
 
-    internal void HandleWork()
+    protected override async Task DoBackgroundWork()
+    {
+        try
+        {
+            await HandleWork().ConfigureAwait(false);
+        }
+        catch (CommunicationException ce)
+        {
+            Logger.Error($"CommunicationException {ce.Message}");
+        }        
+    }
+
+    internal async Task HandleWork()
     {
         _tariffs = RemoveOld(_tariffs);
 
@@ -91,7 +89,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
         if (_tariffs.Length > 12) return;
 
         // grab more tariffs 
-        var t = GetTariff(DateTimeProvider.Now.Date, DateTimeProvider.Now.Date.AddDays(2)).Result;
+        var t = await GetTariff(DateTimeProvider.Now.Date, DateTimeProvider.Now.Date.AddDays(2)).ConfigureAwait(false);
 
         if (t != null && t.Length > 0)
             _tariffs = RemoveOld(t);
@@ -124,9 +122,16 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
     /// <returns></returns>
     internal async Task<Tariff[]> GetTariff(DateTime start, DateTime end)
     {
-        var getapxtariffsUri = new Uri(new Uri(_endpoint), getapxtariffsMethod);
-        using var client = _httpClientFactory.CreateClient();
-        return await GetTariff(client, getapxtariffsUri, start, end).ConfigureAwait(false);
+        try
+        {
+            var getapxtariffsUri = new Uri(new Uri(_endpoint), getapxtariffsMethod);
+            using var client = _httpClientFactory.CreateClient();
+            return await GetTariff(client, getapxtariffsUri, start, end).ConfigureAwait(false);
+        }
+        catch (HttpRequestException hre)
+        {
+            throw new CommunicationException($"Error while retrieving tariff {hre.Message}", hre);
+        }
     }
 
     public async Task<DateTime> GetTariffLastTimestamp()

@@ -15,6 +15,24 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     public Task? BackgroundTask { get { return _backgroundTask; } }
     public Task? ExecuteTask { get { return _backgroundTask; } }
 
+    private readonly IWatchdog _watchdog;
+    public IWatchdog Watchdog => _watchdog;
+
+
+    private bool _isRestarting;
+    protected BackgroundWorker()
+    {
+        if (this is IWatchdog)
+            _watchdog = (IWatchdog)this;
+        else
+            throw new EMS.Library.Exceptions.ApplicationException("Only watchdog can be a worker without a wathdog ;-)");
+    }
+
+    protected BackgroundWorker(IWatchdog watchdog)
+    {
+        _watchdog = watchdog;
+    }
+
     protected abstract Task DoBackgroundWork();
     protected override void Dispose(bool disposing)
     {
@@ -71,6 +89,9 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
 
     protected override Task Start()
     {
+        if (!_isRestarting)
+            Watchdog.Register(this, GetInterval());
+
         _backgroundTask = Task.Run(async () =>
         {
             Logger.Trace("BackgroundWorker {name} running", this.GetType().Name);
@@ -81,7 +102,7 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
             catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Unhandled exception in BackgroundTask");
+                Logger.Error(ex, "Unhandled exception in BackgroundTask" + Environment.NewLine);
                 throw;
             }
 
@@ -90,8 +111,8 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
             {
                 Logger.Info("Canceled - {name}", this.GetType().Name);
             }
-
-
+            else
+                Watchdog.Tick(this);
         }, CancellationToken)
         .ContinueWith((c, e) =>
             {
@@ -109,24 +130,65 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     protected override void Stop()
     {
         TokenSource?.Cancel();
-
+        if (!_isRestarting)
+            Watchdog.Unregister(this);
         TaskTools.Wait(_backgroundTask, 2000);
+        DisposeBackgroundTask();
     }
 
-    public virtual async Task Restart()
+    public virtual async Task Restart(bool useSubtask = true)
     {
-        Logger.Warn("Restarting - {name}", this.GetType().Name);
-        await StopAsync(CancellationToken.None).ConfigureAwait(false);
-        await StartAsync().ConfigureAwait(false);
+        if (useSubtask)
+        {
+            _ = Task.Factory.StartNew(action: async () =>
+            {
+                Logger.Warn("Restarting - {name} - in new task", this.GetType().Name);
+                await Restarter().ConfigureAwait(false);
+            }, CancellationToken, TaskCreationOptions.None, TaskScheduler.Current);
+        }
+        else
+            await Restarter().ConfigureAwait(false);
+    }
+
+    private async Task Restarter()
+    {
+        if (!CancellationToken.IsCancellationRequested)
+        {
+            Logger.Warn("Restarting - {name}", this.GetType().Name);
+            try
+            {
+                _isRestarting = true;
+                await StopAsync(CancellationToken.None).ConfigureAwait(false);
+                await StartAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                _isRestarting = false;
+            }
+        }
+        else
+            Logger.Warn("Restarting - {name} - cancellation is already requested", this.GetType().Name);
+    }
+
+
+    private const int _intervalms = 2500;
+    /// <summary>
+    /// The default next occurence is within 2500ms from now
+    /// </summary>
+    protected virtual DateTimeOffset GetNextOccurrence()
+    {
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
     }
 
     /// <summary>
     /// The default interval is 2500ms
     /// </summary>
-    protected virtual DateTimeOffset GetNextOccurrence()
+    /// <returns></returns>
+    protected virtual int GetInterval()
     {
-        return DateTimeOffsetProvider.Now.AddMilliseconds(2500);
+        return _intervalms;
     }
+
 
     private async Task Run()
     {
@@ -134,6 +196,9 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
         do
         {
             await DoBackgroundWork().ConfigureAwait(false);
+
+            if (!CancellationToken.IsCancellationRequested)
+                Watchdog.Tick(this);
 
             var nextRun = GetNextOccurrence();
             var sleeptimeMs = (int)((nextRun.UtcTicks - DateTimeOffsetProvider.Now.UtcTicks) / 10000);

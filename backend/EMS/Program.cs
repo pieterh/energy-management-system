@@ -236,8 +236,13 @@ static class Program
         DbConfig dbConfig = new();
         builder.Configuration.GetSection("db").Bind(dbConfig);
         HEMSContext.DbPath = dbConfig.name;
-        using var a = new HEMSContext();
-        a.Database.Migrate();
+
+        using (var a = new HEMSContext())
+        {
+            a.Database.Migrate();
+            var t = a.ChargingTransactions.OrderBy(x => x.Timestamp).Last();
+            Logger.Info("Last {transaction}", t);
+        }
 
         builder.Services.AddDbContext<DataProtectionKeyContext>(o =>
         {

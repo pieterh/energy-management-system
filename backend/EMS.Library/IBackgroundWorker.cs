@@ -7,6 +7,6 @@ namespace EMS.Library
     public interface IBackgroundWorker 
     {
         public Task? BackgroundTask { get; }
-        public Task Restart();
+        public Task Restart(bool useSubtask = true);
     }
 }

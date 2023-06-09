@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using EMS.Library;
-using EMS.Library.TestableDateTime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using EMS.Library;
+using EMS.Library.TestableDateTime;
+using EMS.Library.Cron;
 
 namespace EMS;
 
@@ -13,6 +14,14 @@ public class Watchdog : BackgroundWorker, IWatchdog
 
     internal readonly ConcurrentDictionary<IBackgroundWorker, Info> _workersToWatch = new ConcurrentDictionary<IBackgroundWorker, Info>();
     internal DateTimeOffset _lastCheck = DateTimeOffsetProvider.Now;
+
+    private readonly Crontab _cron = new Crontab("0,30 * * * * *", true);
+    private readonly int _intervalms = 30 * 1000;
+
+    public Watchdog() : base()
+    {
+
+    }
 
     public void Register(IBackgroundWorker bgWorkerToWatch, int interval)
     {
@@ -38,7 +47,7 @@ public class Watchdog : BackgroundWorker, IWatchdog
     {
         if (_workersToWatch.TryGetValue(bgWorkerTicked, out var info))
         {
-            info.LastSeen = DateTimeOffsetProvider.Now;
+            info.LastSeen = DateTimeOffsetProvider.Now.UtcDateTime;
         }
         else
         {
@@ -48,33 +57,56 @@ public class Watchdog : BackgroundWorker, IWatchdog
         }
     }
 
-    /// <summary>
-    /// Run every minute to check on the background workers
-    /// </summary>
     protected override DateTimeOffset GetNextOccurrence()
     {
-        return DateTimeOffsetProvider.Now.AddMilliseconds(120 * 1000);
+        var now = DateTimeOffset.Now;
+        var nextRun = _cron.GetNextOccurrence(now);
+        return nextRun;
+    }
+
+    protected override int GetInterval()
+    {
+        return _intervalms;
     }
 
     protected override async Task DoBackgroundWork()
     {
-        var now = DateTimeOffsetProvider.Now;
-        var silentWorkers = _workersToWatch.Where((x) => (now - x.Value.LastSeen).TotalSeconds > x.Value.ExpectedIntervalSeconds).ToArray();
+        await PerformCheck().ConfigureAwait(false);
+    }
+
+    internal async Task PerformCheck()
+    {
+        var now = DateTimeOffsetProvider.Now.UtcDateTime;
+        var silentWorkers = _workersToWatch.Where((x) => (now - x.Value.LastSeen).TotalMilliseconds > x.Value.ExpectedIntervalMilliseconds).ToArray();
 
         if (silentWorkers.Any())
             Logger.Error("Watchdog found faulty tasks. Restarting them.");
+        else
+            Logger.Info("Watchdog has {nr} tasks checked.", _workersToWatch.Count);
 
-        foreach (IBackgroundWorker worker in silentWorkers.Select((x) => x.Key))
+        foreach (var silentWorker in silentWorkers)
         {
-            _workersToWatch.Remove(worker, out _);
-            Logger.Error("Watchdog restarting => {worker}", worker.GetType().Name);
-            await worker.Restart().ConfigureAwait(false);
+#pragma warning disable CA1031 // we need to make sure no exception gets through
+            var worker = silentWorker.Key;
+            try
+            {                
+                Logger.Error("Watchdog restarting => {worker}, {seen}, {expected}, {actual}",
+                    worker.GetType().Name, silentWorker.Value.LastSeen.ToString("O"),
+                    silentWorker.Value.ExpectedIntervalMilliseconds, (now - silentWorker.Value.LastSeen).TotalMilliseconds);
+
+                await worker.Restart(false).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "There was an error restarting failed worker {worker}" + Environment.NewLine, worker.GetType().Name);
+            }
+#pragma warning restore
         }
         _lastCheck = now;
     }
 }
 
-internal record Info(DateTimeOffset FirstSeen, int RequestedIntervalSeconds, int ExpectedIntervalSeconds)
+internal record Info(DateTimeOffset FirstSeen, int RequestedIntervalMilliseconds, int ExpectedIntervalMilliseconds)
 {
     internal DateTimeOffset LastSeen { get; set; } = FirstSeen;
 }

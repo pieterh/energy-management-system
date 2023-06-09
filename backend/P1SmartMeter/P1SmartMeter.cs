@@ -37,8 +37,6 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
     private IP1Reader? _reader;
 
     private readonly P1RelayServer _relayServer;
-    private readonly IWatchdog _watchdog;
-    private readonly int _intervalSeconds = 30;
 
     public SmartMeterMeasurementBase? LastMeasurement { get => Measurement; }
 
@@ -69,7 +67,7 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
     }
 
 
-    public SmartMeter(ILogger<SmartMeter> logger, InstanceConfiguration config, P1RelayServer relayServer, IWatchdog watchdog)
+    public SmartMeter(ILogger<SmartMeter> logger, InstanceConfiguration config, P1RelayServer relayServer, IWatchdog watchdog): base(watchdog)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(config);
@@ -78,7 +76,6 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
 
         Logger = logger;
         _relayServer = relayServer;
-        _watchdog = watchdog;
         Logger.LogInformation("SmartMeter({Cfg})", config.ToString().Replace(Environment.NewLine, " ", StringComparison.Ordinal));
 
         if (string.CompareOrdinal(config.Type.ToString(), "LAN") == 0)
@@ -129,14 +126,12 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
 
         await _reader.StartAsync(CancellationToken).ConfigureAwait(false);
 
-        _watchdog.Register(this, _intervalSeconds);
         await base.Start().ConfigureAwait(false);
     }
 
     protected override async void Stop()
     {
         base.Stop();
-        _watchdog.Unregister(this);
 
         if (_reader is not null)
             await _reader.StopAsync(CancellationToken).ConfigureAwait(false);
@@ -154,9 +149,15 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
         _relayBlock = null;
     }
 
+    private const int _intervalms = 60 * 1000;
     protected override DateTimeOffset GetNextOccurrence()
     {
-        return DateTimeOffsetProvider.Now.AddMilliseconds(60 * 1000);
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
+    }
+
+    protected override int GetInterval()
+    {
+        return _intervalms;
     }
 
     protected override Task DoBackgroundWork()
@@ -198,8 +199,11 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
             var m = new Reading.Measurement(x) { Received = DateTimeProvider.Now };
 
             Logger.LogDebug("Message {Measurement}", m);
+
+            double voltageWarn = 249.5;
+            if (m.VoltageL1 >= voltageWarn || m.VoltageL2 >= voltageWarn || m.VoltageL3 >= voltageWarn)
+                Logger.LogWarning("Check voltage {Warn} => {V1}, {V2}, {V3}", voltageWarn, m.VoltageL1, m.VoltageL2, m.VoltageL3);
             Measurement = m;
-            _watchdog.Tick(this);
         });
 
         _secondBlock.LinkTo(_lastBlock);
@@ -215,21 +219,20 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
             _broadcastRaw.LinkTo(_relayBlock);
         }
 
-
         return _firstBlock;
     }
 
-    static IP1Reader CreateMeterReader(ConnectionType connectionType, string? host, int? port, string? usbPort)
+    IP1Reader CreateMeterReader(ConnectionType connectionType, string? host, int? port, string? usbPort)
     {
         switch (connectionType)
         {
             case ConnectionType.LAN:
                 if (string.IsNullOrWhiteSpace(host)) throw new ArgumentOutOfRangeException(nameof(connectionType), "Missing hostname for ConnectionType.LAN");
                 if (!port.HasValue) throw new ArgumentOutOfRangeException(nameof(connectionType), "Missing port for ConnectionType.LAN");
-                return new P1ReaderLAN(host, port.Value);
+                return new P1ReaderLAN(host, port.Value, Watchdog);
             case ConnectionType.TTY:
                 if (string.IsNullOrWhiteSpace(usbPort)) throw new ArgumentOutOfRangeException(nameof(connectionType), "Missing usbport for ConnectionType.TTY");
-                return new P1ReaderTTY(usbPort);
+                return new P1ReaderTTY(usbPort, Watchdog);
             default:
                 throw new ArgumentOutOfRangeException(nameof(connectionType), "Unhandled conntection type");
         }

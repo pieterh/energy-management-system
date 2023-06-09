@@ -14,6 +14,7 @@ using EMS.Library.TestableDateTime;
 
 using AlfenNG9xx.Modbus;
 using AlfenNG9xx.Model;
+using System.Net.Sockets;
 
 namespace AlfenNG9xx
 {
@@ -199,7 +200,14 @@ namespace AlfenNG9xx
                     Logger.Error("Received an InvalidOperationException, we try later again", ioe);
                     Logger.Error("Just to be sure, we are disposing the connection");
                     DisposeModbusMaster();
-                    throw new CommunicationException("InvalidOperationException", ioe);
+                    throw new CommunicationException($"{ioe.Message}", ioe);
+                }
+                catch(SocketException se)
+                {
+                    Logger.Error($"SocketException {se.Message}, we try later again");
+                    Logger.Error("Disposing connection");
+                    DisposeModbusMaster();
+                    throw new CommunicationException($"{se.Message}", se);
                 }
                 catch (Exception e) when (e.Message.StartsWith("Partial packet exception", StringComparison.OrdinalIgnoreCase))
                 {
@@ -236,6 +244,13 @@ namespace AlfenNG9xx
                     Logger.Info($"UpdateMaxCurrent {maxCurrent}, {phases}");
                     _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters((float)maxCurrent));
                     _modbusMaster.WriteRegister(1, 1215, phases);
+                }
+                catch (SocketException se)
+                {
+                    Logger.Error($"SocketException {se.Message}, we try later again");
+                    Logger.Error("Disposing connection");
+                    DisposeModbusMaster();
+                    throw new CommunicationException($"{se.Message}", se);
                 }
                 catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.OrdinalIgnoreCase))
                 {

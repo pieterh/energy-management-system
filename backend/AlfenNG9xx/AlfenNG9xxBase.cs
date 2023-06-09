@@ -10,6 +10,7 @@ using EMS.Library.Exceptions;
 using EMS.Library.TestableDateTime;
 
 using AlfenNG9xx.Model;
+using System;
 
 namespace AlfenNG9xx;
 
@@ -22,37 +23,44 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
     public SocketMeasurementBase? LastSocketMeasurement { get; protected set; }
     public ChargeSessionInfoBase ChargeSessionInfo { get { return ChargingSession.ChargeSessionInfo; } }
 
+
     public event EventHandler<ChargingStatusUpdateEventArgs> ChargingStatusUpdate = delegate { };
     public event EventHandler<ChargingStateEventArgs> ChargingStateUpdate = delegate { };
     private readonly IPriceProvider _priceProvider;
-    private readonly IWatchdog _watchdog;
 
     protected abstract void PerformUpdateMaxCurrent(double maxCurrent, ushort phases);
     public abstract ProductInformation ReadProductInformation();
     public abstract EMS.Library.StationStatus ReadStationStatus();
     public abstract SocketMeasurement ReadSocketMeasurement(byte socket);
 
-
-    [SuppressMessage("", "CA1030")]
-    protected void RaiseChargingStatusUpdateEvent(ChargingStatusUpdateEventArgs eventArgs)
-    {
-        ChargingStatusUpdate.Invoke(this, eventArgs);
-    }
-
-    [SuppressMessage("", "CA1030")]
-    protected void RaiseChargingStateEvent(ChargingStateEventArgs eventArgs)
-    {
-        ChargingStateUpdate.Invoke(this, eventArgs);
-    }
-
-    protected AlfenBase(InstanceConfiguration config, IPriceProvider priceProvider, IWatchdog watchdog)
+    protected AlfenBase(InstanceConfiguration config, IPriceProvider priceProvider, IWatchdog watchdog) : base(watchdog)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(priceProvider);
         ArgumentNullException.ThrowIfNull(watchdog);
         Logger.Info($"Alfen({config.ToString().Replace(Environment.NewLine, " ", StringComparison.OrdinalIgnoreCase)})");
         _priceProvider = priceProvider;
-        _watchdog = watchdog;
+
+        ChargingSession.ChargingStateUpdate += ChargingSession_ChargingStateUpdate;
+        ChargingSession.ChargingStatusUpdate += ChargingSession_ChargingStatusUpdate;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        ChargingSession.ChargingStateUpdate -= ChargingSession_ChargingStateUpdate;
+        ChargingSession.ChargingStatusUpdate -= ChargingSession_ChargingStatusUpdate;
+    }
+
+    private void ChargingSession_ChargingStateUpdate(object? sender, ChargingStateEventArgs eventArgs)
+    {
+        ChargingStateUpdate.Invoke(this, eventArgs);
+    }
+
+    private void ChargingSession_ChargingStatusUpdate(object? sender, ChargingStatusUpdateEventArgs eventArgs)
+    {
+        ChargingStatusUpdate.Invoke(this, eventArgs);
     }
 
     /// <summary>
@@ -108,18 +116,17 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
     protected override Task Start()
     {
 #if DEBUG
-        ShowProductInformation();
-        ShowStationStatus();
-        ShowSocketMeasurement();
+        try
+        {
+            ShowProductInformation();
+            ShowStationStatus();
+            ShowSocketMeasurement();
+        }catch(CommunicationException ce)
+        {
+            Logger.Error("CommunicationException {Message}", ce.Message);
+        }
 #endif
-        _watchdog.Register(this, 120);
         return base.Start();
-    }
-
-    protected override void Stop()
-    {        
-        base.Stop();
-        _watchdog.Unregister(this);
     }
 
     protected static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
@@ -131,9 +138,14 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
         catch (TaskCanceledException) { /* ignoring */ }
     }
 
+    protected override int GetInterval()
+    {
+        return 60*1000;
+    }
+
     protected override DateTimeOffset GetNextOccurrence()
     {
-        return DateTimeOffsetProvider.Now.AddMilliseconds(1250);
+        return DateTimeOffsetProvider.Now.AddMilliseconds(500);
     }
 
     protected override Task DoBackgroundWork()
@@ -141,11 +153,10 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
         try
         {
             HandleWork();
-            _watchdog.Tick(this);
         }
         catch (CommunicationException ce)
         {
-            Logger.Error(ce, "Communication exception, we try later again\n");
+            Logger.Error("Communication exception: {msg}, we try later again", ce.Message);
         }
         return Task.CompletedTask;
     }
@@ -157,25 +168,7 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
 
         var tariff = _priceProvider.GetTariff();
         ChargingSession.UpdateSession(sm, tariff);
-
-        var chargingStateChanged = LastSocketMeasurement?.Mode3State != sm.Mode3State;
-
         LastSocketMeasurement = sm;
-        RaiseChargingStatusUpdateEvent(new ChargingStatusUpdateEventArgs(sm));
-
-        if (chargingStateChanged)
-        {
-            var sessionEnded = ChargingSession.ChargeSessionInfo.SessionEnded;
-            var energyDelivered = ChargingSession.ChargeSessionInfo.EnergyDelivered;
-            var cost = ChargingSession.ChargeSessionInfo.Cost;
-            var costs = ChargingSession.ChargeSessionInfo.Costs;
-
-            foreach (Cost c in ChargingSession.ChargeSessionInfo.Costs)
-            {
-                Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff?.TariffUsage);
-            }
-            RaiseChargingStateEvent(new ChargingStateEventArgs(sm, sessionEnded, energyDelivered, cost, costs));
-        }
     }
 
     internal static string PlatformTypeToModel(string platformType) => platformType switch

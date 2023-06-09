@@ -14,28 +14,14 @@ public class SolarOptimizer : BackgroundWorker
     static decimal _minTariffCutOff = (decimal)-0.126;
     private readonly IPriceProvider _priceProvider;
     private readonly ISolar _solar;
-    private readonly IWatchdog _watchdog;
 
     private readonly Crontab _cron = new Crontab("55 * * * *");
-    private readonly int _intervalSeconds = 62 * 60;
+    private readonly int _intervalSeconds = 62 * 60 * 1000;
 
-    public SolarOptimizer(IPriceProvider priceProvider, ISolar solar, IWatchdog watchdog)
+    public SolarOptimizer(IPriceProvider priceProvider, ISolar solar, IWatchdog watchdog) : base(watchdog)
     {
         _priceProvider = priceProvider;
         _solar = solar;
-        _watchdog = watchdog;
-    }
-
-    protected override Task Start()
-    {
-        _watchdog.Register(this, _intervalSeconds);
-        return base.Start();
-    }
-
-    protected override void Stop()
-    {
-        base.Stop();
-        _watchdog.Unregister(this);
     }
 
     protected override DateTimeOffset GetNextOccurrence()
@@ -43,6 +29,11 @@ public class SolarOptimizer : BackgroundWorker
         var now = DateTimeOffset.Now;
         var nextRun = _cron.GetNextOccurrence(now);
         return nextRun;
+    }
+
+    protected override int GetInterval()
+    {
+        return _intervalSeconds;
     }
 
     internal async Task PerformCheck()
@@ -80,11 +71,17 @@ public class SolarOptimizer : BackgroundWorker
         try
         {
             await PerformCheck().ConfigureAwait(false);
-            _watchdog.Tick(this);
         }
         catch (CommunicationException ce)
         {
             Logger.Error("There was a problem communicating {message}", ce.Message);
+        }
+        catch (TaskCanceledException)
+        {
+            if (CancellationToken.IsCancellationRequested)
+                Logger.Info("Task cancelled");
+            else
+                Logger.Warn("Unexpected task cancellation");
         }
     }
 }
