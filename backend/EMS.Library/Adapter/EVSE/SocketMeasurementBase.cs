@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+
 namespace EMS.Library.Adapter.EVSE
 {
     public enum Mode3State
@@ -15,21 +17,36 @@ namespace EMS.Library.Adapter.EVSE
         UnknownState = -1
     }
 
+
+
     public enum Phases
     {
         Unknown = 0,
         One = 1,
-        Three = 3        
+        Three = 3
     }
 
     public class SocketMeasurementBase : ICurrentMeasurement
     {
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private static Dictionary<Mode3State, string> Mode3States = new Dictionary<Mode3State, string>() {
+            { Mode3State.A, "Standby" },
+            { Mode3State.B1, "Vehicle detected" },
+            { Mode3State.B2, "Vehicle detected (PWM signal applied)" },
+            { Mode3State.C1, "Ready Charging" },
+            { Mode3State.C2, "Charging (PWM signal applied)" },
+            { Mode3State.D1, "Ready with ventilation" },
+            { Mode3State.D2, "Charging with ventilation (PWM signal applied)" },
+            { Mode3State.E, "No power (shut off)" },
+            { Mode3State.F, "Error" }
+        };
 
         public UInt16 MeterState { get; set; }
         public UInt64 MeterTimestamp { get; set; }
 
         public Mode3State Mode3State { get; set; }
+        public string Mode3StateText { get { return Mode3States[Mode3State]; } }
+
         public DateTime LastChargingStateChanged { get; set; }
 
         public float Voltage { get; set; }
@@ -77,7 +94,10 @@ namespace EMS.Library.Adapter.EVSE
             }
         }
 
-        public string Mode3StateMessage { get {
+        public string Mode3StateMessage
+        {
+            get
+            {
                 switch (Mode3State)
                 {
                     case Mode3State.A: return "Standby";

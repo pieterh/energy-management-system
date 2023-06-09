@@ -14,8 +14,9 @@ public abstract class BackgroundService : IBackgroundService
     public bool Disposed { get; protected set; }
 
     private CancellationToken _parentToken = CancellationToken.None;
+
     private CancellationTokenSource? _tokenSource = new();
-    public CancellationTokenSource? TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
+    public CancellationTokenSource? TokenSource { get => _tokenSource ; protected set => _tokenSource = value; }
     public CancellationToken CancellationToken { get => _tokenSource?.Token ?? CancellationToken.None; }
 
     protected abstract Task Start();
@@ -84,12 +85,15 @@ public abstract class BackgroundService : IBackgroundService
 
     protected Task StartAsync()
     {
-        _parentToken.ThrowIfCancellationRequested(); // not starting anymore
-
+        // not starting anymore if already cancellation requested
+        if (_parentToken.IsCancellationRequested || (TokenSource is not null && TokenSource.IsCancellationRequested))
+            return Task.CompletedTask;
+        
         DisposeTokenSource();
         TokenSource = CancellationTokenSource.CreateLinkedTokenSource(_parentToken);
 
         var task = Start();
+
         if (task.IsCompleted)
         {
             return task;
@@ -104,7 +108,7 @@ public abstract class BackgroundService : IBackgroundService
         TokenSource?.Cancel();
 
         Stop();
-
+        DisposeTokenSource();
         return Task.CompletedTask;
     }
 }

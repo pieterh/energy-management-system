@@ -1,4 +1,5 @@
 ﻿using System.IO.Ports;
+using EMS.Library;
 using P1SmartMeter.Connection.Factories;
 using P1SmartMeter.Connection.Proxies;
 
@@ -14,7 +15,7 @@ namespace P1SmartMeter.Connection
 
         private ISerialPort? _serialPort;
 
-        public P1ReaderTTY(string deviceName, ISerialPortFactory? serialPortFactory = null)
+        public P1ReaderTTY(string deviceName, IWatchdog watchdog, ISerialPortFactory? serialPortFactory = null): base(watchdog)
         {
             Logger.Trace($"Availble ports ->");
 
@@ -75,6 +76,11 @@ namespace P1SmartMeter.Connection
             Logger.Info($"BackgroundTask read {indata.Length} characters...");
 
             OnDataArrived(new DataArrivedEventArgs(indata));
+        }
+
+        protected override Task DoBackgroundWork()
+        {
+            throw new NotImplementedException();
         }
     }
 }

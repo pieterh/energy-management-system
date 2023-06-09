@@ -51,7 +51,7 @@ namespace AlfenNG9xxBase.Tests
 
 
         [Fact]
-        public void HandleWorkShouldStopProperly()
+        public async Task HandleWorkShouldStopProperly()
         {
             var w = new Mock<IWatchdog>();
             var mockAlfen = new Mock<AlfenNG9xx.AlfenBase>(new InstanceConfiguration(), new TestPriceProvider(), w.Object);
@@ -61,23 +61,18 @@ namespace AlfenNG9xxBase.Tests
             mockAlfen.Setup((x) => x.ReadSocketMeasurement(It.IsAny<byte>())).Returns(new AlfenNG9xx.Model.SocketMeasurement());
 
             using var cts = new CancellationTokenSource();
-            var t = mockAlfen.Object.StartAsync(cts.Token);
-            t.IsCompleted.Should().BeTrue("Because the service should start properly");
+            await mockAlfen.Object.StartAsync(cts.Token).ConfigureAwait(false);
 
             Thread.Sleep(800);
 
-            mockAlfen.Object.ExecuteTask?.IsCompleted.Should().BeFalse();
+            mockAlfen.Object.ExecuteTask.Should().NotBeNull();
 
-            mockAlfen.Object.StopAsync(cts.Token);
-#pragma warning disable CS8601       
-            var action = () => { Task.WaitAll(new Task[] { mockAlfen.Object.ExecuteTask }, 2000); };
-#pragma warning restore
-            
-            action.Should().Throw<AggregateException>().WithMessage("One or more errors occurred. (A task was canceled.)").WithInnerException<TaskCanceledException>();
-            
+            Assert.NotNull(mockAlfen.Object.ExecuteTask); // get rid of warning ;-)
+            mockAlfen.Object.ExecuteTask.IsCompleted.Should().BeFalse();
 
-            mockAlfen.Object.ExecuteTask?.IsCompleted.Should().BeTrue();
-            mockAlfen.Object.ExecuteTask?.IsCanceled.Should().BeTrue();
+            await mockAlfen.Object.StopAsync(cts.Token).ConfigureAwait(false);
+
+            mockAlfen.Object.ExecuteTask.Should().BeNull();
 
             mockAlfen.Object.Dispose();
             mockAlfen.Object.Disposed.Should().BeTrue();

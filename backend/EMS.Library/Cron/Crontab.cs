@@ -13,9 +13,9 @@ public class Crontab
 {
     private readonly CrontabSchedule _cs;
 
-    public Crontab(string expression)
+    public Crontab(string expression, bool includeSeconds = false)
     {
-        _cs = CrontabSchedule.Parse(expression);
+        _cs = CrontabSchedule.Parse(expression, new CrontabSchedule.ParseOptions() { IncludingSeconds = includeSeconds });
     }
 
     public DateTimeOffset GetNextOccurrence(DateTimeOffset baseTime)
