@@ -29,7 +29,6 @@ public class EnphaseService : BackgroundWorker, ISolar
 
     private readonly Uri _baseUri;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IWatchdog _watchdog;
 
     private static readonly TimeSpan TimeOut = new TimeSpan(0, 0, 0, 120, 0);
 
@@ -57,7 +56,7 @@ public class EnphaseService : BackgroundWorker, ISolar
         BackgroundServiceHelper.CreateAndStart<ISolar, EnphaseService>(services, instance.Config);
     }
 
-    public EnphaseService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog)
+    public EnphaseService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog): base(watchdog)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(httpClientFactory);
@@ -66,24 +65,39 @@ public class EnphaseService : BackgroundWorker, ISolar
         _baseUri = new Uri(config.EndPoint);
 
         _httpClientFactory = httpClientFactory;
-        _watchdog = watchdog;
     }
 
+    private const int _intervalms = 120 * 1000;
     protected override DateTimeOffset GetNextOccurrence()
     {
-        return DateTimeOffsetProvider.Now.AddMilliseconds(120000);
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
+    }
+    protected override int GetInterval()
+    {
+        return _intervalms + (90 *1000);    // interval and expected max duration of execution
     }
 
     protected override async Task DoBackgroundWork()
     {
-        var s = await GetProductionStatus(CancellationToken).ConfigureAwait(false);
-        Logger.Info("Production         {s}", s ? "Forced off" : "On");
+        try
+        {
+            var s = await GetProductionStatus(CancellationToken).ConfigureAwait(false);
+            Logger.Info("Production         {s}", s ? "Forced off" : "On");
 
-        var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
-        var sum = inverters.Sum((x) => x.LastReportWatts);
-        Logger.Info("Current production {Watts}", sum);
-
-        _watchdog.Tick(this);
+            var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
+            var sum = inverters.Sum((x) => x.LastReportWatts);
+            Logger.Info("Current production {Watts}", sum);
+        }
+        catch(CommunicationException ce)
+        {
+            Logger.Error("CommunicationException {Message}", ce.Message);
+        }
+        catch (TaskCanceledException tce) {
+            if (CancellationToken.IsCancellationRequested)
+                Logger.Info("Task cancelled");
+            else
+                Logger.Warn(tce, "Unexpected task cancellation");
+        }
     }
 
     protected override async Task Start()
@@ -95,15 +109,7 @@ public class EnphaseService : BackgroundWorker, ISolar
         Logger.Info("API Version        {ApiVersion}", i.Device.ApiVersion);
         Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
         Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
-
-        _watchdog.Register(this, 200);
         await base.Start().ConfigureAwait(false);
-    }
-
-    protected override void Stop()
-    {        
-        base.Stop();
-        _watchdog.Unregister(this);
     }
 
     #region ISolar

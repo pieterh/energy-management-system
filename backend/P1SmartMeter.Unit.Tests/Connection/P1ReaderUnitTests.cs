@@ -1,4 +1,5 @@
 ﻿using System;
+using EMS.Library;
 using Moq;
 using Moq.Protected;
 using P1SmartMeter.Connection;
@@ -10,14 +11,16 @@ namespace P1ReaderUnitTests
         [Fact]
         public void DoesNotThrowExceptionWhenNoSubscribersToDataArrivedEvent()
         {
-            using var tester = new P1ReaderTester();
+            var w = new Mock<IWatchdog>();
+            using var tester = new P1ReaderTester(w.Object);
             Action a = () => tester.SomeData("qwerty");
             a.Should().NotThrow();
         }
         [Fact]
         public void ShouldRaiseEventWhenDataArrvives()
         {
-            using var tester = new P1ReaderTester();
+            var w = new Mock<IWatchdog>();
+            using var tester = new P1ReaderTester(w.Object);
             DataArrivedEventArgs? lastEvent = null;
 
             tester.DataArrived += (object? sender, DataArrivedEventArgs e) =>
@@ -33,10 +36,19 @@ namespace P1ReaderUnitTests
 
         internal class P1ReaderTester : P1Reader
         {
+            public P1ReaderTester(IWatchdog watchdog) : base(watchdog)
+            {
+            }
+
             public void SomeData(string data)
             {
                 var dae = new DataArrivedEventArgs(data);
                 this.OnDataArrived(dae);
+            }
+
+            protected override Task DoBackgroundWork()
+            {
+                throw new NotImplementedException();
             }
 
             protected override Task Start()

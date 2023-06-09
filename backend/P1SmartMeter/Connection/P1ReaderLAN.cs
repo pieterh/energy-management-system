@@ -1,6 +1,9 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+
+using EMS.Library;
 using EMS.Library.Tasks;
+using EMS.Library.TestableDateTime;
 using P1SmartMeter.Connection.Proxies;
 
 namespace P1SmartMeter.Connection;
@@ -9,7 +12,8 @@ enum ConnectionStatus
 {
     Connecting,
     Connected,
-    Disconnected
+    Disconnected,
+    Reconnecting
 };
 
 [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
@@ -23,14 +27,12 @@ internal sealed class P1ReaderLAN : P1Reader
     private readonly int _port;
     private readonly ISocketFactory _socketFactory;
 
-    private Task? _backgroundTask;
-
     private ISocket? _socket;
     private ISocketAsyncEventArgs? _receiveEventArgs;
 
     public ConnectionStatus Status { get; internal set; } = ConnectionStatus.Disconnected;
 
-    public P1ReaderLAN(string host, int port, ISocketFactory? socketFactory = null)
+    public P1ReaderLAN(string host, int port, IWatchdog watchdog, ISocketFactory? socketFactory = null) : base(watchdog)
     {
         _host = host;
         _port = port;
@@ -42,23 +44,9 @@ internal sealed class P1ReaderLAN : P1Reader
         if (disposing && !Disposed)
         {
             DisposeSocket();
-            DisposeBackgroundTask();
         }
 
         base.Dispose(disposing);
-    }
-
-    private void DisposeBackgroundTask()
-    {
-        if (_backgroundTask is not null)
-        {
-            // we need atleast a minimal wait for the background task to finish.
-            // but we extend it when we are not beeing canceled
-            TaskTools.Wait(_backgroundTask, 500);
-            TaskTools.Wait(_backgroundTask, 4500, CancellationToken);
-            _backgroundTask.Dispose();
-            _backgroundTask = null;
-        }
     }
 
     private void DisposeSocket()
@@ -68,53 +56,51 @@ internal sealed class P1ReaderLAN : P1Reader
 
         if (_socket is not null)
         {
-            if (_socket.Connected)
-                _socket.Disconnect(false);
-
+            try
+            {
+                if (_socket.Connected)
+                    _socket.Disconnect(false);
+            }
+            catch (SocketException) { /* ignore socket exception when disconnecting / disposing */}
             _socket.Close();
             _socket.Dispose();
             _socket = null;
         }
     }
 
-    protected override Task Start()
+    protected override async Task Start()
     {
-        _backgroundTask = Task.Run(async () =>
-        {
-            Logger.Trace("BackgroundTask running");
-            try
-            {
-                bool run;
-                do
-                {
-                    run = !Connect() && !await StopRequested(2000).ConfigureAwait(false);
-                }
-                while (run);
-            }
-            catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Unhandled exception in BackgroundTask");
-                throw;
-            }
-
-            if (CancellationToken.IsCancellationRequested)
-                Logger.Info("Canceled");
-
-            Logger.Trace("BackgroundTask stopped -> stop requested {StopRequested}", StopRequested(0));
-        }, CancellationToken);
-
-        return _backgroundTask;
+        Connect();
+        await base.Start().ConfigureAwait(false);
     }
 
     protected override void Stop()
     {
-        /* wait a bit for the background task in the case that it still is trying to connect */
-        TaskTools.Wait(_backgroundTask, 10000);
-
-        DisposeSocket();
-        DisposeBackgroundTask();
         Status = ConnectionStatus.Disconnected;
+        DisposeSocket();
+        base.Stop();
+    }
+
+    private const int _intervalms = 10000;
+    protected override DateTimeOffset GetNextOccurrence()
+    {
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
+    }
+
+    protected override int GetInterval()
+    {
+        return _intervalms;
+    }
+
+    protected override async Task DoBackgroundWork()
+    {
+        if (Status == ConnectionStatus.Reconnecting)
+        {
+            Logger.Warn("Status singnaled reconnecting...");
+            Status = ConnectionStatus.Disconnected;
+
+            await Restart(useSubtask: true).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -139,7 +125,7 @@ internal sealed class P1ReaderLAN : P1Reader
             CancellationToken.Register(() =>
             {
                 if (Status == ConnectionStatus.Connecting && _socket is not null)
-                {                    
+                {
                     Logger.Info("Cancellation requested while connecting. Cancel the ConnectAsync.");
                     _socket.CancelConnectAsync(_receiveEventArgs);
                 }
@@ -190,6 +176,10 @@ internal sealed class P1ReaderLAN : P1Reader
                     break;
             }
         }
+        catch (SocketException se)
+        {
+            Logger.Error($"SocketException {se.Message}, while processing received data");
+        }
         catch (Exception ex)
         {
             Logger.Error(ex, "While processing received data");
@@ -217,13 +207,13 @@ internal sealed class P1ReaderLAN : P1Reader
             case SocketError.TimedOut:
                 Logger.Error("Connection {SocketError}", connectEventArgs.SocketError);
                 Status = ConnectionStatus.Disconnected;
-                await RestartConnection().ConfigureAwait(false);
+                RestartConnection();
                 break;
             case SocketError.OperationAborted:
                 Logger.Info("Socket operation aborted");
                 Status = ConnectionStatus.Disconnected;
                 if (!TokenSource?.IsCancellationRequested ?? true)
-                    await RestartConnection().ConfigureAwait(false);
+                    RestartConnection();
                 else
                     Logger.Info("Cancellation requested. Not restarting.");
                 break;
@@ -239,8 +229,11 @@ internal sealed class P1ReaderLAN : P1Reader
 
         if (receiveEventArgs.BytesTransferred <= 0 || socket == null || !socket.Connected)
         {
-            Logger.Error($"Lost connection and retry. {receiveEventArgs.SocketError}");
-            await RestartConnection().ConfigureAwait(false);
+            if (!TokenSource?.IsCancellationRequested ?? false)
+            {
+                Logger.Error($"Lost connection and retry. {receiveEventArgs.SocketError}");
+                RestartConnection();
+            }
             return;
         }
 
@@ -255,13 +248,9 @@ internal sealed class P1ReaderLAN : P1Reader
         }
     }
 
-    private async Task RestartConnection()
+    private void RestartConnection()
     {
-        Logger.Info($"Restart connection...");
-        TokenSource?.Cancel();      // NET 8 has CancelAsync...need to check that out
-        Stop();
-
-        Logger.Trace($"and try again");
-        await StartAsync().ConfigureAwait(false);
+        Logger.Info("Set status to reconnect...");
+        Status = ConnectionStatus.Reconnecting;
     }
 }

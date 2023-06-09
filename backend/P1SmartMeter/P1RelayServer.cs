@@ -18,7 +18,7 @@ namespace P1SmartMeter
         private readonly List<TcpClient> _clients = new();
         private TcpListener? _listener;
 
-        public P1RelayServer()
+        public P1RelayServer(IWatchdog watchdog):base(watchdog)
         {            
         }
 
@@ -91,7 +91,6 @@ namespace P1SmartMeter
             {
                 Logger.Error("Exception: " + e.Message);
             }
-
             return Task.CompletedTask;
         }
     }
