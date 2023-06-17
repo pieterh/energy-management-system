@@ -14,15 +14,15 @@
 		<None Remove="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.7">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.5" />
-		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.5" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.2.0.71021">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="7.0.7" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.3.0.71466">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
