@@ -252,7 +252,7 @@ namespace AlfenNG9xx
                     DisposeModbusMaster();
                     throw new CommunicationException($"{se.Message}", se);
                 }
-                catch (Exception e) when (e.Message.StartsWith("Partial exception packet", StringComparison.OrdinalIgnoreCase))
+                catch (Exception e) when (e.Message.StartsWith("Partial packet exception", StringComparison.OrdinalIgnoreCase))
                 {
                     Logger.Error("Partial Modbus packaged received, we try later again");
                     Logger.Error("Disposing connection");

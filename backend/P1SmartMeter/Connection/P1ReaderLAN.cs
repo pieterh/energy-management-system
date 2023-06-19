@@ -237,8 +237,11 @@ internal sealed class P1ReaderLAN : P1Reader
             return;
         }
 
-        var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
-        OnDataArrived(new DataArrivedEventArgs(data));
+        if (receiveEventArgs.BytesTransferred > 0)
+        {
+            var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
+            OnDataArrived(new DataArrivedEventArgs(data));
+        }
 
         // Start receiving more data
         if (!socket.ReceiveAsync(receiveEventArgs))

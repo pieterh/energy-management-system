@@ -242,6 +242,8 @@ static class Program
             a.Database.Migrate();
             var t = a.ChargingTransactions.OrderBy(x => x.Timestamp).Last();
             Logger.Info("Last {transaction}", t);
+            foreach(var details in t.CostDetails.OrderBy(x => x.Timestamp))
+                Logger.Info("details {details}", details);
         }
 
         builder.Services.AddDbContext<DataProtectionKeyContext>(o =>

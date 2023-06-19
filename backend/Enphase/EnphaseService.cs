@@ -74,7 +74,7 @@ public class EnphaseService : BackgroundWorker, ISolar
     }
     protected override int GetInterval()
     {
-        return _intervalms + (90 *1000);    // interval and expected max duration of execution
+        return _intervalms + (120 *1000);    // interval and expected max duration of execution
     }
 
     protected override async Task DoBackgroundWork()
