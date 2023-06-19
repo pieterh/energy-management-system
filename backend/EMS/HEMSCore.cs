@@ -1,8 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +11,7 @@ using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Core;
 using EMS.Library.TestableDateTime;
 using EMS.Library.Exceptions;
+
 
 namespace EMS;
 
@@ -82,8 +79,13 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
     {
         Logger.LogInformation("1. Start has been called.");
 
+        _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
         _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
+
+        _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
         _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
+
+        _compute.StateUpdate -= Compute_StateUpdate;
         _compute.StateUpdate += Compute_StateUpdate;
 
         _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar, Watchdog);
@@ -95,6 +97,11 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
     protected override async void Stop()
     {
         Logger.LogInformation("4. StopAsync has been called.");
+
+        _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
+        _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
+        _compute.StateUpdate -= Compute_StateUpdate;
+
         if (_solarOptimizerService is not null)
         {
             await _solarOptimizerService.StopAsync(CancellationToken).ConfigureAwait(false);
@@ -169,7 +176,7 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
             {
 
                 var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
-                var sortedCosts = e.Costs.OrderBy((c) => c.Timestamp).ToArray();                
+                var sortedCosts = e.Costs.OrderBy((c) => c.Timestamp).ToArray();
 
                 var transaction = new ChargingTransaction
                 {
