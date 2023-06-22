@@ -5,9 +5,9 @@ public record ChargingTransaction
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ID { get; set; }
-    public DateTime Timestamp { get; set; }
-    public DateTime? Start { get; set; }
-    public DateTime? End { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
+    public DateTimeOffset Start { get; set; }
+    public DateTimeOffset End { get; set; }
     public double EnergyDelivered { get; set; }
     public double Cost { get; set; }
     public double Price { get; set; }
@@ -29,8 +29,8 @@ public record ChargingTransaction
         stringBuilder.Append($"ID = {ID}, ");
         stringBuilder.Append($"Timestamp = {Timestamp.ToLocalTime():O}, ");
         stringBuilder.Append($"EnergyDelivered = {EnergyDelivered} kWh, ");
-        stringBuilder.Append($"Start = {Start?.ToLocalTime():O}, ");
-        stringBuilder.Append($"End = {End?.ToLocalTime():O}, ");
+        stringBuilder.Append($"Start = {Start.ToLocalTime():O}, ");
+        stringBuilder.Append($"End = {End.ToLocalTime():O}, ");
         stringBuilder.Append($"Cost = €{Cost:F2}, ");
         stringBuilder.Append($"Price = €{Price:F2}");
         return true;

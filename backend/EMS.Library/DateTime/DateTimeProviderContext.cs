@@ -12,13 +12,18 @@ public class DateTimeProviderContext : IDisposable
     internal System.DateTimeOffset ContextDateTimeNow;
     private static readonly ThreadLocal<Stack> ThreadScopeStack = new(() => new Stack());
 
-    public DateTimeProviderContext(System.DateTime contextDateTimeNow)
+    public DateTimeProviderContext(System.DateTimeOffset contextDateTimeOffsetNow)
     {
-        ContextDateTimeNow = contextDateTimeNow;
+        ContextDateTimeNow = contextDateTimeOffsetNow;
         if (!ThreadScopeStack.IsValueCreated)
             ThreadScopeStack.Value = new Stack();
 
         ThreadScopeStack.Value?.Push(this);
+    }
+
+    public DateTimeProviderContext(System.DateTime contextDateTimeNow)
+        : this(new DateTimeOffset(contextDateTimeNow))
+    {        
     }
 
     public static DateTimeProviderContext? Current

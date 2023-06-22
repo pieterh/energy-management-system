@@ -7,8 +7,8 @@ namespace EMS.Library.Adapter.EVSE
 {
     public record ChargeSessionInfoBase
     {
-        public Nullable<DateTime> Start { get; set; }
-        public Nullable<DateTime> End { get; set; }
+        public DateTimeOffset Start { get; set; }
+        public DateTimeOffset End { get; set; }
         public UInt32 ChargingTime { get; set; }
         public double EnergyDelivered { get; set; }
         public bool SessionEnded { get; set; }

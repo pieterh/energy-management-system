@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using EMS.Library.TestableDateTime;
 using NCrontab;
 
 namespace EMS.Library.Cron;
@@ -33,18 +34,17 @@ public class Crontab
         ArgumentNullException.ThrowIfNull(cs);
         var occurrence = cs.GetNextOccurrence(baseTime.UtcDateTime);
         /* if the next occurence to close ( 50 ms) we will try to find a better one more in the future */
-        if (occurrence.Ticks < 50000)
+        if ((occurrence - baseTime).TotalMilliseconds < 50)
         {
-            IEnumerable<System.DateTime> foundNext;
-            DateTime begin;
-            var end = occurrence;
+            List<System.DateTime> foundNext;
+            DateTime begin = occurrence;
+            DateTime end = begin;
             do
             {
-                begin = end;
-                end = begin.AddMinutes(30);
-                foundNext = cs.GetNextOccurrences(begin, end).ToArray();
-            } while (foundNext.Any());
-            occurrence = foundNext.First();
+                end = end.AddSeconds(10);
+                foundNext = cs.GetNextOccurrences(begin, end).ToList();
+            } while (!foundNext.Any());
+            occurrence = foundNext[0];
         }
         return new DateTimeOffset(occurrence);
     }

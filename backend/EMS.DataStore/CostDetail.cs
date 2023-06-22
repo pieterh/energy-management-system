@@ -5,10 +5,10 @@ public record CostDetail
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ID { get; set; }
-    public DateTime Timestamp { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
     public double EnergyDelivered { get; set; }
     public double Cost { get; set; }
-    public DateTime TarifStart { get; set; }
+    public DateTimeOffset TarifStart { get; set; }
     public double TarifUsage { get; set; }
 
     protected virtual bool PrintMembers(StringBuilder stringBuilder)
