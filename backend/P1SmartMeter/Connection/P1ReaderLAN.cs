@@ -82,6 +82,7 @@ internal sealed class P1ReaderLAN : P1Reader
     }
 
     private const int _intervalms = 10000;
+    private const int _watchdogms = 15000;
     protected override DateTimeOffset GetNextOccurrence()
     {
         return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
@@ -89,7 +90,7 @@ internal sealed class P1ReaderLAN : P1Reader
 
     protected override int GetInterval()
     {
-        return _intervalms;
+        return _watchdogms;
     }
 
     protected override async Task DoBackgroundWork()
@@ -237,8 +238,11 @@ internal sealed class P1ReaderLAN : P1Reader
             return;
         }
 
-        var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
-        OnDataArrived(new DataArrivedEventArgs(data));
+        if (receiveEventArgs.BytesTransferred > 0)
+        {
+            var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
+            OnDataArrived(new DataArrivedEventArgs(data));
+        }
 
         // Start receiving more data
         if (!socket.ReceiveAsync(receiveEventArgs))

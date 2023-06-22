@@ -16,7 +16,7 @@ public class SolarOptimizer : BackgroundWorker
     private readonly ISolar _solar;
 
     private readonly Crontab _cron = new Crontab("55 * * * *");
-    private readonly int _intervalSeconds = 62 * 60 * 1000;
+    private readonly int _watchdogms = 62 * 60 * 1000;
 
     public SolarOptimizer(IPriceProvider priceProvider, ISolar solar, IWatchdog watchdog) : base(watchdog)
     {
@@ -33,7 +33,7 @@ public class SolarOptimizer : BackgroundWorker
 
     protected override int GetInterval()
     {
-        return _intervalSeconds;
+        return _watchdogms;
     }
 
     internal async Task PerformCheck()

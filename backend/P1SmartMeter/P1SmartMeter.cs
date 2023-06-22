@@ -150,6 +150,7 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
     }
 
     private const int _intervalms = 60 * 1000;
+    private const int _watchdogms = 61 * 1000;
     protected override DateTimeOffset GetNextOccurrence()
     {
         return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
@@ -157,7 +158,7 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
 
     protected override int GetInterval()
     {
-        return _intervalms;
+        return _watchdogms;
     }
 
     protected override Task DoBackgroundWork()

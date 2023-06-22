@@ -17,8 +17,6 @@ namespace EMS.Library.Adapter.EVSE
         UnknownState = -1
     }
 
-
-
     public enum Phases
     {
         Unknown = 0,
@@ -94,23 +92,22 @@ namespace EMS.Library.Adapter.EVSE
             }
         }
 
+        public bool PWMSignalApplied
+        {
+            get
+            {
+                if (Mode3State == Mode3State.B2 ||
+                    Mode3State == Mode3State.C2 ||
+                    Mode3State == Mode3State.D2) return true;
+                return false;
+            }
+        }
+
         public string Mode3StateMessage
         {
             get
             {
-                switch (Mode3State)
-                {
-                    case Mode3State.A: return "Standby";
-                    case Mode3State.B1: return "Vehicle detected";
-                    case Mode3State.B2: return "Vehicle detected";
-                    case Mode3State.C1: return "Ready charging";
-                    case Mode3State.C2: return "Charging";
-                    case Mode3State.D1: return "Ready charging in ventilated area";
-                    case Mode3State.D2: return "Charging in ventilated area";
-                    case Mode3State.E: return "No Power";
-                    case Mode3State.F: return "Error";
-                    default: return "Unknown state";
-                }
+                return Mode3States[Mode3State];
             }
         }
 

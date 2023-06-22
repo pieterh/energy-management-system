@@ -76,7 +76,7 @@ public class HEMSController : ControllerBase
 
             Logger.LogInformation("Database path: {Path}.", HEMSContext.DbPath);
 
-            var items = db.ChargingTransactions.OrderByDescending((x) => x.Timestamp);
+            var items = db.ChargingTransactions.OrderByDescending((x) => x.ID);
             foreach (var item in items)
             {
                 Logger.LogInformation("{Item}", item.ToString());
