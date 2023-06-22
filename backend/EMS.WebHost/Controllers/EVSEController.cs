@@ -81,11 +81,11 @@ public class EVSEController : ControllerBase
         var csi = ChargePoint.ChargeSessionInfo;
 
         SessionInfoModel? session = null;
-        if (socket != null && socket.VehicleIsConnected && csi != null && csi.Start.HasValue)
+        if (socket != null && socket.VehicleIsConnected && csi != null && csi.Start > DateTimeOffset.MinValue)
         {
             session = new SessionInfoModel
             {
-                Start = csi.Start.Value,
+                Start = csi.Start,
                 ChargingTime = csi.ChargingTime,
                 EnergyDeliveredFormatted = PrepareDouble(csi.EnergyDelivered / 1000, 1, "kWh") // kWh
             };

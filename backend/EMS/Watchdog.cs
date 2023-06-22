@@ -29,7 +29,8 @@ public class Watchdog : BackgroundWorker, IWatchdog
                         (bg) =>
                         {
                             var now = DateTimeOffsetProvider.Now;
-                            return new Info(now, interval, (int)Math.Round((interval * 1.05) + 5, MidpointRounding.AwayFromZero));
+                            // allow for 5% slack
+                            return new Info(now, interval, (int)Math.Round((interval * 1.05), MidpointRounding.AwayFromZero));
                         },
                         (bg, existingInfo) =>
                         {

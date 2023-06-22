@@ -16,9 +16,10 @@ namespace AlfenNG9xx
 
         private bool _isConnected;
         private double _meterReadingStart;
-        private DateTime _chargingStart;
+        private DateTimeOffset _chargingStart;
         private bool _isCharging;
 
+        private DateTimeOffset _currentTariffDateTime;
         private Tariff? _currentTariff;
         private double _meterReadingStartTariff;
 
@@ -41,7 +42,7 @@ namespace AlfenNG9xx
                 _isConnected = true;
                 _meterReadingStart = newMeasurement.RealEnergyDeliveredSum;
                 ChargeSessionInfo = DefaultSessionInfo();
-                ChargeSessionInfo.Start = DateTimeProvider.Now;
+                ChargeSessionInfo.Start = DateTimeOffsetProvider.Now;
 
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
@@ -56,7 +57,7 @@ namespace AlfenNG9xx
             if (_isConnected && !newMeasurement.VehicleConnected)
             {
                 _isConnected = false;
-                ChargeSessionInfo.End = DateTimeProvider.Now;
+                ChargeSessionInfo.End = DateTimeOffsetProvider.Now;
                 ChargeSessionInfo.SessionEnded = true;
             }
 
@@ -65,6 +66,7 @@ namespace AlfenNG9xx
             {
                 _chargingStart = DateTimeProvider.Now;
 
+                _currentTariffDateTime = DateTimeOffsetProvider.Now;
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
             }
@@ -75,7 +77,7 @@ namespace AlfenNG9xx
                 ChargeSessionInfo.ChargingTime += (uint)(DateTimeProvider.Now - _chargingStart).TotalSeconds;
 
                 // nog te doen: gebruik moment van gebruik van dit tarief ipv now
-                ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
+                ChargeSessionInfo.Costs.Add(new Cost(_currentTariffDateTime, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                 ChargeSessionInfo.RunningCost = 0m;
             }
 
@@ -88,11 +90,12 @@ namespace AlfenNG9xx
                 if (!_currentTariff.Equals(newTariff))
                 {
                     // nog te doen: gebruik moment van gebruik van dit tarief ipv now
-                    ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
+                    ChargeSessionInfo.Costs.Add(new Cost(_currentTariffDateTime, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                     ChargeSessionInfo.RunningCost = 0m;
 
-                    _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
+                    _currentTariffDateTime = DateTimeProvider.Now;
                     _currentTariff = newTariff;
+                    _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
                 }
                 else
                 {
@@ -150,8 +153,8 @@ namespace AlfenNG9xx
         {
             return new ChargeSessionInfoBase()
             {
-                Start = null,
-                End = null,
+                Start = DateTimeOffset.MinValue,
+                End = DateTimeOffset.MinValue,
                 ChargingTime = 0,
                 EnergyDelivered = 0.0,
                 SessionEnded = false,

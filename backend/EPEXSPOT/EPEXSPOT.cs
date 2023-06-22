@@ -21,7 +21,8 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
     private const string _schemaResourceName = "getapxtariffs.schema.json";
 
     private readonly Crontab _cron = new("05 * * * *");
-    private const int _intervalms = 60 * 60 * 1000;
+    // interval is every hour and we allow 2 minutes of slack
+    private const int _watchdogms = (62 * 60) * 1000;
 
     private readonly string _endpoint;              // ie. https://mijn.easyenergy.com
     private readonly IHttpClientFactory _httpClientFactory;
@@ -66,7 +67,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
 
     protected override int GetInterval()
     {
-        return _intervalms;
+        return _watchdogms;
     }
 
     protected override async Task DoBackgroundWork()

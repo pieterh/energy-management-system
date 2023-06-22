@@ -20,7 +20,7 @@ namespace AlfenNG9xx.Tests
     public class AlfenTests
     {
         [Fact]
-        [SuppressMessage("","S1215")]
+        [SuppressMessage("", "S1215")]
         public void DisposesProperly()
         {
             byte[] piBytes = {
@@ -62,7 +62,7 @@ namespace AlfenNG9xx.Tests
         }
 
         [Fact]
-        [SuppressMessage("","S1215")]
+        [SuppressMessage("", "S1215")]
         public void DisposesCanSafelyCalledTwice()
         {
             byte[] piBytes = {
@@ -200,7 +200,7 @@ namespace AlfenNG9xx.Tests
             mockAlfen.CallBase = true;
             mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
- 
+
             var ss = mockAlfen.Object.ReadSocketMeasurement(1);
 
             Assert.Equal(expectedSocketMeasurement.MeterState, ss.MeterState);
@@ -212,7 +212,7 @@ namespace AlfenNG9xx.Tests
             Assert.Equal(expectedSocketMeasurement.RealEnergyDeliveredL2, ss.RealEnergyDeliveredL2);
             Assert.Equal(expectedSocketMeasurement.RealEnergyDeliveredL3, ss.RealEnergyDeliveredL3);
             Assert.Equal(expectedSocketMeasurement.RealEnergyDeliveredSum, ss.RealEnergyDeliveredSum);
-            
+
             Assert.Equal(expectedSocketMeasurement.AppliedMaxCurrent, ss.AppliedMaxCurrent);
             Assert.Equal(expectedSocketMeasurement.MaxCurrentValidTime, ss.MaxCurrentValidTime);
             Assert.Equal(expectedSocketMeasurement.MaxCurrent, ss.MaxCurrent);
@@ -221,7 +221,7 @@ namespace AlfenNG9xx.Tests
             mockAlfen.Object.Dispose();
         }
 
-         private static ushort[] ConvertBytesToRegisters(byte[] piBytes)
+        private static ushort[] ConvertBytesToRegisters(byte[] piBytes)
         {
             ushort[] registers = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, registers, 0, piBytes.Length);
@@ -355,6 +355,17 @@ namespace AlfenNG9xx.Tests
 
     public class TestPriceProvider : IPriceProvider
     {
+        private Tariff[] _tariffs = Array.Empty<Tariff>();
+        public Tariff[] GetTariffs()
+        {
+            return _tariffs;
+        }
+
+        public void SetTariffs(Tariff[] value)
+        {
+            _tariffs = value;
+        }
+
         public Task<Tariff[]> GetTariff(DateTime start, DateTime end)
         {
             throw new NotImplementedException();
@@ -362,8 +373,9 @@ namespace AlfenNG9xx.Tests
 
         public Tariff GetTariff()
         {
-            var tariff = new Tariff(DateTimeProvider.Now, 0.23m, 0.08m);
-            return tariff;
+            if (GetTariffs().Equals(Array.Empty<Tariff>()))
+                return new Tariff(DateTimeProvider.Now.ToUniversalTime(), 0.23m, 0.08m);
+            return FindTariff(GetTariffs(), DateTimeProvider.Now.ToUniversalTime()) ?? new Tariff(DateTimeProvider.Now.ToUniversalTime(), 0.23m, 0.08m);
         }
 
         public Tariff? GetNextTariff()
@@ -379,6 +391,26 @@ namespace AlfenNG9xx.Tests
         public Task StopAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Find the correct tariff based on given time
+        /// </summary>
+        /// <param name="t">time sorted array of tariffs</param>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public static Tariff? FindTariff(Tariff[] t, DateTime start)
+        {
+            if (t == null || t.Length == 0) return null;
+            if (start.Kind == DateTimeKind.Unspecified) throw new ArgumentOutOfRangeException(nameof(start));
+
+            var startUtc = start.ToUniversalTime();
+            var idx = t.ToList().FindIndex(x => { return x.Timestamp >= startUtc; });
+
+            if (idx < 0) return null;
+            if (t[idx].Timestamp.Equals(start)) return t[idx];
+            if (idx == 0) return null;
+            return t[idx - 1];
         }
     }
 }

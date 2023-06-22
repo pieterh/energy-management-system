@@ -29,7 +29,8 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
     private readonly ISolar _solar;
     private readonly IPriceProvider _priceProvider;
 
-    private const int _intervalms = 10000; //ms
+    private const int _intervalms = 10000; // ms
+    private const int _watchdogms = 15000; // expected ms this worker to report back to watchdog
 
     public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
 
@@ -118,7 +119,7 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
 
     protected override int GetInterval()
     {
-        return _intervalms;
+        return _watchdogms;
     }
 
     protected override Task DoBackgroundWork()
@@ -170,29 +171,29 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
         LoggerChargingState.Info("Mode 3 state {state}, {stateMessage}, session ended {ended}, energy delivered {delivered}",
         e.Status?.Measurement?.Mode3State, e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered);
 
-        if (e.SessionEnded)
+        if (e.SessionEnded && e.EnergyDelivered > 0.0d)
         {
             using (var db = new HEMSContext())
             {
 
-                var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
+                var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.0m;
                 var sortedCosts = e.Costs.OrderBy((c) => c.Timestamp).ToArray();
 
                 var transaction = new ChargingTransaction
                 {
-                    Timestamp = DateTimeProvider.Now,
+                    Timestamp = DateTimeOffsetProvider.Now,
                     Start = e.Start,
                     End = e.End,
                     EnergyDelivered = (double)energyDelivered,
                     Cost = (double)e.Cost,
-                    Price = (double)(e.Cost / energyDelivered)
+                    Price = energyDelivered > 0 ? (double)(e.Cost / energyDelivered) : 0.00d
                 };
 
                 LoggerChargingcost.Debug(transaction.ToString());
 
                 foreach (var c in sortedCosts)
                 {
-                    var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.01m;
+                    var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.0m;
                     var detail = new CostDetail()
                     {
                         Timestamp = c.Timestamp,

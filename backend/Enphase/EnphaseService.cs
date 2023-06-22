@@ -56,7 +56,7 @@ public class EnphaseService : BackgroundWorker, ISolar
         BackgroundServiceHelper.CreateAndStart<ISolar, EnphaseService>(services, instance.Config);
     }
 
-    public EnphaseService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog): base(watchdog)
+    public EnphaseService(InstanceConfiguration config, IHttpClientFactory httpClientFactory, IWatchdog watchdog) : base(watchdog)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(httpClientFactory);
@@ -68,13 +68,15 @@ public class EnphaseService : BackgroundWorker, ISolar
     }
 
     private const int _intervalms = 120 * 1000;
+    private const int _watchdogms = _intervalms + (120 * 1000);
     protected override DateTimeOffset GetNextOccurrence()
     {
         return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
     }
+
     protected override int GetInterval()
     {
-        return _intervalms + (120 *1000);    // interval and expected max duration of execution
+        return _watchdogms;    // interval and expected max duration of execution
     }
 
     protected override async Task DoBackgroundWork()
@@ -88,11 +90,12 @@ public class EnphaseService : BackgroundWorker, ISolar
             var sum = inverters.Sum((x) => x.LastReportWatts);
             Logger.Info("Current production {Watts}", sum);
         }
-        catch(CommunicationException ce)
+        catch (CommunicationException ce)
         {
             Logger.Error("CommunicationException {Message}", ce.Message);
         }
-        catch (TaskCanceledException tce) {
+        catch (TaskCanceledException tce)
+        {
             if (CancellationToken.IsCancellationRequested)
                 Logger.Info("Task cancelled");
             else

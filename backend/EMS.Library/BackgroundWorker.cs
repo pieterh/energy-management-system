@@ -22,8 +22,8 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     private bool _isRestarting;
     protected BackgroundWorker()
     {
-        if (this is IWatchdog)
-            _watchdog = (IWatchdog)this;
+        if (this is IWatchdog t)
+            _watchdog = t;
         else
             throw new EMS.Library.Exceptions.ApplicationException("Only watchdog can be a worker without a wathdog ;-)");
     }
@@ -181,7 +181,7 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     }
 
     /// <summary>
-    /// The default interval is 2500ms
+    /// The failsafe time
     /// </summary>
     /// <returns></returns>
     protected virtual int GetInterval()

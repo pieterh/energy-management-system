@@ -107,7 +107,6 @@ namespace AlfenNG9xx.Tests
         {
             var fakeDate = new DateTime(2023, 6, 10, 00, 51, 46);
             var tariff1 = new Tariff(fakeDate, 0.20m, 0.08m);
-            var tariff2 = new Tariff(fakeDate, 0.19m, 0.08m);
 
             using (new DateTimeProviderContext(fakeDate))
             {
@@ -123,20 +122,20 @@ namespace AlfenNG9xx.Tests
                 fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 02, 0, Mode3State.A, tariff1);          //   2 seconden op A (Standby)
                 fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 02, 0, Mode3State.B1, tariff1);         //   2 seconden op B1 (Vehicle detected)
 
-                fakeDate = NextMeasurement(fakeDate, t, sm, (64 * 60) + 02, 68, Mode3State.C2, tariff1);     //  64 minuten en 2 seconden op C2 (Charging (PWM signal applied))
-                fakeDate = NextMeasurement(fakeDate, t, sm, (180 * 60) + 02, 0, Mode3State.B2, tariff1);    // 180 minuten en 2 seconden op B2 (Vehicle detected (PWM signal applied))
+                fakeDate = NextMeasurement(fakeDate, t, sm, (64 * 60) + 02, 68, Mode3State.C2, tariff1);        //  64 minuten en 2 seconden op C2 (Charging (PWM signal applied))
+                fakeDate = NextMeasurement(fakeDate, t, sm, (180 * 60) + 02, 0, Mode3State.B2, tariff1);        // 180 minuten en 2 seconden op B2 (Vehicle detected (PWM signal applied))
 
                 fakeDate = NextMeasurement(fakeDate, t, sm, (59 * 60) + 02, 10960, Mode3State.C2, tariff1);     // 180 minuten en 2 seconden op C2 (Charging (PWM signal applied))
-                fakeDate = NextMeasurement(fakeDate, t, sm, (59 * 60) + 02, 0, Mode3State.B2, tariff1);     //  59 minuten en 2 seconden op B2 (Vehicle detected (PWM signal applied))
+                fakeDate = NextMeasurement(fakeDate, t, sm, (59 * 60) + 02, 0, Mode3State.B2, tariff1);         //  59 minuten en 2 seconden op B2 (Vehicle detected (PWM signal applied))
 
                 fakeDate = NextMeasurement(fakeDate, t, sm, (59 * 60) + 02, 11040, Mode3State.C2, tariff1);     //  64 minuten en 2 seconden op C2 (Charging (PWM signal applied))
-                fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 20, 0, Mode3State.B2, tariff1);     //   0 minuten en 20 seconden op B2 (Vehicle detected (PWM signal applied))
+                fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 20, 0, Mode3State.B2, tariff1);         //   0 minuten en 20 seconden op B2 (Vehicle detected (PWM signal applied))
 
-                fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 05, 85, Mode3State.C2, tariff1);     // 0 minuten en 5 seconden op C2 (Charging (PWM signal applied))
-                fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 58, 0, Mode3State.B2, tariff1);     //  0 min en 58 seconden op B2
+                fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 05, 85, Mode3State.C2, tariff1);        // 0 minuten en 5 seconden op C2 (Charging (PWM signal applied))
+                fakeDate = NextMeasurement(fakeDate, t, sm, (00 * 60) + 58, 0, Mode3State.B2, tariff1);         //  0 min en 58 seconden op B2
 
-                fakeDate = NextMeasurement(fakeDate, t, sm, (24 * 60) + 40, 3600, Mode3State.C2, tariff1);     // 24 min en 40 seconden op C2 (charging)
-                fakeDate = NextMeasurement(fakeDate, t, sm, (16 * 60) + 02, 0, Mode3State.B2, tariff1);     // 16 min en  2 seconden op B2 
+                fakeDate = NextMeasurement(fakeDate, t, sm, (24 * 60) + 40, 3600, Mode3State.C2, tariff1);      // 24 min en 40 seconden op C2 (charging)
+                fakeDate = NextMeasurement(fakeDate, t, sm, (16 * 60) + 02, 0, Mode3State.B2, tariff1);         // 16 min en  2 seconden op B2 
 
                 using (new DateTimeProviderContext(fakeDate))
                 {
@@ -252,9 +251,9 @@ namespace AlfenNG9xx.Tests
                 fakeDate = NextMeasurement(fakeDate, t, sm, 30, 10, Mode3State.B2);      // 30 seconden op B2 (connected)
                 fakeDate = NextMeasurement(fakeDate, t, sm, 3600, 5000, Mode3State.B2);  // 1uur        op B2 (connected)
                 fakeDate = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.E);       // 30 seconden op E  (disconnected)
-                _ = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.A);       // 30 seconden op A  (standby)
-                Assert.Null(t.ChargeSessionInfo.Start);
-                Assert.Null(t.ChargeSessionInfo.End);
+                _ = NextMeasurement(fakeDate, t, sm, 30, 50, Mode3State.A);              // 30 seconden op A  (standby)
+                t.ChargeSessionInfo.Start.Should().Be(DateTimeOffset.MinValue);
+                t.ChargeSessionInfo.End.Should().Be(DateTimeOffset.MinValue);
                 Assert.Equal(0, t.ChargeSessionInfo.EnergyDelivered);
                 Assert.Equal((uint)0, t.ChargeSessionInfo.ChargingTime);
                 Assert.False(t.ChargeSessionInfo.SessionEnded);
