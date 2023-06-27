@@ -88,7 +88,7 @@ public class EnphaseService : BackgroundWorker, ISolar
 
             var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
             var sum = inverters.Sum((x) => x.LastReportWatts);
-            Logger.Info("Current production {Watts}", sum);
+            Logger.Debug("Current production {Watts}", sum);
         }
         catch (CommunicationException ce)
         {

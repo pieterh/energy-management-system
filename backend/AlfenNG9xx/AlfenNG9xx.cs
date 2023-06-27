@@ -237,11 +237,11 @@ namespace AlfenNG9xx
 
                     if (_modbusMaster == null)
                     {
-                        Logger.Info($"UpdateMaxCurrent({maxCurrent}, {phases}) -> failed, no connection");
+                        Logger.Error($"PerformUpdateMaxCurrent({maxCurrent}, {phases}) -> failed, no connection");
                         return;
                     }
 
-                    Logger.Info($"UpdateMaxCurrent {maxCurrent}, {phases}");
+                    Logger.Trace($"PerformUpdateMaxCurrent {maxCurrent}, {phases}");
                     _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters((float)maxCurrent));
                     _modbusMaster.WriteRegister(1, 1215, phases);
                 }

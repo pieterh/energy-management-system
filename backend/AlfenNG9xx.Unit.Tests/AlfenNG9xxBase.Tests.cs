@@ -67,7 +67,7 @@ namespace AlfenNG9xxBase.Tests
             using var cts = new CancellationTokenSource();
             await mockAlfen.Object.StartAsync(cts.Token).ConfigureAwait(false);
 
-            Thread.Sleep(800);
+            // removed sleep...
 
             mockAlfen.Object.ExecuteTask.Should().NotBeNull();
 

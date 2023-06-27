@@ -70,7 +70,7 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
     /// <param name="phases"></param>
     public void UpdateMaxCurrent(double maxCurrent, ushort phases)
     {
-        Logger.Info($"UpdateMaxCurrent({maxCurrent}, {phases})");
+        Logger.Trace($"UpdateMaxCurrent({maxCurrent}, {phases})");
         if (maxCurrent <= 0)
             return;
 
@@ -85,30 +85,32 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
     /// <param name="maxL3"></param>
     public void UpdateMaxCurrent(double maxL1, double maxL2, double maxL3)
     {
-        Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
+        Logger.Trace($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
         (double maxCurrent, ushort phases) = DetermineMaxCurrent(maxL1, maxL2, maxL3);
-        if (maxCurrent <= 0)
-            return;
         UpdateMaxCurrent(maxCurrent, phases);
     }
 
     public static (double, ushort) DetermineMaxCurrent(double maxL1, double maxL2, double maxL3)
     {
-        Logger.Info($"UpdateMaxCurrent({maxL1}, {maxL2}, {maxL3})");
+        ushort phases = 0;
+        float maxCurrent = -1.0f;
 
-        if (maxL1 < 0f && maxL2 < 0f && maxL3 < 0f) return (-1, 0);
-        ushort phases;
-        float maxCurrent;
-        if (maxL2 <= 0f || maxL3 <= 0f)
+        if (maxL1 >= 0.0f || maxL2 >= 0.0f || maxL3 >= 0.0f)
         {
-            phases = 1;
-            maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
+
+            if (maxL2 <= 0f || maxL3 <= 0f)
+            {
+                phases = 1;
+                maxCurrent = (float)Math.Round(maxL1, 1, MidpointRounding.ToZero);
+            }
+            else
+            {
+                phases = 3;
+                maxCurrent = (float)Math.Round(Math.Min(maxL1, Math.Min(maxL2, maxL3)), 1, MidpointRounding.ToZero);
+            }
         }
-        else
-        {
-            phases = 3;
-            maxCurrent = (float)Math.Round(Math.Min(maxL1, Math.Min(maxL2, maxL3)), 1, MidpointRounding.ToZero);
-        }
+
+        Logger.Info($"DetermineMaxCurrent({maxL1}, {maxL2}, {maxL3}) => {maxCurrent}, {phases}");
 
         return (maxCurrent, phases);
     }
@@ -121,7 +123,8 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
             ShowProductInformation();
             ShowStationStatus();
             ShowSocketMeasurement();
-        }catch(CommunicationException ce)
+        }
+        catch (CommunicationException ce)
         {
             Logger.Error("CommunicationException {Message}", ce.Message);
         }
@@ -140,7 +143,7 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
 
     protected override int GetInterval()
     {
-        return 60*1000;
+        return 60 * 1000;
     }
 
     protected override DateTimeOffset GetNextOccurrence()
