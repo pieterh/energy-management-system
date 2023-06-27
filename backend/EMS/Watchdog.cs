@@ -16,7 +16,7 @@ public class Watchdog : BackgroundWorker, IWatchdog
     internal DateTimeOffset _lastCheck = DateTimeOffsetProvider.Now;
 
     private readonly Crontab _cron = new Crontab("0,30 * * * * *", true);
-    private readonly int _intervalms = 30 * 1000;
+    private readonly int _intervalms = -1;
 
     public Watchdog() : base()
     {
@@ -29,8 +29,12 @@ public class Watchdog : BackgroundWorker, IWatchdog
                         (bg) =>
                         {
                             var now = DateTimeOffsetProvider.Now;
-                            // allow for 5% slack
-                            return new Info(now, interval, (int)Math.Round((interval * 1.05), MidpointRounding.AwayFromZero));
+
+                            // when a negative interval is given, we will not watch the health of the worker
+                            if (interval > 0)
+                                return new Info(now, interval, (int)Math.Round((interval * 1.05), MidpointRounding.AwayFromZero)); // allow for 5% slack
+                            else
+                                return new Info(now, interval, interval);   
                         },
                         (bg, existingInfo) =>
                         {
@@ -78,24 +82,33 @@ public class Watchdog : BackgroundWorker, IWatchdog
     internal async Task PerformCheck()
     {
         var now = DateTimeOffsetProvider.Now.UtcDateTime;
-        var silentWorkers = _workersToWatch.Where((x) => (now - x.Value.LastSeen).TotalMilliseconds > x.Value.ExpectedIntervalMilliseconds).ToArray();
+        var silentWorkers = _workersToWatch.Where((x) => x.Value.ExpectedIntervalMilliseconds > 0 && (now - x.Value.LastSeen).TotalMilliseconds > x.Value.ExpectedIntervalMilliseconds).ToArray();
 
         if (silentWorkers.Any())
             Logger.Error("Watchdog found faulty tasks. Restarting them.");
         else
-            Logger.Info("Watchdog has {nr} tasks checked.", _workersToWatch.Count);
+            Logger.Debug("Watchdog has {nr} tasks checked.", _workersToWatch.Count);
 
         foreach (var silentWorker in silentWorkers)
         {
 #pragma warning disable CA1031 // we need to make sure no exception gets through
             var worker = silentWorker.Key;
             try
-            {                
-                Logger.Error("Watchdog restarting => {worker}, {seen}, {expected}, {actual}",
-                    worker.GetType().Name, silentWorker.Value.LastSeen.ToString("O"),
-                    silentWorker.Value.ExpectedIntervalMilliseconds, (now - silentWorker.Value.LastSeen).TotalMilliseconds);
+            {
+                if (worker != this)
+                {
+                    Logger.Error("Watchdog restarting => {worker}, {seen}, {expected}, {actual}",
+                        worker.GetType().Name, silentWorker.Value.LastSeen.ToString("O"),
+                        silentWorker.Value.ExpectedIntervalMilliseconds, (now - silentWorker.Value.LastSeen).TotalMilliseconds);
 
-                await worker.Restart(false).ConfigureAwait(false);
+                    await worker.Restart(false).ConfigureAwait(false);
+                }
+                else
+                {
+                    Logger.Error("Watchdog is a bit late.... => {worker}, {seen}, {expected}, {actual}",
+                        worker.GetType().Name, silentWorker.Value.LastSeen.ToString("O"),
+                        silentWorker.Value.ExpectedIntervalMilliseconds, (now - silentWorker.Value.LastSeen).TotalMilliseconds);
+                }
             }
             catch (Exception ex)
             {

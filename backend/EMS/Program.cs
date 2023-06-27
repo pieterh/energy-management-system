@@ -216,11 +216,10 @@ static class Program
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
         {
             ContentRootPath = wc.ContentRootPath,
-            WebRootPath = wc.WebRootPath
+            WebRootPath = wc.WebRootPath,            
         });
 
-        builder.Logging.ClearProviders();
-        builder.Logging.AddNLogWeb();
+
 
         var env = builder.Environment;
         Logger.Info($"Hosting environment: {env.EnvironmentName}");
@@ -231,6 +230,9 @@ static class Program
         {
             builder.Configuration.AddJsonFile(configFileEnvironmentSpecific, optional: true, reloadOnChange: false);
         }
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddNLogWeb();
 
         /* nog te doen: hmmm handle inital configuration in a better way and perform the creation or migration in a better way */
         DbConfig dbConfig = new();

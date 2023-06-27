@@ -26,6 +26,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
 
     private readonly string _endpoint;              // ie. https://mijn.easyenergy.com
     private readonly IHttpClientFactory _httpClientFactory;
+    private static string httpClientName = "EPEXSpot";
 
     internal const string getapxtariffsMethod = "/nl/api/tariff/getapxtariffs";
     private const Decimal INKOOP = 0.01331m;     // inkoopkosten per kWh (incl. btw)
@@ -126,7 +127,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
         try
         {
             var getapxtariffsUri = new Uri(new Uri(_endpoint), getapxtariffsMethod);
-            using var client = _httpClientFactory.CreateClient();
+            using var client = _httpClientFactory.CreateClient(httpClientName);
             return await GetTariff(client, getapxtariffsUri, start, end).ConfigureAwait(false);
         }
         catch (HttpRequestException hre)
@@ -137,7 +138,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
 
     public async Task<DateTime> GetTariffLastTimestamp()
     {
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient(httpClientName);
 
         var getapxtariffslasttimestampUri = new Uri(new Uri(_endpoint), "/nl/api/tariff/getapxtariffslasttimestamp");
         using var resultStream = await client.GetStreamAsync(getapxtariffslasttimestampUri).ConfigureAwait(false);
