@@ -1,7 +1,9 @@
-﻿using System.Data.SqlTypes;
+﻿using System.Collections;
+using System.Data.SqlTypes;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Adapter.Solar;
 using EMS.Library.Configuration;
 using EMS.Library.Exceptions;
+using EMS.Library.JSon;
 using EMS.Library.Tasks;
 using EMS.Library.TestableDateTime;
 using EMS.Library.Xml;
@@ -36,22 +39,36 @@ public class EnphaseService : BackgroundWorker, ISolar
 
     private static readonly MediaTypeWithQualityHeaderValue requestHeaderAcceptJson = new MediaTypeWithQualityHeaderValue("application/json");
     private static readonly MediaTypeWithQualityHeaderValue requestHeaderAcceptXml = new MediaTypeWithQualityHeaderValue("application/xml");
+    private static readonly MediaTypeWithQualityHeaderValue requestHeaderAcceptTextHtml = new MediaTypeWithQualityHeaderValue("text/html");
 
     internal Task? _backgroundTask;
 
     public static void ConfigureServices(IServiceCollection services, AdapterInstance instance)
     {
         ArgumentNullException.ThrowIfNull(instance);
-        var config = instance.Config;
-        var baseUri = new Uri(config.EndPoint);
+
         var clientBuilder = services.AddHttpClient(httpClientName);
+        
+        // We need to set the network credentials early in the configuration fase
+        // There is no quick way to retreive the serial number from the device and
+        // calculate the password. Since I don't like to block startup untill the
+        // serial is retrieved from the system, we just take it from the config file.
+        // Atleast the startup is quick ;-)
+        var username = instance.Config.Username;
+        var serial = instance.Config.Password;
+        var password = Authentication.GetMobilePasswdForSerial(serial, username);
+
         clientBuilder.ConfigurePrimaryHttpMessageHandler(
             handler => new HttpClientHandler
             {
-                Credentials = new CredentialCache { {
-                    baseUri,
-                    "Digest",
-                    new NetworkCredential(config.Username, config.Password) } }
+                Credentials = new CredentialCache
+                                    {
+                                        {
+                                            new Uri(instance.Config.EndPoint),
+                                            "Digest",
+                                            new NetworkCredential(username, password)
+                                        }
+                                    }
             });
         BackgroundServiceHelper.CreateAndStart<ISolar, EnphaseService>(services, instance.Config);
     }
@@ -63,7 +80,6 @@ public class EnphaseService : BackgroundWorker, ISolar
         ArgumentNullException.ThrowIfNull(watchdog);
 
         _baseUri = new Uri(config.EndPoint);
-
         _httpClientFactory = httpClientFactory;
     }
 
@@ -112,6 +128,7 @@ public class EnphaseService : BackgroundWorker, ISolar
         Logger.Info("API Version        {ApiVersion}", i.Device.ApiVersion);
         Logger.Info("Build ID           {BuildId}", i.BuildInfo.BuildId);
         Logger.Info("Build At           {BuildAt}", i.BuildInfo.BuildDate.ToString("u"));
+
         await base.Start().ConfigureAwait(false);
     }
 
@@ -218,6 +235,46 @@ public class EnphaseService : BackgroundWorker, ISolar
         }
     }
 
+    /// <summary>
+    /// Returns some system info (BackboneConfig?) found on the homepage as a dictionary.
+    /// Not sure if we can use this or not
+    ///     "serial":"122011110000"
+    ///     "profiles":"false"
+    ///     "show_prompt":"false"
+    ///     "internal_meter":"true"
+    ///     "software_version":"R4.10.35 (6ed292)"
+    ///     "envoy_type":"EU"
+    ///     "polling_interval":"300000"
+    ///     "polling_frequency":"60"
+    ///     "backbone_public":"true"
+    ///     "cte_mode":"false"
+    ///     "toolkit":"false"
+    ///     "max_errors":"0"
+    ///     "max_timeouts":"0"
+    /// "e_units":"sig_fig"
+    /// </summary>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    internal async Task<IDictionary<string, string>> GetSystemInfoDictionary(CancellationToken cancellationToken)
+    {
+        var str = await GetData("/home", CancellationToken.None).ConfigureAwait(false);
+
+        // grab the BackboneConfig configuration from the html
+        // since it is javascript, the properties are not enclosed with quotes, so we can't just deserialize this.
+        var rege = new Regex("BackboneConfig = ({[^{}]*})", RegexOptions.Multiline | RegexOptions.Singleline, new TimeSpan(0, 0, 0, 0, 200));
+        var matches = rege.Match(str);
+
+        Dictionary<string, string> retval;
+        if (matches.Success && matches.Groups.Count == 2)
+        {
+            string javascript = matches.Groups[1].Value;
+            retval = JsonHelpers.JavascriptObjectToDictionary(javascript);
+        }
+        else
+            retval = new Dictionary<string, string>(0);
+        return retval;
+    }
+
     internal async Task<Inverter[]> GetInverters(CancellationToken cancellationToken)
     {
         try
@@ -249,7 +306,7 @@ public class EnphaseService : BackgroundWorker, ISolar
             }
             else
             {
-                Logger.Error("Error retrieving inverter information status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
+                Logger.Error("Error retrieving json data from enphase. Status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
                 return default(T);
             }
         }, cancellationToken).ConfigureAwait(false);
@@ -269,8 +326,27 @@ public class EnphaseService : BackgroundWorker, ISolar
             }
             else
             {
-                Logger.Error("Error retrieving inverter information status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
+                Logger.Error("Error retrieving xml data from enphase. Status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
                 return default(T);
+            }
+        }, cancellationToken).ConfigureAwait(false);
+
+        return data;
+    }
+
+    internal async Task<string> GetData(string endpoint, CancellationToken cancellationToken)
+    {
+        var data = await GetData<string>(endpoint, requestHeaderAcceptTextHtml, async (response, cancellationToken) =>
+        {
+            if (response.IsSuccessStatusCode)
+            {
+                var rawString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                return rawString ?? string.Empty;
+            }
+            else
+            {
+                Logger.Error("Error retrieving xml data from enphase. Status {StatusCode}, {Reason}", (int)response.StatusCode, response.ReasonPhrase);
+                return string.Empty;
             }
         }, cancellationToken).ConfigureAwait(false);
 
@@ -310,7 +386,6 @@ public class EnphaseService : BackgroundWorker, ISolar
             else
                 throw; // parent task cancelled... bubble up
         }
-
     }
 
     internal virtual async Task<string> PutData(string endpoint, HttpContent content, CancellationToken cancellationToken)
@@ -347,6 +422,7 @@ public class EnphaseService : BackgroundWorker, ISolar
         // set the httpclient timeout just a bit longer then the timeout we use with the cancellation token.
         // this will make sure there is consistent behavior when there is a timeout
         client.Timeout = TimeOut.Duration().Add(new TimeSpan(0, 0, 2));
+
         return client;
     }
     #endregion

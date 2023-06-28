@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using Json.Schema;
@@ -77,5 +78,28 @@ public static class JsonHelpers
                         }
                     }
                 });
+    }
+
+    /// <summary>
+    /// Parses the javascript object and returns all the properties in the dictionary.
+    /// </summary>
+    /// <param name="javascriptObject"></param>
+    /// <returns></returns>
+    public static Dictionary<string, string> JavascriptObjectToDictionary(string javascriptObject)
+    {
+        var jarReg = new Regex("""([^{\n\s,:]*):\s*("([^",]*)"|([^",]*)),?""", RegexOptions.Multiline | RegexOptions.Singleline | RegexOptions.Compiled, new TimeSpan(0, 0, 0, 0, 200));
+
+        var jMatches = jarReg.Match(javascriptObject);
+        var dict = new Dictionary<string, string>();
+        while (jMatches.Success)
+        {
+            var propname = jMatches.Groups[1].Value;
+            var val = string.IsNullOrWhiteSpace(jMatches.Groups[3].Value) ? jMatches.Groups[2].Value : jMatches.Groups[3].Value;
+            Logger.Trace("{propname}:{val}", propname, val);
+            dict.Add(propname, val);
+            jMatches = jMatches.NextMatch();
+        }
+
+        return dict;
     }
 }

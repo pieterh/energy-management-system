@@ -202,13 +202,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
             using var jsondocument = JsonDocument.Parse(rawTariffData);
             var jsonResult = jsondocument.RootElement;
             var isValid = JsonHelpers.Evaluate(_schemaResourceName, jsonResult);
-            using var stream = new MemoryStream();
-            using Utf8JsonWriter w = new Utf8JsonWriter(stream);
-            jsondocument.WriteTo(w);
-            w.Flush();
-            var str = Encoding.UTF8.GetString(stream.ToArray());
 
-            Logger.Info(str);
             if (isValid)
             {
                 var result = JsonSerializer.Deserialize<SpotTariff[]>(jsonResult, new JsonSerializerOptions());
