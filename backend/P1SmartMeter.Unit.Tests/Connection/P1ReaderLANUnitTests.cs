@@ -75,11 +75,10 @@ namespace P1ReaderUnitTests
             var w = new Mock<IWatchdog>();
             var r = new P1ReaderLAN("127.0.0.1", 8080, w.Object, socketFactory.Object);
             var token = new CancellationToken();
-            await r.StartAsync(token).ConfigureAwait(false);
 
-            // wait a bit until the service is connecting
-            for (int i = 0; i < 50 && r.Status != ConnectionStatus.Connecting; i++)
-                Thread.Sleep(100);
+            r.Status.Should().Be(ConnectionStatus.Disconnected);
+            await r.StartAsync(token).ConfigureAwait(false);
+            // expecting the status to be immediatly 'Connecting'
             r.Status.Should().Be(ConnectionStatus.Connecting);
 
             await r.StopAsync(token).ConfigureAwait(false);

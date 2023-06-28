@@ -202,7 +202,7 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
 
             var nextRun = GetNextOccurrence();
             var sleeptimeMs = (int)((nextRun.UtcTicks - DateTimeOffsetProvider.Now.UtcTicks) / 10000);
-            Logger.Warn("BackgroundWorker {name} => sleeping {sleepm}m, {sleeps}ms", this.GetType().Name, (double)sleeptimeMs / 60000.0, sleeptimeMs);
+            Logger.Trace("BackgroundWorker {name} => sleeping {sleepm}m, {sleeps}ms", this.GetType().Name, (double)sleeptimeMs / 60000.0, sleeptimeMs);
             run = !await StopRequested(sleeptimeMs).ConfigureAwait(false);
         } while (run);
 

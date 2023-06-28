@@ -67,7 +67,7 @@ namespace AlfenNG9xxBase.Tests
             using var cts = new CancellationTokenSource();
             await mockAlfen.Object.StartAsync(cts.Token).ConfigureAwait(false);
 
-            Thread.Sleep(800);
+            // removed sleep...
 
             mockAlfen.Object.ExecuteTask.Should().NotBeNull();
 
@@ -306,6 +306,7 @@ namespace AlfenNG9xxBase.Tests
                 lastChargingStateEventArgs.Start.Should().Be(start);
                 lastChargingStateEventArgs.End.Should().Be(end);
                 lastChargingStateEventArgs.EnergyDelivered.Should().Be(9920);
+                //TODO: check why it fails when running on git pipeline unittest
                 //lastChargingStateEventArgs.Cost.Should().BeApproximately(1.09m, 0.005m);
                 lastChargingStateEventArgs.Costs.Should().HaveCount(2);
 

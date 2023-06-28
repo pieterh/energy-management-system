@@ -38,7 +38,7 @@ public class SolarOptimizer : BackgroundWorker
 
     internal async Task PerformCheck()
     {
-        Logger.Warn("Solar production => start check");
+        Logger.Debug("Solar production => start check");
         var tariff = _priceProvider.GetNextTariff();
 
         if (tariff is not null && tariff.TariffReturn <= _minTariffCutOff)
@@ -47,22 +47,22 @@ public class SolarOptimizer : BackgroundWorker
             var isForcedOff = await _solar.GetProductionStatus(CancellationToken).ConfigureAwait(false);
             if (!isForcedOff)
             {
-                Logger.Warn("Solar production => switch off");
+                Logger.Info("Solar production => switch off");
                 await _solar.StopProduction(CancellationToken).ConfigureAwait(false);
             }
             else
-                Logger.Warn("Solar production => already off");
+                Logger.Debug("Solar production => already off");
         }
         else
         {
             var isForcedOff = await _solar.GetProductionStatus(CancellationToken).ConfigureAwait(false);
             if (isForcedOff)
             {
-                Logger.Warn("Solar production => switch on");
+                Logger.Info("Solar production => switch on");
                 await _solar.StartProduction(CancellationToken).ConfigureAwait(false);
             }
             else
-                Logger.Warn("Solar production => already on");
+                Logger.Debug("Solar production => already on");
         }
     }
 
