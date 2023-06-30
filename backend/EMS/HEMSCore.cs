@@ -30,7 +30,7 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
     private readonly IPriceProvider _priceProvider;
 
     private const int _intervalms = 10000; // ms
-    private const int _watchdogms = 15000; // expected ms this worker to report back to watchdog
+    private const int _watchdogms = 60000; // expected ms this worker to report back to watchdog
 
     public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
 
@@ -128,6 +128,7 @@ public class HEMSCore : BackgroundWorker, IHEMSCore
         try
         {
             _chargePoint.UpdateMaxCurrent(l1, l2, l3);
+            WatchDogTick();
         }
         catch (CommunicationException ce)
         {

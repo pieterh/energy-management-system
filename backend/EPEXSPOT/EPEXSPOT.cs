@@ -76,6 +76,7 @@ public class EPEXSPOTService : BackgroundWorker, IPriceProvider
         try
         {
             await HandleWork().ConfigureAwait(false);
+            WatchDogTick();
         }
         catch (CommunicationException ce)
         {

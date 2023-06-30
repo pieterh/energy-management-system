@@ -115,9 +115,10 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
         return (maxCurrent, phases);
     }
 
+#if DEBUG
     protected override Task Start()
     {
-#if DEBUG
+
         try
         {
             ShowProductInformation();
@@ -128,9 +129,9 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
         {
             Logger.Error("CommunicationException {Message}", ce.Message);
         }
-#endif
         return base.Start();
     }
+#endif
 
     protected static async Task Delay(int millisecondsDelay, CancellationToken stoppingToken)
     {
@@ -156,6 +157,7 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
         try
         {
             HandleWork();
+            WatchDogTick();
         }
         catch (CommunicationException ce)
         {

@@ -161,9 +161,11 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
         return _watchdogms;
     }
 
+
     protected override Task DoBackgroundWork()
     {
-        /* we are using the BckgroundWorker, since the watchdog doesnt support service */
+        /* we are using the BackgroundWorker, since the watchdog doesnt support service */
+        /* watchdog tick is performed when we actually processed a p1 message */
         return Task.CompletedTask;
     }
 
@@ -205,6 +207,9 @@ public class SmartMeter : BackgroundWorker, ISmartMeterAdapter
             if (m.VoltageL1 >= voltageWarn || m.VoltageL2 >= voltageWarn || m.VoltageL3 >= voltageWarn)
                 Logger.LogWarning("Check voltage {Warn} => {V1}, {V2}, {V3}", voltageWarn, m.VoltageL1, m.VoltageL2, m.VoltageL3);
             Measurement = m;
+
+            // perform the tick when we actually received and processed a message!
+            WatchDogTick();
         });
 
         _secondBlock.LinkTo(_lastBlock);

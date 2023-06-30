@@ -306,8 +306,12 @@ namespace AlfenNG9xxBase.Tests
                 lastChargingStateEventArgs.Start.Should().Be(start);
                 lastChargingStateEventArgs.End.Should().Be(end);
                 lastChargingStateEventArgs.EnergyDelivered.Should().Be(9920);
+                foreach(var c in lastChargingStateEventArgs.Costs)
+                {
+                    Console.WriteLine($"{c.Tariff.Timestamp.ToString("o")} - {c.Tariff.TariffReturn}");
+                }
                 //TODO: check why it fails when running on git pipeline unittest
-                //lastChargingStateEventArgs.Cost.Should().BeApproximately(1.09m, 0.005m);
+                lastChargingStateEventArgs.Cost.Should().BeApproximately(1.09m, 0.005m);
                 lastChargingStateEventArgs.Costs.Should().HaveCount(2);
 
                 lastChargingStateEventArgs.Costs[0].Timestamp.Should().BeCloseTo(new DateTimeOffset(2023, 06, 20, 12, 43, 40, 58, 700, new TimeSpan(2, 0, 0)), new TimeSpan(0, 0, 1));

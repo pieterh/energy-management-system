@@ -22,10 +22,12 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
     private bool _isRestarting;
     protected BackgroundWorker()
     {
+#pragma warning disable S3060
         if (this is IWatchdog t)
             _watchdog = t;
         else
             throw new EMS.Library.Exceptions.ApplicationException("Only watchdog can be a worker without a wathdog ;-)");
+#pragma warning restore
     }
 
     protected BackgroundWorker(IWatchdog watchdog)
@@ -189,6 +191,11 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
         return _intervalms;
     }
 
+    protected virtual void WatchDogTick()
+    {
+        if (!CancellationToken.IsCancellationRequested)
+            Watchdog.Tick(this);
+    }
 
     private async Task Run()
     {
@@ -196,9 +203,6 @@ public abstract class BackgroundWorker : BackgroundService, IBackgroundWorker
         do
         {
             await DoBackgroundWork().ConfigureAwait(false);
-
-            if (!CancellationToken.IsCancellationRequested)
-                Watchdog.Tick(this);
 
             var nextRun = GetNextOccurrence();
             var sleeptimeMs = (int)((nextRun.UtcTicks - DateTimeOffsetProvider.Now.UtcTicks) / 10000);

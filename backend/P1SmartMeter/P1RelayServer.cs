@@ -86,6 +86,7 @@ namespace P1SmartMeter
                     _clients.Add(client);
                     Logger.Info($"added client #{_clients.Count}");                    
                 }
+                WatchDogTick();
             } catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */
             } catch (Exception e) 
             {
