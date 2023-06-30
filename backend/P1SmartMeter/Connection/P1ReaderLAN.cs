@@ -102,6 +102,7 @@ internal sealed class P1ReaderLAN : P1Reader
 
             await Restart(useSubtask: true).ConfigureAwait(false);
         }
+        WatchDogTick();
     }
 
     /// <summary>

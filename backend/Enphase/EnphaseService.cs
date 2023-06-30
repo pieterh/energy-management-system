@@ -84,7 +84,7 @@ public class EnphaseService : BackgroundWorker, ISolar
     }
 
     private const int _intervalms = 120 * 1000;
-    private const int _watchdogms = _intervalms + (120 * 1000);
+    private const int _watchdogms = _intervalms + (150 * 1000);
     protected override DateTimeOffset GetNextOccurrence()
     {
         return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
@@ -105,6 +105,7 @@ public class EnphaseService : BackgroundWorker, ISolar
             var inverters = await GetInverters(CancellationToken).ConfigureAwait(false);
             var sum = inverters.Sum((x) => x.LastReportWatts);
             Logger.Debug("Current production {Watts}", sum);
+            WatchDogTick();
         }
         catch (CommunicationException ce)
         {

@@ -8,6 +8,7 @@ namespace Enphase
         private const string defaultRealm = "enphaseenergy.com";
 
         [SuppressMessage("", "CA5351", Justification = "Unable to change due compatibility with existing hardware")]
+        [SuppressMessage("", "S4790", Justification = "Unable to change due compatibility with existing hardware")]
         private static MD5 hashlib = MD5.Create();
 
         internal static string GetPublicPasswd(string serialNumber, string userName, string realm = "", DateTimeOffset expiryTimestamp = default)

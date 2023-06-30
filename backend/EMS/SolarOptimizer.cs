@@ -71,6 +71,7 @@ public class SolarOptimizer : BackgroundWorker
         try
         {
             await PerformCheck().ConfigureAwait(false);
+            WatchDogTick();
         }
         catch (CommunicationException ce)
         {

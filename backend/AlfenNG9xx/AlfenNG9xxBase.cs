@@ -156,6 +156,7 @@ public abstract class AlfenBase : BackgroundWorker, IChargePoint
         try
         {
             HandleWork();
+            WatchDogTick();
         }
         catch (CommunicationException ce)
         {
