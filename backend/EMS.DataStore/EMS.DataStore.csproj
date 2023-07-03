@@ -26,7 +26,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="NLog" Version="5.2.0" />
+		<PackageReference Include="NLog" Version="5.2.1" />
 		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="7.0.3" />
 	</ItemGroup>
 	<ItemGroup>
