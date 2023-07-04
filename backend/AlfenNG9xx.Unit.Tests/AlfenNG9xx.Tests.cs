@@ -13,14 +13,14 @@ using EMS.Library.Adapter.EVSE;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Configuration;
 using EMS.Library.TestableDateTime;
-
+using AlfenNG9xx.Modbus;
 
 namespace AlfenNG9xx.Tests
 {
     public class AlfenTests
     {
         [Fact]
-        [SuppressMessage("","S1215")]
+        [SuppressMessage("", "S1215")]
         public void DisposesProperly()
         {
             byte[] piBytes = {
@@ -38,25 +38,31 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
-            mock.Protected()
-                .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
-                .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
-            mock.Setup(m => m.Dispose()).CallBase();
-            mock.Setup(m => m.Grind(It.IsAny<bool>())).CallBase();
+            var mockModbusMaster = new Mock<IModbusMaster>();
+            mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
+              .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-            Assert.False(mock.Object.isDisposed);
-            var pi = mock.Object.ReadProductIdentification();
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
+            mockAlfen.CallBase = true;
+            mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
-            mock.Object.Dispose();
+            mockAlfen.Object.Disposed.Should().BeFalse();
+            var pi = mockAlfen.Object.ReadProductInformation();
+
+            mockAlfen.Object.ModbusMaster.Should().NotBeNull();
+
+            mockAlfen.Object.Dispose();
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            Assert.NotNull(pi);
-            Assert.True(mock.Object.isDisposed);
+            pi.Should().NotBeNull();
+            mockAlfen.Object.Disposed.Should().BeTrue();
+            mockAlfen.Object.ModbusMaster.Should().BeNull();
         }
+
         [Fact]
-        [SuppressMessage("","S1215")]
+        [SuppressMessage("", "S1215")]
         public void DisposesCanSafelyCalledTwice()
         {
             byte[] piBytes = {
@@ -74,26 +80,32 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
-            mock.Protected()
-                .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
-                .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
-            mock.Setup(m => m.Dispose()).CallBase();
-            mock.Setup(m => m.Grind(It.IsAny<bool>())).CallBase();
+            var mockModbusMaster = new Mock<IModbusMaster>();
+            mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
+              .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-            Assert.False(mock.Object.isDisposed);
-            var pi = mock.Object.ReadProductIdentification();
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
+            mockAlfen.CallBase = true;
+            mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
-            mock.Object.Dispose();
+            mockAlfen.Object.Disposed.Should().BeFalse();
+            var pi = mockAlfen.Object.ReadProductInformation();
+
+            mockAlfen.Object.ModbusMaster.Should().NotBeNull();
+
+            mockAlfen.Object.Dispose();
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            Assert.NotNull(pi);
-            Assert.True(mock.Object.isDisposed);
+            pi.Should().NotBeNull();
+            mockAlfen.Object.Disposed.Should().BeTrue();
+            mockAlfen.Object.ModbusMaster.Should().BeNull();
 
             // and for the second time
-            mock.Object.Dispose();
-            Assert.True(mock.Object.isDisposed);
+            mockAlfen.Object.Dispose();
+            mockAlfen.Object.Disposed.Should().BeTrue();
+            mockAlfen.Object.ModbusMaster.Should().BeNull();
         }
 
         [Fact]
@@ -113,13 +125,17 @@ namespace AlfenNG9xx.Tests
                 };
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
-            
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
-            mock.Protected()
-                .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
-                .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-            var pi = mock.Object.ReadProductIdentification();
+            var mockModbusMaster = new Mock<IModbusMaster>();
+            mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
+              .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
+
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
+            mockAlfen.CallBase = true;
+            mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
+
+            var pi = mockAlfen.Object.ReadProductInformation();
 
             pi.Should().NotBeNull();
             if (pi == null) Assert.True(false);
@@ -134,7 +150,7 @@ namespace AlfenNG9xx.Tests
             Assert.Equal(DateTimeKind.Utc, pi.DateTimeUtc.Kind);
             Assert.Equal(DateTimeKind.Local, pi.DateTimeLocal.Kind);
             Assert.Equal(DateTimeKind.Utc, pi.UpSinceUtc.Kind);
-            mock.Object.Dispose();
+            mockAlfen.Object.Dispose();
         }
 
         [Theory]
@@ -147,40 +163,45 @@ namespace AlfenNG9xx.Tests
             ushort[] piRegisters = new ushort[piBytes.Length / 2];
             Buffer.BlockCopy(piBytes, 0, piRegisters, 0, piBytes.Length);
 
-            var mock = new Mock<AlfenNG9xx.Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
-            mock.Protected()
-                .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
-                .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
+            var mockModbusMaster = new Mock<IModbusMaster>();
+            mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
+              .Returns<byte, ushort, ushort>((slave, address, count) => { return piRegisters; });
 
-            var ss = mock.Object.ReadStationStatus();
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
+            mockAlfen.CallBase = true;
+            mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
+
+            var ss = mockAlfen.Object.ReadStationStatus();
 
             Assert.Equal(expectedStationStatus.ActiveMaxCurrent, ss.ActiveMaxCurrent);
             Assert.Equal(expectedStationStatus.Temperature, ss.Temperature);
             Assert.Equal(expectedStationStatus.OCCPState, ss.OCCPState);
             Assert.Equal(expectedStationStatus.NrOfSockets, ss.NrOfSockets);
-            mock.Object.Dispose();
+            mockAlfen.Object.Dispose();
         }
 
         [Theory]
         [MemberData(nameof(TestDataGenerator.ReadSocketMeasurement), MemberType = typeof(TestDataGenerator))]
         public void ReadSocketMeasurement(byte[] piBytes300, byte[] piBytes1200, SocketMeasurement expectedSocketMeasurement)
         {
-            if (piBytes300 == null) throw new ArgumentNullException(nameof(piBytes300));
-            if (piBytes1200 == null) throw new ArgumentNullException(nameof(piBytes1200));
-            if (expectedSocketMeasurement == null) throw new ArgumentNullException(nameof(expectedSocketMeasurement));
+            ArgumentNullException.ThrowIfNull(piBytes300);
+            ArgumentNullException.ThrowIfNull(piBytes1200);
+            ArgumentNullException.ThrowIfNull(expectedSocketMeasurement);
 
             ushort[] piRegisters_300 = ConvertBytesToRegisters(piBytes300);
             ushort[] piRegisters_1200 = ConvertBytesToRegisters(piBytes1200);
+            var mockModbusMaster = new Mock<IModbusMaster>();
+            mockModbusMaster.Setup((x) => x.ReadHoldingRegisters(It.IsAny<byte>(), It.IsAny<ushort>(), It.IsAny<ushort>()))
+              .Returns<byte, ushort, ushort>((slave, address, count) => { return (address == 300) ? piRegisters_300 : piRegisters_1200; });
 
-            var mock = new Mock<Alfen>(new Config() { Host = "192.168.1.9", Port = 502, Type = "LAN" }, new TestPriceProvider());
-            mock.Protected()
-                .Setup<ushort[]>("ReadHoldingRegisters", ItExpr.IsAny<byte>(), ItExpr.IsAny<ushort>(), ItExpr.IsAny<ushort>())
-                .Returns<byte, ushort, ushort>((slave, address, count) =>
-                {
-                    return (address == 300) ? piRegisters_300 : piRegisters_1200;
-                });
+            var w = new Mock<IWatchdog>();
+            var mockAlfen = new Mock<AlfenNG9xx.Alfen>(new InstanceConfiguration() { Host = "127.0.0.1", Port = 502, Type = "LAN" }, new TestPriceProvider(), w.Object);
+            mockAlfen.CallBase = true;
+            mockAlfen.Setup((x) => x.ModbusMasterFactory()).Returns(() => { return mockModbusMaster.Object; });
 
-            var ss = mock.Object.ReadSocketMeasurement(1);
+
+            var ss = mockAlfen.Object.ReadSocketMeasurement(1);
 
             Assert.Equal(expectedSocketMeasurement.MeterState, ss.MeterState);
             Assert.Equal(expectedSocketMeasurement.MeterTimestamp, ss.MeterTimestamp);
@@ -191,53 +212,13 @@ namespace AlfenNG9xx.Tests
             Assert.Equal(expectedSocketMeasurement.RealEnergyDeliveredL2, ss.RealEnergyDeliveredL2);
             Assert.Equal(expectedSocketMeasurement.RealEnergyDeliveredL3, ss.RealEnergyDeliveredL3);
             Assert.Equal(expectedSocketMeasurement.RealEnergyDeliveredSum, ss.RealEnergyDeliveredSum);
-            
+
             Assert.Equal(expectedSocketMeasurement.AppliedMaxCurrent, ss.AppliedMaxCurrent);
             Assert.Equal(expectedSocketMeasurement.MaxCurrentValidTime, ss.MaxCurrentValidTime);
             Assert.Equal(expectedSocketMeasurement.MaxCurrent, ss.MaxCurrent);
             Assert.Equal(expectedSocketMeasurement.ActiveLBSafeCurrent, ss.ActiveLBSafeCurrent);
             Assert.Equal(expectedSocketMeasurement.Phases, ss.Phases);
-            mock.Object.Dispose();
-        }
-
-        [Fact(DisplayName = "Determine no current properly")]
-        public void DetermineNoCurrent()
-        {
-            (var max, var phases) = Alfen.DetermineMaxCurrent(-1, -2, -3);
-            Assert.Equal(-1, max, 0.1);
-            Assert.Equal(0, phases);
-        }
-
-        [Fact(DisplayName = "Determine max current one phase (supply one)")]
-        public void DetermineMaxCurrentOnePhase1()
-        {
-            (var max, var phases) = Alfen.DetermineMaxCurrent(14.1, 0, 0);
-            Assert.Equal(14.1, max, 0.1);
-            Assert.Equal(1, phases);
-        }
-
-        [Fact(DisplayName = "Determine max current one phase (suply two)")]
-        public void DetermineMaxCurrentOnePhase2()
-        {
-            (var max, var phases) = Alfen.DetermineMaxCurrent(14.2, 10.0, 0);
-            Assert.Equal(14.2, max, 0.1);
-            Assert.Equal(1, phases);
-        }
-
-        [Fact(DisplayName = "Determine max current three phases (second phase leading)")]
-        public void DetermineMaxCurrentThreePhase1()
-        {
-            (var max, var phases) = Alfen.DetermineMaxCurrent(15.2, 14.2, 15.1);
-            Assert.Equal(14.2, max, 0.1);
-            Assert.Equal(3, phases);
-        }
-
-        [Fact(DisplayName = "Determine max current three phases (third phase current)")]
-        public void DetermineMaxCurrentThreePhase2()
-        {
-            (var max, var phases) = Alfen.DetermineMaxCurrent(15.3, 15.4, 14.3);
-            Assert.Equal(14.3, max, 0.1);
-            Assert.Equal(3, phases);
+            mockAlfen.Object.Dispose();
         }
 
         private static ushort[] ConvertBytesToRegisters(byte[] piBytes)
@@ -374,6 +355,17 @@ namespace AlfenNG9xx.Tests
 
     public class TestPriceProvider : IPriceProvider
     {
+        private Tariff[] _tariffs = Array.Empty<Tariff>();
+        public Tariff[] GetTariffs()
+        {
+            return _tariffs;
+        }
+
+        public void SetTariffs(Tariff[] value)
+        {
+            _tariffs = value;
+        }
+
         public Task<Tariff[]> GetTariff(DateTime start, DateTime end)
         {
             throw new NotImplementedException();
@@ -381,8 +373,14 @@ namespace AlfenNG9xx.Tests
 
         public Tariff GetTariff()
         {
-            var tariff = new Tariff(DateTimeProvider.Now, 0.23m, 0.08m);
-            return tariff;
+            if (GetTariffs().Equals(Array.Empty<Tariff>()))
+                return new Tariff(DateTimeProvider.Now.ToUniversalTime(), 0.23m, 0.08m);
+            return FindTariff(GetTariffs(), DateTimeProvider.Now.ToUniversalTime()) ?? new Tariff(DateTimeProvider.Now.ToUniversalTime(), 0.23m, 0.08m);
+        }
+
+        public Tariff? GetNextTariff()
+        {
+            throw new NotImplementedException();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -393,6 +391,26 @@ namespace AlfenNG9xx.Tests
         public Task StopAsync(CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Find the correct tariff based on given time
+        /// </summary>
+        /// <param name="t">time sorted array of tariffs</param>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public static Tariff? FindTariff(Tariff[] t, DateTime start)
+        {
+            if (t == null || t.Length == 0) return null;
+            if (start.Kind == DateTimeKind.Unspecified) throw new ArgumentOutOfRangeException(nameof(start));
+
+            var startUtc = start.ToUniversalTime();
+            var idx = t.ToList().FindIndex(x => { return x.Timestamp >= startUtc; });
+
+            if (idx < 0) return null;
+            if (t[idx].Timestamp.Equals(start)) return t[idx];
+            if (idx == 0) return null;
+            return t[idx - 1];
         }
     }
 }

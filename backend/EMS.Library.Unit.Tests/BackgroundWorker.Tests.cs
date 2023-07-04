@@ -19,7 +19,8 @@ namespace BackgroundWorker
         [Fact]
         public void CreateAndDispose()
         {
-            var mock = new Mock<EMS.Library.BackgroundWorker>
+            var w = new Mock<IWatchdog>();
+            var mock = new Mock<EMS.Library.BackgroundWorker>(w.Object)
             {
                 CallBase = true
             };
@@ -37,7 +38,8 @@ namespace BackgroundWorker
         [SuppressMessage("","S3966")]
         public void CreateAndDoubleDispose()
         {
-            var mock = new Mock<EMS.Library.BackgroundWorker>
+            var w = new Mock<IWatchdog>();
+            var mock = new Mock<EMS.Library.BackgroundWorker>(w.Object)
             {
                 CallBase = true
             };
@@ -225,10 +227,18 @@ namespace BackgroundWorker
 
     public class BGTester : EMS.Library.BackgroundWorker
     {
-
-        protected override void DoBackgroundWork()
+        public BGTester(IWatchdog watchdog) : base(watchdog)
         {
+        }
 
+        protected override Task DoBackgroundWork()
+        {
+            return Task.CompletedTask;
+        }
+
+        protected override int GetInterval()
+        {
+            throw new NotImplementedException();
         }
 
         protected override Task Start()

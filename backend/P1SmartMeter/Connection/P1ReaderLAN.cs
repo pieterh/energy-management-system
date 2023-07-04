@@ -1,228 +1,261 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace P1SmartMeter.Connection
+using EMS.Library;
+using EMS.Library.Tasks;
+using EMS.Library.TestableDateTime;
+using P1SmartMeter.Connection.Proxies;
+
+namespace P1SmartMeter.Connection;
+
+enum ConnectionStatus
 {
-    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
-    internal sealed class P1ReaderLAN : P1Reader
+    Connecting,
+    Connected,
+    Disconnected,
+    Reconnecting
+};
+
+[SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+internal sealed class P1ReaderLAN : P1Reader
+{
+    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+    private const int RECEIVE_BUFFER_SIZE = 2048;
+
+    private readonly string _host;
+    private readonly int _port;
+    private readonly ISocketFactory _socketFactory;
+
+    private ISocket? _socket;
+    private ISocketAsyncEventArgs? _receiveEventArgs;
+
+    public ConnectionStatus Status { get; internal set; } = ConnectionStatus.Disconnected;
+
+    public P1ReaderLAN(string host, int port, IWatchdog watchdog, ISocketFactory? socketFactory = null) : base(watchdog)
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        _host = host;
+        _port = port;
+        _socketFactory = socketFactory ?? new SocketFactory();
+    }
 
-        private readonly string _host;
-        private readonly int _port;
-        private const int RECEIVE_BUFFER_SIZE = 2048;
-        private Task? _backgroundTask;
-
-        private Socket? _socket;
-        private NetworkStream? _stream;
-        private SocketAsyncEventArgs? _receiveEventArgs;
-
-        public P1ReaderLAN(string host, int port)
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !Disposed)
         {
-            _host = host;
-            _port = port;
+            DisposeSocket();
         }
 
-        protected override void Dispose(bool disposing)
+        base.Dispose(disposing);
+    }
+
+    private void DisposeSocket()
+    {
+        _receiveEventArgs?.Dispose();
+        _receiveEventArgs = null;
+
+        if (_socket is not null)
         {
-            base.Dispose(disposing);
-            if (disposing)
-            {
-                DisposeStream();
-                DisposeBackgroundTask();
-            }
-        }
-
-        private void DisposeBackgroundTask()
-        {
-            _backgroundTask?.Wait(5000);
-            _backgroundTask?.Dispose();
-            _backgroundTask = null;
-        }
-
-        private void DisposeStream()
-        {
-            Logger.Trace($"DisposeStream {_stream?.Socket?.LocalEndPoint?.ToString()}");
-            _receiveEventArgs?.Dispose();
-            _receiveEventArgs = null;
-
-            _stream?.Close();
-            _stream?.Dispose();
-            _stream = null;
-
-            if (_socket is not null)
+            try
             {
                 if (_socket.Connected)
                     _socket.Disconnect(false);
-
-                _socket.Close();
-                _socket.Dispose();
-                _socket = null;
             }
+            catch (SocketException) { /* ignore socket exception when disconnecting / disposing */}
+            _socket.Close();
+            _socket.Dispose();
+            _socket = null;
         }
+    }
 
-        protected override Task Start()
+    protected override async Task Start()
+    {
+        Connect();
+        await base.Start().ConfigureAwait(false);
+    }
+
+    protected override void Stop()
+    {
+        Status = ConnectionStatus.Disconnected;
+        DisposeSocket();
+        base.Stop();
+    }
+
+    private const int _intervalms = 10000;
+    private const int _watchdogms = 15000;
+    protected override DateTimeOffset GetNextOccurrence()
+    {
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
+    }
+
+    protected override int GetInterval()
+    {
+        return _watchdogms;
+    }
+
+    protected override async Task DoBackgroundWork()
+    {
+        if (Status == ConnectionStatus.Reconnecting)
         {
-            _backgroundTask = Task.Run(async () =>
+            Logger.Warn("Status singnaled reconnecting...");
+            Status = ConnectionStatus.Disconnected;
+
+            await Restart(useSubtask: true).ConfigureAwait(false);
+        }
+        WatchDogTick();
+    }
+
+    /// <summary>
+    /// Returns true if the connection setup is started
+    /// </summary>
+    /// <returns></returns>
+    internal bool Connect()
+    {
+        bool isConnecting = false;
+        try
+        {
+            Logger.Info($"Connecting {_host}:{_port}");
+
+            _socket = _socketFactory.CreateSocket(SocketType.Stream, ProtocolType.Tcp);
+            _receiveEventArgs = _socketFactory.CreateSocketAsyncEventArgs();
+            _receiveEventArgs.SetBuffer(new Byte[RECEIVE_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
+            _receiveEventArgs.Completed += new EventHandler<ISocketAsyncEventArgs>(OnCompleted);
+            _receiveEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Parse(_host), _port);
+
+            Status = ConnectionStatus.Connecting;
+
+            CancellationToken.Register(() =>
             {
-                Logger.Trace("BackgroundTask running");
-                try
+                if (Status == ConnectionStatus.Connecting && _socket is not null)
                 {
-                    bool run;
-                    do
-                    {
-                        run = !Connect() && !await StopRequested(2000).ConfigureAwait(false);
-                    }
-                    while (run);
+                    Logger.Info("Cancellation requested while connecting. Cancel the ConnectAsync.");
+                    _socket.CancelConnectAsync(_receiveEventArgs);
                 }
-                catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */ }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "Unhandled exception in BackgroundTask");
-                    throw;
-                }
-                Logger.Trace($"BackgroundTask stopped -> stop requested {StopRequested(0)}");
-            }, TokenSource.Token);
+            });
 
-            return _backgroundTask;
+            if (!_socket.ConnectAsync(_receiveEventArgs))
+            {
+                Logger.Info($"Data {_receiveEventArgs.BytesTransferred},{_socket.Connected}");
+                OnCompleted(this, _receiveEventArgs);
+            }
+
+            var port = _socket != null && _socket.LocalEndPoint != null ? ((IPEndPoint)_socket.LocalEndPoint).Port : -1;
+            isConnecting = true;
+            Logger.Trace($"Connecting from local port {port}");
+        }
+        catch (SocketException se1)
+            when (se1.SocketErrorCode == SocketError.TimedOut ||
+                  se1.SocketErrorCode == SocketError.ConnectionRefused)
+        {
+            DisposeSocket();
+            Logger.Error($"Socket error {se1.SocketErrorCode} while connecting.");
+        }
+        catch (SocketException se2)
+        {
+            DisposeSocket();
+            Logger.Error(se2, $"Unexpected socket exception while connecting.");
         }
 
-        protected override void Stop()
+        return isConnecting;
+    }
+
+    [SuppressMessage("Code Analysis", "CA1031")]
+    private async void OnCompleted(object? sender, ISocketAsyncEventArgs eventArgs)
+    {
+        try
         {
-            TokenSource.Cancel();
-            /* wait a bit for the background task in the case that it still is trying to connect */
-            _backgroundTask?.Wait(750);
-
-            DisposeStream();
-            DisposeBackgroundTask();
-        }
-
-        private bool Connect()
-        {
-            bool isConnected = false;
-            try
+            Logger.Trace($"==> {eventArgs.LastOperation}");
+            switch (eventArgs.LastOperation)
             {
-                Logger.Info($"Connecting {_host}:{_port}");
-
-                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                _receiveEventArgs = new SocketAsyncEventArgs();
-                _receiveEventArgs.SetBuffer(new Byte[RECEIVE_BUFFER_SIZE], 0, RECEIVE_BUFFER_SIZE);
-                _receiveEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnCompleted);
-                _receiveEventArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Parse(_host), _port);
-                if (!_socket.ConnectAsync(_receiveEventArgs))
-                {
-                    Logger.Info($"Data {_receiveEventArgs.BytesTransferred},{_socket.Connected}");
-                    OnCompleted(this, _receiveEventArgs);
-                }
-
-                isConnected = true;
-                var port = _socket != null && _socket.LocalEndPoint != null ? ((IPEndPoint)_socket.LocalEndPoint).Port : -1;
-                var connected = _socket?.Connected;
-                Logger.Trace($"Connected {isConnected},{connected},{port}");
-            }
-            catch (SocketException se1)
-                when (se1.SocketErrorCode == SocketError.TimedOut ||
-                      se1.SocketErrorCode == SocketError.ConnectionRefused)
-            {
-                DisposeStream();
-                Logger.Error($"Socket error {se1.SocketErrorCode} while connecting.");
-            }
-            catch (SocketException se2)
-            {
-                DisposeStream();
-                Logger.Error(se2, $"Unexpected socket exception while connecting.");
-            }
-
-            return isConnected;
-        }
-
-        private async void OnCompleted(object? sender, SocketAsyncEventArgs eventArgs)
-        {
-            try
-            {
-                Logger.Trace($"==> {eventArgs.LastOperation}");
-                switch (eventArgs.LastOperation)
-                {
-                    case SocketAsyncOperation.Connect:
-                        await ProcesConnect(eventArgs).ConfigureAwait(false);
-                        break;
-                    case SocketAsyncOperation.Receive:
-                        await ProcesReceive(eventArgs).ConfigureAwait(false);
-                        break;
-                    default:
-                        Logger.Error($"Received {eventArgs.LastOperation}");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "While processing received data");
-            }
-        }
-
-        private async Task ProcesConnect(SocketAsyncEventArgs connectEventArgs)
-        {
-            var socket = connectEventArgs.ConnectSocket;
-            switch (connectEventArgs.SocketError)
-            {
-                case SocketError.Success:
-                    var port = socket != null && socket.LocalEndPoint != null ? ((IPEndPoint)socket.LocalEndPoint).Port : -1;
-                    var connected = socket?.Connected;
-                    Logger.Info($"{connectEventArgs.LastOperation}, port={port}, connected={connected}, socketError={connectEventArgs.SocketError}");
-                    var willRaiseEvent = socket?.ReceiveAsync(connectEventArgs);
-                    if (willRaiseEvent.HasValue && !willRaiseEvent.Value)
-                    {
-                        await ProcesReceive(connectEventArgs).ConfigureAwait(false);
-                    }
+                case SocketAsyncOperation.Connect:
+                    await ProcesConnect(eventArgs).ConfigureAwait(false);
                     break;
-                case SocketError.ConnectionRefused:
-                    Logger.Error("Connection refused");
-                    await RestartConnection().ConfigureAwait(false);
-                    break;
-                case SocketError.OperationAborted:
-                    Logger.Info("Socket operation aborted");
+                case SocketAsyncOperation.Receive:
+                    await ProcesReceive(eventArgs).ConfigureAwait(false);
                     break;
                 default:
-                    throw new SocketException((int)connectEventArgs.SocketError);
+                    Logger.Error($"Received {eventArgs.LastOperation}");
+                    break;
             }
         }
-
-        private async Task ProcesReceive(SocketAsyncEventArgs receiveEventArgs)
+        catch (SocketException se)
         {
-            if (await StopRequested(0).ConfigureAwait(false)) { return; }
-            var socket = receiveEventArgs.ConnectSocket;
+            Logger.Error($"SocketException {se.Message}, while processing received data");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "While processing received data");
+        }
+    }
 
-            if (receiveEventArgs.BytesTransferred <= 0 || socket == null || !socket.Connected )
-            {
+    private async Task ProcesConnect(ISocketAsyncEventArgs connectEventArgs)
+    {
+        var socket = connectEventArgs.ConnectSocket;
+        switch (connectEventArgs.SocketError)
+        {
+            case SocketError.Success:
                 var port = socket != null && socket.LocalEndPoint != null ? ((IPEndPoint)socket.LocalEndPoint).Port : -1;
                 var connected = socket?.Connected;
-                Logger.Error($"No bytes received {receiveEventArgs.BytesTransferred}. Lost connection and retry. {port},{connected},{receiveEventArgs.SocketError}");
-                await RestartConnection().ConfigureAwait(false);
-                return;
-            }
+                Logger.Info($"{connectEventArgs.LastOperation}, port={port}, connected={connected}, socketError={connectEventArgs.SocketError}");
+                Status = ConnectionStatus.Connected;
 
+                var willRaiseEvent = socket?.ReceiveAsync(connectEventArgs);
+                if (willRaiseEvent.HasValue && !willRaiseEvent.Value)
+                {
+                    await ProcesReceive(connectEventArgs).ConfigureAwait(false);
+                }
+                break;
+            case SocketError.ConnectionRefused:
+            case SocketError.TimedOut:
+                Logger.Error("Connection {SocketError}", connectEventArgs.SocketError);
+                Status = ConnectionStatus.Disconnected;
+                RestartConnection();
+                break;
+            case SocketError.OperationAborted:
+                Logger.Info("Socket operation aborted");
+                Status = ConnectionStatus.Disconnected;
+                if (!TokenSource?.IsCancellationRequested ?? true)
+                    RestartConnection();
+                else
+                    Logger.Info("Cancellation requested. Not restarting.");
+                break;
+            default:
+                throw new SocketException((int)connectEventArgs.SocketError);
+        }
+    }
+
+    private async Task ProcesReceive(ISocketAsyncEventArgs receiveEventArgs)
+    {
+        if (await StopRequested(0).ConfigureAwait(false)) { return; }
+        var socket = receiveEventArgs.ConnectSocket;
+
+        if (receiveEventArgs.BytesTransferred <= 0 || socket == null || !socket.Connected)
+        {
+            if (!TokenSource?.IsCancellationRequested ?? false)
+            {
+                Logger.Error($"Lost connection and retry. {receiveEventArgs.SocketError}");
+                RestartConnection();
+            }
+            return;
+        }
+
+        if (receiveEventArgs.BytesTransferred > 0)
+        {
             var data = Encoding.ASCII.GetString(receiveEventArgs.MemoryBuffer.Span[..receiveEventArgs.BytesTransferred]);
             OnDataArrived(new DataArrivedEventArgs(data));
-
-            // Start receiving more data
-            if (!socket.ReceiveAsync(receiveEventArgs))
-            {
-                // completion was synch, so process immediatly
-                await ProcesReceive(receiveEventArgs).ConfigureAwait(false);
-            }
         }
 
-        private async Task RestartConnection()
+        // Start receiving more data
+        if (!socket.ReceiveAsync(receiveEventArgs))
         {
-            Logger.Info($"Restart connection...");
-            Stop();
-
-            Logger.Trace($"and try again");
-            await StartAsync().ConfigureAwait(false);
+            // completion was synch, so process immediatly
+            await ProcesReceive(receiveEventArgs).ConfigureAwait(false);
         }
+    }
+
+    private void RestartConnection()
+    {
+        Logger.Info("Set status to reconnect...");
+        Status = ConnectionStatus.Reconnecting;
     }
 }

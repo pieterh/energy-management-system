@@ -1,1 +1,5 @@
 config/logging.log
+config/logging.*.log
+config/hems.db
+config/hems.db-shm
+config/hems.db-wal

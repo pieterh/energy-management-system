@@ -1,217 +1,233 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using EMS.DataStore;
 using EMS.Library;
 using EMS.Library.Adapter.EVSE;
-using EMS.Engine;
-using EMS.Library.Core;
 using EMS.Library.Adapter.SmartMeterAdapter;
+using EMS.Library.Adapter.Solar;
+using EMS.Library.Adapter.PriceProvider;
+using EMS.Library.Core;
 using EMS.Library.TestableDateTime;
-using EMS.DataStore;
-using System.Diagnostics.CodeAnalysis;
+using EMS.Library.Exceptions;
 
-namespace EMS
+
+namespace EMS;
+
+[SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
+public class HEMSCore : BackgroundWorker, IHEMSCore
 {
-    [SuppressMessage("SonarLint", "S101", Justification = "Ignored intentionally")]
-    public class HEMSCore : Microsoft.Extensions.Hosting.BackgroundService, IHEMSCore, IHostedService
+    private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
+    private static readonly NLog.Logger LoggerChargingcost = NLog.LogManager.GetLogger("chargingcost");
+    private readonly Compute _compute;
+
+    private readonly ILogger Logger;
+
+    private readonly ISmartMeterAdapter _smartMeter;
+    private readonly IChargePoint _chargePoint;
+    private readonly ISolar _solar;
+    private readonly IPriceProvider _priceProvider;
+
+    private const int _intervalms = 10000; // ms
+    private const int _watchdogms = 60000; // expected ms this worker to report back to watchdog
+
+    public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
+
+    private bool _disposed;
+    private SolarOptimizer? _solarOptimizerService;
+
+    public ChargingMode ChargingMode
     {
+        get => _compute.Mode;
+        set => _compute.Mode = value;
+    }
 
-        private static readonly NLog.Logger LoggerChargingState = NLog.LogManager.GetLogger("chargingstate");
-        private static readonly NLog.Logger LoggerChargingcost = NLog.LogManager.GetLogger("chargingcost");
-        private readonly Compute _compute;
+    public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, IWatchdog watchdog, ISmartMeterAdapter smartMeter, IChargePoint chargePoint, ISolar solar, IPriceProvider priceProvider) : base(watchdog)
+    {
+        ArgumentNullException.ThrowIfNull(appLifetime);
+        Logger = logger;
 
-        private readonly ILogger Logger;
-        private readonly ISmartMeterAdapter _smartMeter;
-        private readonly IChargePoint _chargePoint;
+        _smartMeter = smartMeter;
+        _chargePoint = chargePoint;
+        _solar = solar;
+        _priceProvider = priceProvider;
 
-        private const int _interval = 10000; //ms
+        _compute = new(logger, ChargingMode.MaxCharge);
 
-        public ChargeControlInfo ChargeControlInfo { get { return _compute.Info; } }
+        appLifetime.ApplicationStarted.Register(OnStarted);
+        appLifetime.ApplicationStopping.Register(OnStopping);
+        appLifetime.ApplicationStopped.Register(OnStopped);
+    }
 
-        public ChargingMode ChargingMode
+    protected override void Dispose(bool disposing)
+    {
+        Logger.LogTrace("Dispose({Disposing}) _disposed {Disposed}", disposing, _disposed);
+
+        if (_disposed) return;
+
+        _solarOptimizerService?.Dispose();
+        _solarOptimizerService = null;
+
+        _disposed = true;
+        Logger.LogTrace("Dispose({Disposing}) done => _disposed {Disposed}", disposing, _disposed);
+
+        base.Dispose(disposing);
+    }
+
+
+    protected override async Task Start()
+    {
+        Logger.LogInformation("1. Start has been called.");
+
+        _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
+        _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
+
+        _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
+        _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
+
+        _compute.StateUpdate -= Compute_StateUpdate;
+        _compute.StateUpdate += Compute_StateUpdate;
+
+        _solarOptimizerService = new SolarOptimizer(_priceProvider, _solar, Watchdog);
+        await _solarOptimizerService.StartAsync(CancellationToken).ConfigureAwait(false);
+
+        await base.Start().ConfigureAwait(false);
+    }
+
+    protected override async void Stop()
+    {
+        Logger.LogInformation("4. StopAsync has been called.");
+
+        _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
+        _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
+        _compute.StateUpdate -= Compute_StateUpdate;
+
+        if (_solarOptimizerService is not null)
         {
-            get => _compute.Mode;
-            set => _compute.Mode = value;
+            await _solarOptimizerService.StopAsync(CancellationToken).ConfigureAwait(false);
+            _solarOptimizerService.Dispose();
+            _solarOptimizerService = null;
         }
+        base.Stop();
+    }
 
-        public HEMSCore(ILogger<HEMSCore> logger, IHostApplicationLifetime appLifetime, ISmartMeterAdapter smartMeter, IChargePoint chargePoint)
+    protected override DateTimeOffset GetNextOccurrence()
+    {
+        return DateTimeOffsetProvider.Now.AddMilliseconds(_intervalms);
+    }
+
+    protected override int GetInterval()
+    {
+        return _watchdogms;
+    }
+
+    protected override Task DoBackgroundWork()
+    {
+        var (l1, l2, l3) = _compute.Charging();
+        try
         {
-            ArgumentNullException.ThrowIfNull(appLifetime);
-            Logger = logger;
-
-            _smartMeter = smartMeter;
-            _chargePoint = chargePoint;
-
-            _compute = new(logger, ChargingMode.MaxCharge);
-
-            appLifetime.ApplicationStarted.Register(OnStarted);
-            appLifetime.ApplicationStopping.Register(OnStopping);
-            appLifetime.ApplicationStopped.Register(OnStopped);
+            _chargePoint.UpdateMaxCurrent(l1, l2, l3);
+            WatchDogTick();
         }
-
-        public override Task StartAsync(CancellationToken cancellationToken)
+        catch (CommunicationException ce)
         {
-            Logger.LogInformation("1. StartAsync has been called.");
-            _smartMeter.SmartMeterMeasurementAvailable += SmartMeter_MeasurementAvailable;
-            _chargePoint.ChargingStateUpdate += ChargePoint_ChargingStateUpdate;
-            _compute.StateUpdate += Compute_StateUpdate;
-
-            base.StartAsync(cancellationToken);
-
-            return Task.CompletedTask;
+            Logger.LogError("CommunicationException {Message}, while update max current", ce.Message);
         }
+        return Task.CompletedTask;
+    }
 
-        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
+    private void OnStarted()
+    {
+        Logger.LogInformation("2. OnStarted has been called.");
+    }
+
+    private void OnStopping()
+    {
+        Logger.LogInformation("3. OnStopping has been called.");
+
+        _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
+        _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
+        _compute.StateUpdate -= Compute_StateUpdate;
+    }
+
+    private void OnStopped()
+    {
+        Logger.LogInformation("5. OnStopped has been called.");
+    }
+
+    private void SmartMeter_MeasurementAvailable(object? sender, SmartMeterMeasurementAvailableEventArgs e)
+    {
+        Logger.LogTrace("- {Measurement}", e.Measurement);
+
+        var chargePointSocketMeasurement = _chargePoint.LastSocketMeasurement ?? new SocketMeasurementBase();
+        _compute.AddMeasurement(e.Measurement, chargePointSocketMeasurement);
+    }
+
+    private void ChargePoint_ChargingStateUpdate(object? sender, ChargingStateEventArgs e)
+    {
+        Logger.LogInformation("- {StateMessage}, {Ended}, {Delivered}, €{Cost} ",
+            e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered, e.Cost);
+
+        LoggerChargingState.Info("Mode 3 state {state}, {stateMessage}, session ended {ended}, energy delivered {delivered}",
+        e.Status?.Measurement?.Mode3State, e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered);
+
+        if (e.SessionEnded && e.EnergyDelivered > 0.0d)
         {
-            try
+            using (var db = new HEMSContext())
             {
-                ChargingMode = ChargingMode.MaxCharge;
 
-                using (var db = new HEMSContext())
+                var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.0m;
+                var sortedCosts = e.Costs.OrderBy((c) => c.Timestamp).ToArray();
+
+                var transaction = new ChargingTransaction
                 {
+                    Timestamp = DateTimeOffsetProvider.Now,
+                    Start = e.Start,
+                    End = e.End,
+                    EnergyDelivered = (double)energyDelivered,
+                    Cost = (double)e.Cost,
+                    Price = energyDelivered > 0 ? (double)(e.Cost / energyDelivered) : 0.00d
+                };
 
-                    Logger.LogInformation("Database path: {Path}.", HEMSContext.DbPath);
+                LoggerChargingcost.Debug(transaction.ToString());
 
-                    var items = db.ChargingTransactions.OrderBy((x) => x.Timestamp);
-                    foreach (var item in items)
-                    {
-                        Logger.LogTrace("Transaction: {Trans}", item.ToString());
-                        db.Entry(item)
-                            .Collection(b => b.CostDetails)
-                            .Load();
-                        foreach (var detail in item.CostDetails.OrderBy((x) => x.Timestamp))
-                        {
-                            Logger.LogTrace("Transaction detail: {Detail}", detail.ToString());
-                        }
-                    }
-                }
-
-                while (!stoppingToken.IsCancellationRequested)
+                foreach (var c in sortedCosts)
                 {
-                    var (l1, l2, l3) = _compute.Charging();
-
-                    try
+                    var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.0m;
+                    var detail = new CostDetail()
                     {
-                        _chargePoint.UpdateMaxCurrent(l1, l2, l3);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogError(e, "while update max current");
-                    }
-
-                    await Task.Delay(_interval, stoppingToken).ConfigureAwait(false);
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                Logger.LogInformation("Canceled");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Unhandled exception");
-            }
-        }
-
-        private void OnStarted()
-        {
-            Logger.LogInformation("2. OnStarted has been called.");
-        }
-
-        private void OnStopping()
-        {
-            Logger.LogInformation("3. OnStopping has been called.");
-
-            _smartMeter.SmartMeterMeasurementAvailable -= SmartMeter_MeasurementAvailable;
-            _chargePoint.ChargingStateUpdate -= ChargePoint_ChargingStateUpdate;
-            _compute.StateUpdate -= Compute_StateUpdate;
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            base.StopAsync(cancellationToken);
-            Logger.LogInformation("4. StopAsync has been called.");
-
-            return Task.CompletedTask;
-        }
-
-        private void OnStopped()
-        {
-            Logger.LogInformation("5. OnStopped has been called.");
-        }
-
-        private void SmartMeter_MeasurementAvailable(object? sender, SmartMeterMeasurementAvailableEventArgs e)
-        {
-            Logger.LogTrace("- {Measurement}", e.Measurement);
-
-            _compute.AddMeasurement(e.Measurement, e.Measurement);
-        }
-
-        private void ChargePoint_ChargingStateUpdate(object? sender, ChargingStateEventArgs e)
-        {
-            Logger.LogInformation("- {StateMessage}, {Ended}, {Delivered}, €{Cost} ",
-                e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered, e.Cost);
-
-
-            LoggerChargingState.Info("Mode 3 state {state}, {stateMessage}, session ended {ended}, energy delivered {delivered}",
-            e.Status?.Measurement?.Mode3State, e.Status?.Measurement?.Mode3StateMessage, e.SessionEnded, e.EnergyDelivered);
-
-            if (e.SessionEnded)
-            {
-                using (var db = new HEMSContext())
-                {
-
-                    var energyDelivered = e.EnergyDelivered > 0.0d ? (decimal)e.EnergyDelivered / 1000.0m : 0.01m;
-
-                    var transaction = new ChargingTransaction
-                    {
-                        Timestamp = DateTimeProvider.Now,
-                        EnergyDelivered = (double)energyDelivered,
-                        Cost = (double)e.Cost,
-                        Price = (double)(e.Cost / energyDelivered)
+                        Timestamp = c.Timestamp,
+                        EnergyDelivered = (double)energy,
                     };
-
-                    LoggerChargingcost.Debug(transaction.ToString());
-
-                    foreach (var c in e.Costs)
+                    if (c.Tariff != null)
                     {
-                        var energy = c.Energy > 0.0m ? c.Energy / 1000.0m : 0.01m;
-                        var detail = new CostDetail()
-                        {
-                            Timestamp = c.Timestamp,
-                            EnergyDelivered = (double)energy,  
-                        };
-                        if (c.Tariff != null)
-                        {
-                            detail.Cost = (double)(energy * c.Tariff.TariffUsage);
-                            detail.TarifStart = c.Tariff.Timestamp;
-                            detail.TarifUsage = (double)c.Tariff.TariffUsage;
-                        }
-                        db.Add(detail);
-
-                        LoggerChargingcost.Debug(detail.ToString());
-
-                        transaction.CostDetails.Add(detail);
+                        detail.Cost = (double)(energy * c.Tariff.TariffUsage);
+                        detail.TarifStart = c.Tariff.Timestamp;
+                        detail.TarifUsage = (double)c.Tariff.TariffUsage;
                     }
+                    db.Add(detail);
 
-                    db.Add(transaction);
-                    db.SaveChanges();
+                    LoggerChargingcost.Debug(detail.ToString());
+
+                    transaction.CostDetails.Add(detail);
                 }
+
+                db.Add(transaction);
+                db.SaveChanges();
             }
         }
+    }
 
-        private void Compute_StateUpdate(object? sender, StateUpdateEventArgs e)
+    private void Compute_StateUpdate(object? sender, StateUpdateEventArgs e)
+    {
+        if (e.Info != null)
         {
-            if (e.Info != null)
-            {
-                LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
-            }
-            else
-            {
-                LoggerChargingState.Info($"Mode information not available");
-            }
+            LoggerChargingState.Info($"Mode {e.Info.Mode} - state {e.Info.State} - {e.Info.CurrentAvailableL1} - {e.Info.CurrentAvailableL2} - {e.Info.CurrentAvailableL3}");
+        }
+        else
+        {
+            LoggerChargingState.Info($"Mode information not available");
         }
     }
 }

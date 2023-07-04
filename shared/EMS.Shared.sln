@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1705.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EMS.Library.Shared", "EMS.Library.Shared\EMS.Library.Shared.csproj", "{40186345-2643-4C76-8DE4-68CC8B1DD9FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EMS.Library.Shared.Unit.Tests", "EMS.Library.Shared.Unit.Tests\EMS.Library.Shared.Unit.Tests.csproj", "{B5BAF720-C535-48CF-98B4-49ED5D403994}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40186345-2643-4C76-8DE4-68CC8B1DD9FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40186345-2643-4C76-8DE4-68CC8B1DD9FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40186345-2643-4C76-8DE4-68CC8B1DD9FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40186345-2643-4C76-8DE4-68CC8B1DD9FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5BAF720-C535-48CF-98B4-49ED5D403994}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5BAF720-C535-48CF-98B4-49ED5D403994}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5BAF720-C535-48CF-98B4-49ED5D403994}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5BAF720-C535-48CF-98B4-49ED5D403994}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A5D78CE8-21CE-4FD8-842B-DAD159A273DD}
+	EndGlobalSection
+EndGlobal

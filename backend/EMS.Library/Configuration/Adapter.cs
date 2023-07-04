@@ -1,8 +1,8 @@
 ﻿using System;
 namespace EMS.Library.Configuration
 {
-    public enum AdapterType  { chargepoint, smartmeter, priceprovider };
-    public record Adapter
+    public enum AdapterType  { chargepoint, smartmeter, priceprovider, solar };
+    public record AdapterConfiguration
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = default!;

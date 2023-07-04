@@ -7,10 +7,10 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="NLog" Version="5.1.3" />
+		<PackageReference Include="NLog" Version="5.2.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
 		<PackageReference Include="SharpModbus" Version="2.0.0" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.4.0.72892">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
@@ -21,5 +21,11 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="AlfenNG9xx.Unit.Tests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Modbus\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Modbus\" />
 	</ItemGroup>
 </Project>

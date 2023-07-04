@@ -4,12 +4,20 @@ services:
   hems:
     image: pieterhil/energy-management-system:feature-blazorwasm
     container_name: hems-integration-test
+    user: 1001:123
     entrypoint: bash -c "cd /app/ems && ls -la /app/ems/userdata && dotnet EMS.dll -- --config /app/ems/userdata/config.json --nlogcfg /app/ems/userdata/NLog.config --nlogdebug true"
     ports:
-      - "5005:5000"
+      - "5005:8080"
     volumes:
       - ./config:/app/ems/userdata:rw
     environment:
       - TZ=Europe/Amsterdam
       - EMS_PATHS_CONFIG=/app/ems/userdata/config.json
       - EMS_PATHS_NLOG=/app/ems/userdata/NLog.config
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh" ,"--config", "/app/ems/userdata/config.json", "--nlogcfg", "/app/ems/userdata/NLog.config"]
+      start_period: 20s
+      interval: 60s
+      timeout: 20s
+      retries: 10
+

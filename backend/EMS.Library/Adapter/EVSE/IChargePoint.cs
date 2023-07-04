@@ -73,13 +73,18 @@ namespace EMS.Library
     {
         public Status Status { get; set; }
         public bool SessionEnded { get; set; }
+        public DateTimeOffset Start { get; set; }
+        public DateTimeOffset End { get; set; }
         public double? EnergyDelivered { get; set; }
         public Decimal Cost { get; set; }
         public IList<Cost> Costs { get; init; }
-        public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, double? energyDelivered, Decimal cost, IList<Cost> costs)
+
+        public ChargingStateEventArgs(SocketMeasurementBase measurement, bool sessionEnded, DateTimeOffset start, DateTimeOffset end, double? energyDelivered, Decimal cost, IList<Cost> costs)
         {
             Status = new Status(measurement);
             SessionEnded = sessionEnded;
+            Start = start;
+            End = end;
             EnergyDelivered = sessionEnded ? (energyDelivered ?? 0.0d) : null;
             Cost = cost;
             Costs = costs;

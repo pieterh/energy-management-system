@@ -1,122 +1,234 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
 
-using EMS.WebHost.Helpers;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
-namespace EMS.WebHost.Controllers
+using EMS.Library.Passwords;
+using EMS.WebHost.Helpers;
+using EMS.Library.Shared.DTO;
+using EMS.Library.Shared.DTO.Users;
+using EMS.DataStore;
+using System.Xml.Linq;
+
+namespace EMS.WebHost.Controllers;
+
+[ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Route("api/[controller]")]
+public class UsersController : ControllerBase
 {
-    public class Response
+    private ILogger Logger { get; init; }
+    private static readonly NLog.Logger StaticLogger = NLog.LogManager.GetCurrentClassLogger();
+
+    private readonly IJwtService _jwtService;
+
+    public UsersController(ILogger<UsersController> logger, IJwtService jwtService)
     {
-        public required int Status { get; set; }
-        public required string StatusText { get; init; }
-        public string? Message { get; init; }
+        Logger = logger;
+        _jwtService = jwtService;
     }
 
-    public class LoginResponse : Response
+    [AllowAnonymous]
+    [HttpPost("authenticate")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    public IActionResult Authenticate([FromBody] LoginModel model)
     {
-        public required string Token { get; init; }
-        public required UserModel User { get; init; }
-    }
-
-    public class PingResponse : Response
-    {
-        public required UserModel User { get; init; }
-    }
-
-    public class LoginModel
-    {
-        public required string Username { get; init; }
-        public required string Password { get; init; }
-    }
-
-    public class UserModel
-    {
-        public Guid Id { get; set; }
-        public required string Username { get; init; }
-        public required string Name { get; init; }
-    }   
-
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UsersController : ControllerBase
-    {
-        private ILogger Logger { get; init; }
-        private readonly IJwtService _jwtService;
-
-        public UsersController(ILogger<UsersController> logger, IJwtService jwtService)
+        ArgumentNullException.ThrowIfNull(model);
+        var user = PerformAuth(model);
+        if (user != null)
         {
-            Logger = logger;
-            _jwtService = jwtService;
+            var token = _jwtService.Generate(user.Id, user.Username, user.Name, user.NeedPasswordChange);
+
+            var result = new LoginResponse
+            {
+                Status = 200,
+                StatusText = "OK",
+                Token = token,
+                User = user
+            };
+            return Ok((Response)result);
+        }
+        else
+        {
+            var result = new Response
+            {
+                Status = 401,
+                StatusText = "Je mag er niet in",
+                Message = "Helaas ;-)"
+            };
+            return Unauthorized(result);
+        }
+    }
+
+    [HttpPost("setpassword")]
+    public IActionResult SetPassword([FromBody] SetPasswordModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        if (Guid.TryParse(User.Claims.First<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub).Value, out var userid))
+        {
+            using (var db = new HEMSContext())
+            {
+                var userFromDb = db.FindUserById(userid);
+                if (userFromDb == null)
+                    return ValidationProblem();
+
+                switch (VerifyPassword(userFromDb, userFromDb.Password, model.OldPassword))
+                {
+                    case PasswordVerificationResult.Failed:
+                        return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "Old password is wrong.", User = userFromDb.CreateUserModelBasic() });
+
+                    case PasswordVerificationResult.Success:
+                    case PasswordVerificationResult.SuccessRehashNeeded:
+                        if (PasswordQualityChecker.IsValidPassword(model.NewPassword))
+                        {
+                            userFromDb.Password = HashPasword(userFromDb, model.NewPassword);
+                            db.Entry(userFromDb).Property(x => x.Password).IsModified = true;
+
+                            userFromDb.LastPasswordChangedDate = DateTime.UtcNow;
+                            db.Entry(userFromDb).Property(x => x.LastPasswordChangedDate).IsModified = true;
+
+                            db.SaveChanges();
+
+                            return new JsonResult(new SetPasswordResponse() { Status = 200, StatusText = "", User = userFromDb.CreateUserModelBasic() });
+                        }
+                        else
+                        {
+                            return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "New password is to week.", User = userFromDb.CreateUserModelBasic() });
+                        }
+
+                    default:
+                        break;
+                }
+            }
+        }
+        return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "Password was not changed" });
+    }
+
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+        var id = User.Claims.First<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub).Value;
+        var name = User.Claims.First<Claim>((x) => x.Type == "name").Value;
+        var username = User.Claims.First<Claim>((x) => x.Type == "username").Value;
+
+        foreach (var c in User.Claims)
+        {
+            Logger.LogDebug("{Type} - {Value}", c.Type, c.Value);
         }
 
-        [AllowAnonymous]
-        [HttpPost("authenticate")]
-        [Consumes("application/json")]
-        [Produces("application/json")]
-
-        public IActionResult Authenticate([FromBody] LoginModel model)
+        var user = new UserModelBasic
         {
-            ArgumentNullException.ThrowIfNull(model);
-            var user = PerformAuth(model);
-            if (user != null)
-            {
-                var token = _jwtService.Generate(user.Id, user.Username, user.Name);
+            Id = Guid.Parse(id),
+            Username = username,
+            Name = name
+        };
 
-                var result = new LoginResponse
+        return new JsonResult(new PingResponse() { Status = 200, StatusText = "OK", User = user });
+    }
+
+    private static UserModelLogon? PerformAuth(LoginModel model)
+    {
+
+        using (HEMSContext db = new HEMSContext())
+        {
+            DataStore.User? userFromDb = null;
+            DataStore.User? found = db.FindUserByUsername(model.Username);
+
+            if (found == null)
+            {
+                // create the admin user if it doesn't exist
+                if (model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase))
                 {
-                    Status = 200,
-                    StatusText = "OK",
-                    Token = token,
-                    User = user
-                };
-                return new JsonResult(result);
+                    StaticLogger.Warn("The user 'admin' doesn't exist yet. Creating it with a default password.");
+#pragma warning disable S2068
+                    userFromDb = new DataStore.User() { Username = "admin", Name = "Administrator", LastLogonDate = DateTime.UtcNow, Password = "tbd" };
+#pragma warning restore
+                    var passwordHashed = HashPasword(userFromDb, "admin");
+                    userFromDb.Password = passwordHashed;
+                    db.Add<DataStore.User>(userFromDb);
+                    db.SaveChanges();
+                }
             }
             else
+                userFromDb = found;
+
+            if (userFromDb != null)
             {
-                return Unauthorized();
+                var verifyResult = VerifyPassword(userFromDb, userFromDb.Password, model.Password);
+                if (verifyResult == PasswordVerificationResult.Failed)
+                    return null;
+                if (verifyResult != PasswordVerificationResult.Success && verifyResult != PasswordVerificationResult.SuccessRehashNeeded)
+                    return null;
+
+                // update last logon time
+                userFromDb.LastLogonDate = DateTime.UtcNow;
+                db.Entry(userFromDb).Property(x => x.LastLogonDate).IsModified = true;
+
+                if (verifyResult == PasswordVerificationResult.SuccessRehashNeeded)
+                {
+                    string h = HashPasword(userFromDb, model.Password);
+                    userFromDb.Password = h;
+                    db.Entry(userFromDb).Property(x => x.Password).IsModified = true;
+                }
+
+                db.SaveChanges();
+
+                return userFromDb.CreateUserModelLogon();
             }
+            else
+                return null;
         }
+    }
 
-        [HttpGet("ping")]
-        public IActionResult Ping()
-        {
+    private static PasswordHasher<DataStore.User> _passwordHasher = new PasswordHasher<DataStore.User>();
+    public static string HashPasword(DataStore.User user, string password)
+    {
+        string hash = _passwordHasher.HashPassword(user, password);
+        return hash;
+    }
 
+    public static PasswordVerificationResult VerifyPassword(DataStore.User user, string hashedPassword, string providedPassword)
+    {
+        var result = _passwordHasher.VerifyHashedPassword(user, hashedPassword, providedPassword);
+        return result;
+    }
+}
 
-            var id = User.Claims.First<Claim>((x) => x.Type == JwtRegisteredClaimNames.Sub).Value;
-            var name = User.Claims.First<Claim>((x) => x.Type == "name").Value;
-            foreach (var c in User.Claims)
-            {
-                Logger.LogDebug("{Type} - {Value}", c.Type, c.Value);
-            }
-            var user = new UserModel
-            {
-                Id = Guid.Parse(id),
-                Username = "admin",
-                Name = name
-            };
+public static class UserExtension
+{
+    public static DataStore.User? FindUserByUsername(this HEMSContext db, string username)
+    {
+        ArgumentNullException.ThrowIfNull(db);
+        ArgumentNullException.ThrowIfNullOrEmpty(username);
+        var upper = username.ToUpperInvariant();
+        return db.Users.Where(x => x.Username == upper).FirstOrDefault();
 
-            return new JsonResult(new PingResponse() { Status = 200, StatusText = "OK", User = user });
-        }
+    }
 
-        private static UserModel? PerformAuth(LoginModel model)
-        {
-            var user = (model.Username.Equals("admin", StringComparison.OrdinalIgnoreCase) &&
-                    model.Password.Equals("admin", StringComparison.Ordinal)) ? new UserModel
-                    {
-                        Id = Guid.NewGuid(),
-                        Username = "admin",
-                        Name = "Pieter Hilkemeijer"
-                    } : null;
-            return user;
-        }
+    public static DataStore.User? FindUserById(this HEMSContext db, Guid id)
+    {
+        ArgumentNullException.ThrowIfNull(db);
+        ArgumentNullException.ThrowIfNull(id);
+        return db.Users.Where((x) => x.ID.Equals(id)).FirstOrDefault();
+    }
+
+    public static UserModelBasic CreateUserModelBasic(this DataStore.User user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        var umd = new UserModelBasic(user.ID, user.Username, user.Name);
+        return umd;
+    }
+
+    public static UserModelLogon CreateUserModelLogon(this DataStore.User user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        bool needPasswordChange = (user.LastPasswordChangedDate.Ticks <= 0) || (DateTime.UtcNow - user.LastPasswordChangedDate).TotalDays > 3;
+        var uml = new UserModelLogon(user.ID, user.Username, user.Name, needPasswordChange);
+        return uml;
     }
 }

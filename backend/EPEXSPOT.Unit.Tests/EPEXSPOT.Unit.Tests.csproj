@@ -24,31 +24,47 @@
 		<None Remove="System.Net.Http" />
 		<None Remove="System.Text.RegularExpressions" />
 		<None Remove="Properties\" />
+		<None Remove="TestData\" />
+		<None Remove="TestData\TestData1.json" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
 		<PackageReference Include="xunit" Version="2.4.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="coverlet.msbuild" Version="3.2.0">
+		<PackageReference Include="coverlet.msbuild" Version="6.0.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="coverlet.collector" Version="3.2.0">
+		<PackageReference Include="coverlet.collector" Version="6.0.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-		<PackageReference Include="FluentAssertions" Version="6.10.0" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		  <PrivateAssets>all</PrivateAssets>
+		<PackageReference Include="FluentAssertions" Version="6.11.0" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.4.0.72892">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="Moq" Version="4.18.4" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Properties\" />
 	</ItemGroup>
+	<ItemGroup>
+		<Content Include="TestData\TestData1.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <AssetsSourceFiles Include="TestData\TestData1.json" />
+	  <AssetsSourceFiles Include="TestData\TestData_wrong_schema.json" />
+	  <AssetsSourceFiles Include="TestData\TestData_invalid_json.json" />
+	</ItemGroup>
+	<Target Name="CopyCustomContent" AfterTargets="AfterBuild">
+		<Copy SourceFiles="@(AssetsSourceFiles)" DestinationFolder="$(OutputPath)\TestData" SkipUnchangedFiles="true" />
+	</Target>
 </Project>

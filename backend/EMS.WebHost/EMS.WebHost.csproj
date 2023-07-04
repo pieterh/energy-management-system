@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
@@ -14,14 +14,20 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.4" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.8" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.4.0.72892">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="7.0.8" />
 	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+		<PackageReference Include="Microsoft.AspNetCore.MiddlewareAnalysis" Version="7.0.8" />
+		<PackageReference Include="Microsoft.Extensions.DiagnosticAdapter" Version="3.1.32" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<!-- Don't publish the SPA source files, but do show them in the project files list -->
 		<Content Remove="$(SpaRoot)**" />
@@ -31,6 +37,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\EMS.Library\EMS.Library.csproj" />
 		<ProjectReference Include="..\EMS.DataStore\EMS.DataStore.csproj" />
+		<ProjectReference Include="..\..\shared\EMS.Library.Shared\EMS.Library.Shared.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="ExampleRequests\" />

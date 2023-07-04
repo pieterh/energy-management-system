@@ -7,6 +7,7 @@ using System.Linq;
 using EMS.Library;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace P1SmartMeter
 {
@@ -17,7 +18,7 @@ namespace P1SmartMeter
         private readonly List<TcpClient> _clients = new();
         private TcpListener? _listener;
 
-        public P1RelayServer()
+        public P1RelayServer(IWatchdog watchdog):base(watchdog)
         {            
         }
 
@@ -34,9 +35,9 @@ namespace P1SmartMeter
             _listener = null;
         }
 
+        [SuppressMessage("Code Analysis", "CA1031")]
         public void Relay(string data2relay)
         {
-            
             var bytes = Encoding.ASCII.GetBytes(data2relay);
             List<TcpClient> clients;
             lock (_clients)
@@ -72,11 +73,12 @@ namespace P1SmartMeter
             });
         }
 
-        protected override void DoBackgroundWork()
+        [SuppressMessage("Code Analysis", "CA1031")]
+        protected override Task DoBackgroundWork()
         {
             try
             {
-                TcpClient client = Task.Run(() => _listener?.AcceptTcpClientAsync(), TokenSource.Token).GetAwaiter().GetResult();
+                TcpClient client = Task.Run(() => _listener?.AcceptTcpClientAsync(), CancellationToken).GetAwaiter().GetResult();
                 Logger.Info($"Client connected!");
                 client.SendBufferSize = 2048;
                 lock (_clients)
@@ -84,11 +86,13 @@ namespace P1SmartMeter
                     _clients.Add(client);
                     Logger.Info($"added client #{_clients.Count}");                    
                 }
+                WatchDogTick();
             } catch (OperationCanceledException) { /* We expecting the cancelation exception and don't need to act on it */
             } catch (Exception e) 
             {
                 Logger.Error("Exception: " + e.Message);
             }
+            return Task.CompletedTask;
         }
     }
 }

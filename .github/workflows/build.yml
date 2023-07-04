@@ -41,7 +41,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Environment information
-        path: ${{ runner.temp }}/environment.txt      
+        path: ${{ runner.temp }}/environment.txt  
+    - name: Cache nuget packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: ${{ runner.os }}-nuget-            
     - name: Cache SonarQube scanner
       id: cache-sonar-scanner
       uses: actions/cache@v3
@@ -85,6 +91,42 @@ jobs:
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies outdated packages scan - Shared
+      shell: bash
+      run: |
+        dotnet list package --outdated 2>&1 | tee -a outdated_scan.log
+        outdated=true
+        grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
+        [ $outdated = true ] && echo "Outdated packages found on the log output"
+        exit 0
+      working-directory: shared      
+    - name: Dependencies vulnerability scan - Shared
+      shell: bash
+      run: |
+        dotnet list package --vulnerable --include-transitive 2>&1 | tee -a vulnerability_scan.log
+        vulnerabilities=true
+        grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
+        [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
+        exit 0
+      working-directory: shared
+    - name: Dependencies deprecation scan - Shared
+      shell: bash
+      run: |
+        dotnet list package --deprecated 2>&1 | tee -a deprecation_scan.log
+        deprecations=true
+        grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
+        [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
+        exit 0
+      working-directory: shared
+    - name: Dependencies outdated packages scan - Backend
+      shell: bash
+      run: |
+        dotnet list package --outdated 2>&1 | tee -a outdated_scan.log
+        outdated=true
+        grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
+        [ $outdated = true ] && echo "Outdated packages found on the log output"
+        exit 0
+      working-directory: backend      
     - name: Dependencies vulnerability scan - Backend
       shell: bash
       run: |
@@ -103,6 +145,15 @@ jobs:
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
       working-directory: backend
+    - name: Dependencies outdated packages scan - Blazor WASM frontend
+      shell: bash
+      run: |
+        dotnet list package --outdated 2>&1 | tee -a outdated_scan.log
+        outdated=true
+        grep -i "has the following updates to its packages" outdated_scan.log || outdated=false && true
+        [ $outdated = true ] && echo "Outdated packages found on the log output"
+        exit 0
+      working-directory: frontend        
     - name: Dependencies vulnerability scan - Blazor WASM frontend
       shell: bash
       run: |
@@ -111,7 +162,7 @@ jobs:
         grep ">" vulnerability_scan.log | grep -q -i "critical\|high\|moderate\|low" || vulnerabilities=false && true
         [ $vulnerabilities = true ] && echo "Security Vulnerabilities found on the log output" && exit 1
         exit 0
-      working-directory: frontend/EMS.BlazorWasm      
+      working-directory: frontend     
     - name: Dependencies deprecation scan - Blazor WASM frontend
       shell: bash
       run: |
@@ -120,60 +171,39 @@ jobs:
         grep -i "has the following deprecated packages" deprecation_scan.log || deprecations=false && true
         [ $deprecations = true ] && echo "Deprecated packages found on the log output" && exit 1
         exit 0
-      working-directory: frontend/EMS.BlazorWasm
-    - name: Install CycloneDX .NET
-      if: ${{ env.generate-sbom == true }}
-      shell: bash
-      run: |  
-        dotnet tool install CycloneDX --global
-    - name: CycloneDX .NET Generate SBOM - backend
-      if: ${{ env.generate-sbom == true }}
-      shell: bash
-      run: |  
-        dotnet CycloneDX backend/ems.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-backend-ems.json
-    - name: CycloneDX .NET Generate SBOM - frontend
-      if: ${{ env.generate-sbom == true }}
-      shell: bash
-      run: |  
-        dotnet CycloneDX frontend/EMS.BlazorWasm/EMS.BlazorWasm.sln --exclude-test-projects --exclude-dev --disable-package-restore --json --out ${{ runner.temp }}/sbom --filename sbom-frontend-ems.json
-    - name: Upload SBOM Artifact
-      uses: actions/upload-artifact@v3
-      if: ${{ env.generate-sbom == true }}
-      with:
-        name: SBOM
-        path: ${{ runner.temp }}\sbom\*
-    - name: SBOM submission action
-      uses: evryfs/sbom-dependency-submission-action@4466eb923772acc3bd54081f8e2a0ef601d2f28a
-      if: ${{ env.generate-sbom == true }}
-      with:
-        sbom-files: ${{ runner.temp }}\sbom\sbom-backend-ems.json
-        token: ${{ secrets.GH_TOKEN }}
+      working-directory: frontend
     - name: SonarQube - Begin
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}      
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs" /d:"sonar.cs.roslyn.ignoreIssues=false"
-      working-directory: backend
+      run: .sonar/scanner/dotnet-sonarscanner begin /k:"pieterh_energy-management-system" /o:"pieterh" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.branch.name="${{ github.ref_name }}" /d:"sonar.cs.vstest.reportsPaths=**/TestResults/*.trx" /d:"sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml" /d:"sonar.coverage.exclusions=**/*Tests.cs" /d:"sonar.exclusions=**/*Tests.cs" /d:"sonar.tests.exclusions=**/*Tests.cs" /d:"sonar.cs.roslyn.ignoreIssues=false"
+      working-directory: .
+    - name: Build - shared
+      run: dotnet msbuild shared /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
+      working-directory: .
+    - name: Test - shared
+      run: dotnet test shared --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: .      
     - name: Build - backend
-      run: dotnet msbuild /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
-      working-directory: backend
+      run: dotnet msbuild backend /p:Configuration=Release /p:RestorePackages=true /p:RunAnalyzersDuringBuild=true /t:rebuild
+      working-directory: .
     - name: Test - backend
-      run: dotnet test --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-      working-directory: backend
+      run: dotnet test backend --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: .
     - name: Build - Blazor WASM frontend
-      run: dotnet msbuild /p:Configuration=Release /p:RestorePackages=false
-      working-directory: frontend/EMS.BlazorWasm      
+      run: dotnet msbuild frontend /p:Configuration=Release /p:RestorePackages=false
+      working-directory: .
     - name: Test - Blazor WASM frontend
-      run: dotnet test --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-      working-directory: frontend/EMS.BlazorWasm
+      run: dotnet test frontend --filter "Category=Unit" --no-build --no-restore --configuration Release --verbosity minimal --logger "trx;LogFileName=TestResults.trx" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+      working-directory: .
     - name: SonarQube - End
       if: ${{ !startsWith(github.ref, 'refs/heads/dependabot') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-      run: ../.sonar/scanner/dotnet-sonarscanner end
-      working-directory: backend
+      run: .sonar/scanner/dotnet-sonarscanner end
+      working-directory: .
     - name: Publish - backend
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
@@ -190,7 +220,7 @@ jobs:
         path: ${{ runner.temp }}/ems.zip
     - name: Publish - Blazor WASM frontend
       run: |
-        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm/EMS.BlazorWasm
+        dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm
     - name: Zip Release - Blazor WASM frontend
       uses: TheDoctor0/zip-release@0.7.1
       with:
@@ -252,6 +282,8 @@ jobs:
       run: |
         mkdir -p dist/ems
         unzip ${{ runner.temp }}/ems.zip -d dist
+        find dist/ems/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
+        ls -la dist/ems/runtimes
       working-directory: docker     
     - name: Download EMS.BlazorWasm Build Artifact
       uses: actions/download-artifact@v3
@@ -263,14 +295,26 @@ jobs:
         mkdir -p dist/ems.blazorwasm
         unzip ${{ runner.temp }}/ems.blazorwasm.zip -d dist/ems.blazorwasm
       working-directory: docker
-    - name: ls
-      if: ${{ false }}
-      run: |      
-        ls -la docker
-        ls -la docker/dist
-        ls -la docker/dist/ems
-        ls -la docker/dist/ems.blazorwasm
-        ls -la docker/dist/ems.blazorwasm/ems.blazorwasm
+    - name: create backend
+      working-directory: docker
+      run: |
+        mkdir -p dist/app
+        mv dist/ems/* dist/app
+        rm -f dist/app/NLog.config \
+        rm -f dist/app/config.json
+        cp build/EMS.runtimeconfig.json dist/app/EMS.runtimeconfig.json
+        ls -la dist
+        ls -la dist/app
+        find dist/app/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
+        ls -la dist/app/runtimes
+    - name: create blazorfrontend
+      working-directory: docker
+      run: |
+        ls -la dist/ems.blazorwasm
+        ls -la dist/ems.blazorwasm/ems.blazorwasm
+        rm -f -R dist/app/wwwroot
+        mkdir dist/app/wwwroot
+        mv dist/ems.blazorwasm/ems.blazorwasm/wwwroot/* dist/app/wwwroot
     - name: Docker metadata
       id: meta
       uses: docker/metadata-action@v4
@@ -285,8 +329,7 @@ jobs:
         platforms: linux/amd64,linux/arm64,linux/arm
         tags: ${{ steps.meta.outputs.tags }}
         build-args: |
-          BACKEND=dist/ems 
-          FEBLAZORWASM=dist/ems.blazorwasm/ems.blazorwasm
+          BACKEND=dist/app 
         push: true
   call-2:
     name: "Integration tests!"

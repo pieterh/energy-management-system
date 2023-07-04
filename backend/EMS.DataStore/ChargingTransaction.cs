@@ -1,22 +1,23 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
+﻿namespace EMS.DataStore;
 
-namespace EMS.DataStore;
 public record ChargingTransaction
 {
-	[Key]
+    [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int ID { get; set; }
-    public DateTime Timestamp { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
+    public DateTimeOffset Start { get; set; }
+    public DateTimeOffset End { get; set; }
     public double EnergyDelivered { get; set; }
     public double Cost { get; set; }
     public double Price { get; set; }
 
     private ICollection<CostDetail>? _costDetails;
-    public virtual ICollection<CostDetail> CostDetails {
-        get { 
-            if (_costDetails == null) _costDetails = new List<CostDetail>() ;
+    public virtual ICollection<CostDetail> CostDetails
+    {
+        get
+        {
+            if (_costDetails == null) _costDetails = new List<CostDetail>();
             return _costDetails;
         }
     }
@@ -28,9 +29,10 @@ public record ChargingTransaction
         stringBuilder.Append($"ID = {ID}, ");
         stringBuilder.Append($"Timestamp = {Timestamp.ToLocalTime():O}, ");
         stringBuilder.Append($"EnergyDelivered = {EnergyDelivered} kWh, ");
+        stringBuilder.Append($"Start = {Start.ToLocalTime():O}, ");
+        stringBuilder.Append($"End = {End.ToLocalTime():O}, ");
         stringBuilder.Append($"Cost = €{Cost:F2}, ");
         stringBuilder.Append($"Price = €{Price:F2}");
         return true;
     }
 }
-

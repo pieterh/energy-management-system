@@ -118,13 +118,33 @@ namespace P1SmartMeter
 
         private string? HandleMessageInBuffer(int msgLength)
         {
+            /* Smallest valid message without data, would be */
+            /* 1 for the start */
+            /* 4 for ... */
+            /* 4 CR LF CR LF */
+            /* 0 no data */ 
+            /* 7 for the end */
+            if (msgLength < 16)
+            {
+                Logger.Warn("Message is to short. {msgLength}", msgLength);
+                DiscardBytesInBuffer(msgLength);
+                return string.Empty;
+            }
+
             var msg = new String(_buffer.AsSpan(0, msgLength));             // get message
 
             Span<char> checksumbytes = stackalloc char[4];                  // get checksum
-            checksumbytes[0] = _buffer[msgLength - 6];                      
+            checksumbytes[0] = _buffer[msgLength - 6];
             checksumbytes[1] = _buffer[msgLength - 5];
             checksumbytes[2] = _buffer[msgLength - 4];
             checksumbytes[3] = _buffer[msgLength - 3];
+
+            if (!Uri.IsHexDigit(checksumbytes[0]) || !Uri.IsHexDigit(checksumbytes[1]) || !Uri.IsHexDigit(checksumbytes[2]) || !Uri.IsHexDigit(checksumbytes[3]))
+            {
+                Logger.Warn("Checksum contains invalid characters.");
+                DiscardBytesInBuffer(msgLength);
+                return string.Empty;
+            }
 
             if (_tailPosition > msgLength)
             {
@@ -165,6 +185,16 @@ namespace P1SmartMeter
             return retvalMsg;
         }
 
+        private void DiscardBytesInBuffer(int nrOfBytes)
+        {
+            // There is more data in the buffer to process. Move it to the beginning of the buffer
+            Logger.Warn("Discarding {nrOfBytes} from buffer.", nrOfBytes);
+            OnDataError(new DataErrorEventArgs("Discarding data from buffer.") { Data = string.Empty });
+            _buffer.AsSpan(nrOfBytes, _tailPosition - nrOfBytes).CopyTo(_buffer.AsSpan());
+            _tailPosition -= nrOfBytes;
+            RemovePartialMessage();
+        }
+
         private void RemovePartialMessage()
         {
             // check if buffer is empty
@@ -182,14 +212,14 @@ namespace P1SmartMeter
                 _buffer.AsSpan(start, _tailPosition - start).CopyTo(_buffer.AsSpan());
                 _tailPosition -= start;
                 if (Logger.IsDebugEnabled) Logger.Debug("bytes in buffer {Position}, ", _tailPosition);
-                OnDataError(new DataErrorEventArgs("Partial message removed from buffer") { Data = discardedData });
+                OnDataError(new DataErrorEventArgs("Partial message removed from buffer (1)") { Data = discardedData });
             }
             else if (start == _tailPosition)
             {
                 if (Logger.IsDebugEnabled) Logger.Debug("discarding all bytes");
                 var discardedData = new String(_buffer.AsSpan(0, _tailPosition));
                 _tailPosition = 0;
-                OnDataError(new DataErrorEventArgs("Partial message removed from buffer") { Data = discardedData });
+                OnDataError(new DataErrorEventArgs("Partial message removed from buffer (2)") { Data = discardedData });
             }
         }
 

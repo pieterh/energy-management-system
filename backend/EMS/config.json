@@ -24,7 +24,16 @@
       "name": "EPEXSPOT Price Provider",
       "driver": {
         "assembly": "EPEXSPOT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-        "type": "EPEXSPOT.EPEXSPOT"
+        "type": "EPEXSPOT.EPEXSPOTService"
+      }
+    },
+    {
+      "id": "ac7844a4-14c7-478b-954c-fc03994791d4",
+      "type": "solar",
+      "name": "Enphase - Envoy",
+      "driver": {
+        "assembly": "Enphase, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+        "type": "Enphase.EnphaseService"
       }
     }
   ],
@@ -69,17 +78,34 @@
       "config": {
         "endpoint": "https://mijn.easyenergy.com"
       }
+    },
+    {
+      "id": "7c87689d-7d9d-4cfa-a5ab-e48f9947a6aa",
+      "name": "Enphase",
+      "enabled": true,
+      "adapterid": "ac7844a4-14c7-478b-954c-fc03994791d4",
+      "config": {
+        "endpoint": "http://192.168.1.8",
+        "username": "installer",
+        "password": "122011110962"
+      }
     }
   ],
   "web": {
-    "port": 5005,
-    "host": "localhost",
-    "https": false,
+    "ContentRootPath": "",
+    "WebRootPath": "wwwroot",
     "jwt": {
       "issuer": "hems",
       "audience": "hems",
       "expiration": 60,
       "clockskew": 10
+    }
+  },
+  "Kestrel": {
+    "EndPoints": {
+      "Http": {
+        "Url": "http://*:5005"
+      }
     }
   },
   "db": {

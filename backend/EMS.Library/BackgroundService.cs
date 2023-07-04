@@ -1,97 +1,114 @@
-﻿using EMS.Library.Exceptions;
-using System;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EMS.Library
+using EMS.Library.Exceptions;
+
+namespace EMS.Library;
+
+[SuppressMessage("", "S3881")]
+public abstract class BackgroundService : IBackgroundService
 {
-    public abstract class BackgroundService : IBackgroundService
+    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
+    public bool Disposed { get; protected set; }
+
+    private CancellationToken _parentToken = CancellationToken.None;
+
+    private CancellationTokenSource? _tokenSource = new();
+    public CancellationTokenSource? TokenSource { get => _tokenSource ; protected set => _tokenSource = value; }
+    public CancellationToken CancellationToken { get => _tokenSource?.Token ?? CancellationToken.None; }
+
+    protected abstract Task Start();
+
+    [SuppressMessage("", "CA1716")] // no problem with this 'reserved' keyword
+    protected abstract void Stop();
+
+    [SuppressMessage("", "CA1063")]
+    public void Dispose()
     {
-        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        Logger.Trace("Dispose()");
+        Dispose(true);
+        GC.SuppressFinalize(this);  // Suppress finalization.
+        Disposed = true;
+        Logger.Trace("Dispose() done => _disposed {Disposed}", Disposed);
+    }
 
-        public bool Disposed { get; protected set; }
+    protected virtual void Dispose(bool disposing)
+    {
+        Logger.Trace("Dispose({Disposing}) _disposed {Disposed}", disposing, Disposed);
 
-        private CancellationToken? _parentToken;
-        private CancellationTokenSource _tokenSource = new();
-        public CancellationTokenSource TokenSource { get => _tokenSource; protected set => _tokenSource = value; }
+        if (Disposed) return;
 
-
-        protected abstract Task Start();
-        protected abstract void Stop();
-
-        public void Dispose()
+        if (disposing)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);  // Suppress finalization.
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            Logger.Trace($"Dispose({disposing}) _disposed {Disposed}");
-
-            if (Disposed) return;
-
-            if (disposing)
-            {
-                DisposeTokenSource();
-            }
-
-            Disposed = true;
-            Logger.Trace($"Dispose({disposing}) done => _disposed {Disposed}");
-        }
-
-        private void DisposeTokenSource()
-        {
-            _tokenSource.Cancel();
-            _tokenSource.Dispose();
-        }
-
-        public async Task<bool> StopRequested(int ms)
-        {
-            if (_tokenSource.Token.IsCancellationRequested)
-                return true;
-            if (ms > 0)
-            {
-                try
-                {
-                    await Task.Delay(ms, _tokenSource.Token).ConfigureAwait(false);
-                }
-                catch (TaskCanceledException) { /* nothing to do here */  }
-            }
-            return (_tokenSource.Token.IsCancellationRequested);
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
-        {
-            Logger.Trace($"Starting");
-
-            _parentToken = cancellationToken;
-            await StartAsync().ConfigureAwait(false);
-        }
-        protected Task StartAsync()
-        {
-            if (_parentToken == null) throw new HEMSApplicationException("Missing parent token");
-            _parentToken.Value.ThrowIfCancellationRequested(); // not starting anymore
-
             DisposeTokenSource();
-            TokenSource = CancellationTokenSource.CreateLinkedTokenSource(_parentToken.Value);
-
-            var task = Start();
-            if (task.IsCompleted)
-            {
-                return task;
-            }
-
-            return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        Logger.Trace("Dispose({Disposing}) done.", disposing);
+    }
+
+    private void DisposeTokenSource()
+    {
+        _tokenSource?.Cancel();
+        _tokenSource?.Dispose();
+        _tokenSource = null;
+    }
+
+    /// <summary>
+    /// Delays the task
+    /// </summary>
+    /// <param name="ms"></param>
+    /// <returns>true if a stop was requested, false otherwise</returns>
+    public async Task<bool> StopRequested(int ms)
+    {
+        if (CancellationToken.IsCancellationRequested)
+            return true;
+        if (ms > 0)
         {
-            TokenSource.Cancel();
-
-            Stop();
-
-            return Task.CompletedTask;
+            try
+            {
+                await Task.Delay(ms, CancellationToken).ConfigureAwait(false);
+            }
+            catch (TaskCanceledException) { /* nothing to do here */  }
         }
+        return (CancellationToken.IsCancellationRequested);
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        Logger.Trace($"Starting");
+
+        _parentToken = cancellationToken;
+        await StartAsync().ConfigureAwait(false);
+    }
+
+    protected Task StartAsync()
+    {
+        // not starting anymore if already cancellation requested
+        if (_parentToken.IsCancellationRequested || (TokenSource is not null && TokenSource.IsCancellationRequested))
+            return Task.CompletedTask;
+        
+        DisposeTokenSource();
+        TokenSource = CancellationTokenSource.CreateLinkedTokenSource(_parentToken);
+
+        var task = Start();
+
+        if (task.IsCompleted)
+        {
+            return task;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        // NET 8 has CancelAsync...need to check that out
+        TokenSource?.Cancel();
+
+        Stop();
+        DisposeTokenSource();
+        return Task.CompletedTask;
     }
 }

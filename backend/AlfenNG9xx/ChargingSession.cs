@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using AlfenNG9xx.Model;
+using EMS.Library;
 using EMS.Library.Adapter.EVSE;
 using EMS.Library.Adapter.PriceProvider;
 using EMS.Library.Core;
@@ -10,15 +12,18 @@ namespace AlfenNG9xx
 {
     public class ChargingSession
     {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+
         private bool _isConnected;
         private double _meterReadingStart;
-        private DateTime _chargingStart;
+        private DateTimeOffset _chargingStart;
         private bool _isCharging;
 
+        private DateTimeOffset _currentTariffDateTime;
         private Tariff? _currentTariff;
         private double _meterReadingStartTariff;
 
-
+        public SocketMeasurementBase? LastSocketMeasurement { get; protected set; }
         public ChargeSessionInfoBase ChargeSessionInfo { get; private set; } = DefaultSessionInfo();
 
         public void UpdateSession(SocketMeasurement newMeasurement, Tariff? newTariff)
@@ -37,7 +42,7 @@ namespace AlfenNG9xx
                 _isConnected = true;
                 _meterReadingStart = newMeasurement.RealEnergyDeliveredSum;
                 ChargeSessionInfo = DefaultSessionInfo();
-                ChargeSessionInfo.Start = DateTimeProvider.Now;
+                ChargeSessionInfo.Start = DateTimeOffsetProvider.Now;
 
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
@@ -52,7 +57,7 @@ namespace AlfenNG9xx
             if (_isConnected && !newMeasurement.VehicleConnected)
             {
                 _isConnected = false;
-                ChargeSessionInfo.End = DateTimeProvider.Now;
+                ChargeSessionInfo.End = DateTimeOffsetProvider.Now;
                 ChargeSessionInfo.SessionEnded = true;
             }
 
@@ -61,6 +66,7 @@ namespace AlfenNG9xx
             {
                 _chargingStart = DateTimeProvider.Now;
 
+                _currentTariffDateTime = DateTimeOffsetProvider.Now;
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
             }
@@ -71,7 +77,7 @@ namespace AlfenNG9xx
                 ChargeSessionInfo.ChargingTime += (uint)(DateTimeProvider.Now - _chargingStart).TotalSeconds;
 
                 // nog te doen: gebruik moment van gebruik van dit tarief ipv now
-                ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
+                ChargeSessionInfo.Costs.Add(new Cost(_currentTariffDateTime, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                 ChargeSessionInfo.RunningCost = 0m;
             }
 
@@ -84,11 +90,12 @@ namespace AlfenNG9xx
                 if (!_currentTariff.Equals(newTariff))
                 {
                     // nog te doen: gebruik moment van gebruik van dit tarief ipv now
-                    ChargeSessionInfo.Costs.Add(new Cost(DateTimeProvider.Now, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
+                    ChargeSessionInfo.Costs.Add(new Cost(_currentTariffDateTime, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                     ChargeSessionInfo.RunningCost = 0m;
 
-                    _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
+                    _currentTariffDateTime = DateTimeProvider.Now;
                     _currentTariff = newTariff;
+                    _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
                 }
                 else
                 {
@@ -98,14 +105,56 @@ namespace AlfenNG9xx
                     ChargeSessionInfo.RunningCost = energy * costPerWatt;
                 }
             }
+
+            RaiseEvents(newMeasurement);
+
+            LastSocketMeasurement = newMeasurement;
+        }
+
+        public event EventHandler<ChargingStatusUpdateEventArgs> ChargingStatusUpdate = delegate { };
+        [SuppressMessage("", "CA1030")]
+        protected void RaiseChargingStatusUpdateEvent(ChargingStatusUpdateEventArgs eventArgs)
+        {
+            ChargingStatusUpdate.Invoke(this, eventArgs);
+        }
+
+        public event EventHandler<ChargingStateEventArgs> ChargingStateUpdate = delegate { };
+        [SuppressMessage("", "CA1030")]
+        protected void RaiseChargingStateEvent(ChargingStateEventArgs eventArgs)
+        {
+            ChargingStateUpdate.Invoke(this, eventArgs);
+        }
+
+        internal void RaiseEvents(SocketMeasurement newMeasurement)
+        {
+            
+            RaiseChargingStatusUpdateEvent(new ChargingStatusUpdateEventArgs(newMeasurement));
+
+            var chargingStateChanged = LastSocketMeasurement?.Mode3State != newMeasurement.Mode3State;
+
+            if (chargingStateChanged)
+            {
+                var sessionStart = ChargeSessionInfo.Start;
+                var sessionEnd = ChargeSessionInfo.End;
+                var sessionEnded = ChargeSessionInfo.SessionEnded;
+                var energyDelivered = ChargeSessionInfo.EnergyDelivered;
+                var cost = ChargeSessionInfo.Cost;
+                var costs = ChargeSessionInfo.Costs;
+
+                foreach (Cost c in ChargeSessionInfo.Costs)
+                {
+                    Logger.Debug("Cost : {0}, {1}, {2}", c.Timestamp.ToLocalTime().ToString("O"), c.Energy, c.Tariff?.TariffUsage);
+                }
+                RaiseChargingStateEvent(new ChargingStateEventArgs(newMeasurement, sessionEnded, sessionStart, sessionEnd, energyDelivered, cost, costs));
+            }
         }
 
         private static ChargeSessionInfoBase DefaultSessionInfo()
         {
             return new ChargeSessionInfoBase()
             {
-                Start = null,
-                End = null,
+                Start = DateTimeOffset.MinValue,
+                End = DateTimeOffset.MinValue,
                 ChargingTime = 0,
                 EnergyDelivered = 0.0,
                 SessionEnded = false,

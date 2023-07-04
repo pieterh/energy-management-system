@@ -47,6 +47,9 @@ Docker repository: [https://hub.docker.com/repository/docker/pieterhil/energy-ma
 ## How to use
 The recommended method is to use Docker compose (See below). For instructions how to install docker desktop see https://docs.docker.com/desktop/ and  docker engine (server) see https://docs.docker.com/engine/install/.
 
+
+
+
 ### Docker compose
 ```
 mkdir hems
@@ -55,6 +58,7 @@ mkdir config
 ```
 
 create config.json and a NLog.config in the 'config' subfolder. You can find examples of these in this repository folder docker/tests/config/
+
 
 *docker-compose.yml*
 
@@ -65,9 +69,10 @@ services:
   hems:
     image: pieterhil/energy-management-system:latest
     container_name: hems
+    user: 1001:123
     restart: unless-stopped
     ports:
-      - "8080:5000"
+      - "8080:8080"
     volumes:
       - ./config:/app/ems/userdata
     environment:
@@ -107,14 +112,22 @@ docker container rm hems
 
 ```
 docker run \
-    -p 8080:5000 \
+    -p 8080:8080 \
     --mount type=bind,source="$(pwd)"/config,destination=/app/ems/userdata \
+    --user 1001:123
     -e TZ=Europe/Amsterdam \
     -e EMS_PATHS_CONFIG=/app/ems/userdata/config.json \
     -e EMS_PATHS_NLOG=/app/ems/userdata/NLog.config \
     --name=hems \
     pieterhil/energy-management-system:latest
 ```
+
+### Write access to local storage
+
+The application does as user 'app' inside the docker container. For some systems it is mandatory that this user has write access to the volume so that logfiles and the databse can be saved. Some operating systems this is nod needed. For instance macOS is able to write in the mounted volume. It is recommended always to supply a user and group id that has write access to the local storage. You can do this in the docker-compose.yml file, or
+Some background information and other strategies for handling this issue can be found at the following blog post:
+[Docker and the Host Filesystem Owner Matching Problem](https://www.fullstaq.com/knowledge-hub/blogs/docker-and-the-host-filesystem-owner-matching-problem) and can also be found at 
+[The Internet Archive WayBackMachine](https://web.archive.org/web/20221204121741/https://www.fullstaq.com/knowledge-hub/blogs/docker-and-the-host-filesystem-owner-matching-problem)
 
 ### Frontend
 The frontend is accessible using the browser http://127.0.0.1:8080 if you are running the docker on you own local system.

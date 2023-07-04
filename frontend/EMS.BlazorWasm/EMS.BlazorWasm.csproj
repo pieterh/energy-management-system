@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<PublishTrimmed>false</PublishTrimmed>
+		<SelfContained>false</SelfContained>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(RunConfiguration)' == 'https' ">
+		<ExternalConsole>true</ExternalConsole>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(RunConfiguration)' == 'http' ">
+		<ExternalConsole>true</ExternalConsole>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+		<PlatformTarget>anycpu</PlatformTarget>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<DebugSymbols>true</DebugSymbols>
+		<WarningLevel>4</WarningLevel>
+		<PlatformTarget>anycpu</PlatformTarget>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.8" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="7.0.8" />
+		<PackageReference Include="MudBlazor" Version="6.6.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="Microsoft.AspNetCore.Components.WebAssembly.Authentication" />
+		<None Remove="Microsoft.AspNetCore.Authentication.JwtBearer" />
+		<None Remove="Services\Auth\" />
+		<None Remove="MudBlazor" />
+		<None Remove="Shared\chargepoint\" />
+		<None Remove="Shared\Exceptions\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Services\Auth\" />
+		<Folder Include="Shared\chargepoint\" />
+		<Folder Include="Shared\Exceptions\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\..\shared\EMS.Library.Shared\EMS.Library.Shared.csproj">
+	    <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+	  </ProjectReference>
+	</ItemGroup>
+</Project>

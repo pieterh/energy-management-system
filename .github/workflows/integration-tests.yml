@@ -22,8 +22,9 @@ jobs:
       working-directory: backend
     - name: Start docker containers
       run: |
+        chmod ugo+w config         
         docker compose --file hems-integration-test-docker-compose.yml up --pull --build --detach
-        sleep 20
+        sleep 15
       working-directory: docker/tests  
     - name: Build - backend
       run: |
@@ -39,7 +40,7 @@ jobs:
       id: docker-stop
       continue-on-error: true
       run: |
-        sleep 20
+        sleep 5
         docker logs hems-integration-test >${{ runner.temp }}/hems-integration-test-docker.log
         docker compose --file hems-integration-test-docker-compose.yml down
         echo ${{ steps.tests.outcome }}

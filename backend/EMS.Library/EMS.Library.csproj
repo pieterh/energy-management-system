@@ -7,13 +7,14 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="NLog" Version="5.1.3" />
+		<PackageReference Include="NLog" Version="5.2.1" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-		<PackageReference Include="JsonSchema.Net" Version="4.0.3" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		<PackageReference Include="JsonSchema.Net" Version="4.1.6" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.4.0.72892">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<PackageReference Include="ncrontab" Version="3.3.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="Adapter\" />
@@ -27,11 +28,17 @@
 		<Folder Include="Exceptions\" />
 		<Folder Include="dotNET\" />
 		<Folder Include="Files\" />
+		<Folder Include="Tasks\" />
+		<Folder Include="Adapter\Solar\" />
+		<Folder Include="Xml\" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Remove="Adapter\PriceProvider\" />
 		<None Remove="Assembly\" />
 		<None Remove="Exceptions\" />
 		<None Remove="dotNET\" />
+		<None Remove="Tasks\" />
+		<None Remove="Adapter\Solar\" />
+		<None Remove="Xml\" />
 	</ItemGroup>
 </Project>

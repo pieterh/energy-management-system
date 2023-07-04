@@ -1,44 +1,65 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.IO.Compression;
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.StaticFiles;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.AspNetCore.ResponseCompression;
-using System.IO.Compression;
 
 namespace EMS.WebHost
 {
     public record WebConfig
     {
-        public ushort Port { get; set; }
+        public string? ContentRootPath { get; set; }
+        public string? WebRootPath { get; set; }
         public JwtConfig? Jwt { get; set; }
-        public bool https { get; set; }
+    }
+    public record KestrelConfig
+    {
+        public EndPoints? EndPoints { get; set; }
+    }
+    public record EndPoints
+    {
+        public Http? Http { get; set; }
+    }
+    [SuppressMessage("", "CA1056")]
+    [SuppressMessage("", "CA1724")]
+    public record Http
+    {
+        public string? Url { get; set; }
     }
 
-    public class Startup
-    {
-        private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+    public interface IWebHost {
+        DateTime UpSince { get; }
+    }
 
-        private readonly IWebHostEnvironment _env;
-        private readonly IConfiguration _configuration;
+    public class Startup : IWebHost
+    {
+        private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+        private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+        private IWebHostEnvironment Env { get; init; }
+        private IConfiguration Configuration { get; init; }
 
         public WebConfig? WebConfig { get; set; }
-        private ILogger? Logger { get; set; }
 
-        public IWebHostEnvironment Env => _env;
-        public IConfiguration Configuration => _configuration;
+        private readonly DateTime _upSince = DateTime.Now;
+        public DateTime UpSince => _upSince;
 
         [SuppressMessage("Code Analysis", "CA1810")]
         static Startup()
@@ -49,33 +70,23 @@ namespace EMS.WebHost
 
         public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
-            _env = env;
-            _configuration = configuration;
+            Env = env;
+            Configuration = configuration;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            ArgumentNullException.ThrowIfNull(services);
+
             WebConfig wc = new();
             Configuration.GetSection("web").Bind(wc);
             WebConfig = wc;
 
+            services.AddSingleton(typeof(IWebHost), this);
             services.AddSingleton<IJwtService, JwtTokenService>();
 
-            services.AddControllers();
-
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
-            });
-
-            services.AddAuthentication(options =>
-            {
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                        .AddJwtBearer();
 
             services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
@@ -85,21 +96,21 @@ namespace EMS.WebHost
                 options.SaveToken = true;
             });
 
-            services.AddResponseCompression(options =>
+            services.AddControllers().AddApplicationPart(typeof(UsersController).Assembly);
+
+            services.AddSwaggerGen(options =>
             {
-                options.Providers.Add<BrotliCompressionProvider>();
-                options.Providers.Add<GzipCompressionProvider>();
-
-                options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] {
-                        "image/jpeg",
-                        "image/png",
-                        "application/font-woff2",
-                        "image/svg+xml",
-                        "application/octet-stream",
-                        "application/wasm"
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "HEMS API", Version = "v1" });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
                 });
-
-                options.EnableForHttps = true;
+                options.OperationFilter<SecurityRequirementsOperationFilter>();
             });
 
             services.Configure<BrotliCompressionProviderOptions>(options =>
@@ -112,28 +123,63 @@ namespace EMS.WebHost
                 options.Level = CompressionLevel.SmallestSize;
             });
 
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+                options.MimeTypes = new[] {
+                        "application/font-woff2",
+                        "application/javascript",
+                        "application/json",
+                        "application/octet-stream",
+                        "application/wasm",
+                        "application/xml",
+                        "text/css",
+                        "text/javascript",
+                        "text/json",
+                        "text/html",
+                        "text/plain",
+                };
+
+                options.EnableForHttps = true;
+            });
+
 #if DEBUG
             services.AddCors(options =>
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
-                      builder =>
-                      {
-                          builder.WithOrigins("http://127.0.0.1:5005",
-                                              "http://localhost:5005",
-                                              "http://127.0.0.1:5281",
-                                              "http://localhost:5281"
-                                              )
-                          .AllowCredentials()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
+                      builder =>{                          
+                          builder
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            ;
                       });
             });
+
+            // insert the AnalysisStartupFilter as the first IStartupFilter in the container
+            services.Insert(0, ServiceDescriptor.Transient<IStartupFilter, Microsoft.AspNetCore.MiddlewareAnalysis.AnalysisStartupFilter>());
 #endif
         }
 
-        public void Configure(ILogger<Startup> logger, IApplicationBuilder app)
+        public void Configure(WebApplication app)
         {
-            Logger = logger;
+            ArgumentNullException.ThrowIfNull(app);
+
+#if DEBUG
+            // Grab the "Microsoft.AspNetCore" DiagnosticListener from DI
+            var listener = app.Services.GetRequiredService<DiagnosticListener>();
+
+            // Create an instance of the AnalysisDiagnosticAdapter using the IServiceProvider
+            var observer = ActivatorUtilities.CreateInstance<AnalysisDiagnosticAdapter>(app.Services);
+
+            // Subscribe to the listener with the SubscribeWithAdapter() extension method
+            // and ignoring the disposible subscription 
+            _ = listener.SubscribeWithAdapter(observer);
+#endif
+
+            app.UseResponseCompression();
+
             if (Env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -168,10 +214,9 @@ namespace EMS.WebHost
 
             if (!Env.IsDevelopment())
                 app.UseHttpsRedirection();
-
+            
             app.UseMiddleware<Middleware.SecurityHeaders>();
             app.UseDefaultFiles();
-            app.UseResponseCompression();
 
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings.Clear();
@@ -194,44 +239,51 @@ namespace EMS.WebHost
 
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Path.Combine(Env.ContentRootPath, "dist")),
+                FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Env.WebRootPath),
                 RequestPath = string.Empty,
                 ContentTypeProvider = provider,
                 DefaultContentType = "application/octet-stream",
-                ServeUnknownFileTypes = true
+                ServeUnknownFileTypes = true,
+                OnPrepareResponse = ctx =>
+                {
+                    ctx.Context.Response.Headers.Append(
+                         "Cache-Control", $"public, max-age={1}");
+                }
             });
 
             app.UseRouting();
 
+            // put this between UseRouting and map of controllers / swagger
+            // and CORS needs to be before response caching
             app.UseCors(MyAllowSpecificOrigins);
+            app.UseResponseCaching();
 
-            // put this between UseRouting and UseEndpoints
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-                endpoints.MapSwagger();
-            });
+            app.MapControllers();
+            app.MapSwagger();
 
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("v1/swagger.json", "HEMS API V1");
             });
+
+            app.MapFallbackToFile("index.html");
+
             app.Use((context, next) =>
             {
-                Logger.LogInformation("{Path}", context.Request.Path);
+                Logger.Info("{Path}", context.Request.Path);
                 return next.Invoke();
             });
 
-            Logger.LogInformation("============================================================");
-            Logger.LogInformation("Web Host Environment");
-            Logger.LogInformation("ApplicationName: {ApplicationName}", _env.ApplicationName);
-            Logger.LogInformation("EnvironmentName: {EnvironmentName}", _env.EnvironmentName);
-            Logger.LogInformation("ContentRootPath: {ContentRootPath}", _env.ContentRootPath);
-            Logger.LogInformation("WebRootPath {WebRootPath}", _env.WebRootPath);
+            Logger.Info("============================================================");
+            Logger.Info("Web Host Environment");
+            Logger.Info("ApplicationName: {ApplicationName}", Env.ApplicationName);
+            Logger.Info("EnvironmentName: {EnvironmentName}", Env.EnvironmentName);
+            Logger.Info("ContentRootPath: {ContentRootPath}", Env.ContentRootPath);
+            Logger.Info("WebRootPath {WebRootPath}", Env.WebRootPath);
         }
     }
 }

@@ -15,15 +15,19 @@ namespace EMS.DataStore.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.7");
 
             modelBuilder.Entity("EMS.DataStore.ChargingTransaction", b =>
                 {
                     b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<double>("Cost")
                         .HasColumnType("REAL");
+
+                    b.Property<DateTimeOffset>("End")
+                        .HasColumnType("TEXT");
 
                     b.Property<double>("EnergyDelivered")
                         .HasColumnType("REAL");
@@ -31,7 +35,13 @@ namespace EMS.DataStore.Migrations
                     b.Property<double>("Price")
                         .HasColumnType("REAL");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTimeOffset>("Start")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("TimestampOffset")
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
@@ -42,6 +52,7 @@ namespace EMS.DataStore.Migrations
             modelBuilder.Entity("EMS.DataStore.CostDetail", b =>
                 {
                     b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("ChargingTransactionID")
@@ -53,13 +64,13 @@ namespace EMS.DataStore.Migrations
                     b.Property<double>("EnergyDelivered")
                         .HasColumnType("REAL");
 
-                    b.Property<DateTime>("TarifStart")
+                    b.Property<DateTimeOffset>("TarifStart")
                         .HasColumnType("TEXT");
 
                     b.Property<double>("TarifUsage")
                         .HasColumnType("REAL");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.HasKey("ID");
@@ -67,6 +78,38 @@ namespace EMS.DataStore.Migrations
                     b.HasIndex("ChargingTransactionID");
 
                     b.ToTable("CostDetail");
+                });
+
+            modelBuilder.Entity("EMS.DataStore.User", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastLogonDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("LastPasswordChangedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("EMS.DataStore.CostDetail", b =>

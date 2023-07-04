@@ -17,19 +17,20 @@
 		<None Remove="Microsoft.Extensions.Http" />
 		<None Remove="schemas\" />
 		<None Remove="schemas\getapxtariffs.schema.json" />
+		<None Remove="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
-		<PackageReference Include="System.Text.Json" Version="7.0.2" />
-		<PackageReference Include="JsonSchema.Net" Version="4.0.3" />
-		<PackageReference Include="SonarAnalyzer.CSharp" Version="8.55.0.65544">
+		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.4.0.72892">
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		  <PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="schemas\" />
+		<Folder Include="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="schemas\getapxtariffs.schema.json" LogicalName="getapxtariffs.schema.json" />
