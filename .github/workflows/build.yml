@@ -5,6 +5,7 @@ on:
     paths:
       - ".github/workflows/build.yml"
       - ".github/workflows/integration-tests.yml"
+      - ".github/actions/integration-tests/action.yml"
       - "backend/**"
       - "docker/**"
       - "frontend/**"
@@ -236,9 +237,13 @@ jobs:
     name: Build docker images
     needs: build_ems_app
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.version }}
     steps:    
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Docker Setup QEMU
       uses: docker/setup-qemu-action@v2
     - name: Docker Setup Buildx
@@ -307,6 +312,7 @@ jobs:
         ls -la dist/app
         find dist/app/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
         ls -la dist/app/runtimes
+        ls -la /home/runner/work
     - name: create blazorfrontend
       working-directory: docker
       run: |
@@ -320,9 +326,9 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}
-    - name: Docker build and push
+    - name: Docker build multi arch and push
       uses: docker/build-push-action@v4
-      if: github.ref != 'refs/heads/main'
+      if: ${{ github.ref != 'refs/heads/main' && (! startsWith(github.ref, 'refs/heads/dependabot')) }}
       with:
         context: docker
         file: docker/build/dockerfile
@@ -330,10 +336,21 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         build-args: |
           BACKEND=dist/app 
-        push: true
-  call-2:
-    name: "Integration tests!"
-    uses: ./.github/workflows/integration-tests.yml
-    needs: build_docker_images
-    with:
-      docker-image-tag: feature-blazorwasm
+        push: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
+        load: ${{ !! startsWith(github.ref, 'refs/heads/dependabot') }}        
+    - name: Docker build single arch and load
+      uses: docker/build-push-action@v4
+      if: ${{ github.ref == 'refs/heads/main' || (!! startsWith(github.ref, 'refs/heads/dependabot')) }}
+      with:
+        context: docker
+        file: docker/build/dockerfile
+        platforms: linux/amd64
+        tags: ${{ steps.meta.outputs.version }}
+        build-args: |
+          BACKEND=dist/app 
+        push: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
+        load: ${{ !! startsWith(github.ref, 'refs/heads/dependabot') }}
+    - name: Integration Testing
+      uses: ./.github/actions/integration-tests
+      with:
+        docker-image-tag: ${{ steps.meta.outputs.version }}

@@ -1,14 +1,12 @@
-on:
-  workflow_call:
-    inputs:
-      docker-image-tag:
-        required: true
-        type: string
-jobs:
-  integration_tests:
-    name: Integration tests
-    runs-on: ubuntu-latest
-    steps:
+name: Integration Tests!
+Description: Some integration tests!
+inputs:
+  docker-image-tag:
+    required: true
+    type: string
+runs:
+  using: composite
+  steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -19,22 +17,34 @@ jobs:
         dotnet-version: 7.0.x
     - name: Install dependencies - backend
       run: dotnet restore
+      shell: bash
       working-directory: backend
-    - name: Start docker containers
+    - name: Determine image name to use
+      id: image
       run: |
-        chmod ugo+w config         
-        docker compose --file hems-integration-test-docker-compose.yml up --pull --build --detach
-        sleep 15
-      working-directory: docker/tests  
+        docker images
+        if [[ "$(docker images|grep ${{ inputs.docker-image-tag }}|wc -l)" == 1 ]]; then echo "name=${{ inputs.docker-image-tag }}:latest" >> "$GITHUB_OUTPUT"; else echo "name=pieterhil/energy-management-system:${{ inputs.docker-image-tag }}" >> "$GITHUB_OUTPUT"; fi
+      shell: bash  
+    - name: Start docker containers
+      env: 
+         IMAGE: ${{ steps.image.outputs.name }}
+      run: |
+        chmod ugo+w config
+        docker compose --file hems-integration-test-docker-compose.yml up --build --detach
+        sleep 15   
+      shell: bash  
+      working-directory: docker/tests         
     - name: Build - backend
       run: |
         dotnet build --no-restore --configuration Release --verbosity normal --property WarningLevel=0
+      shell: bash
       working-directory: backend
     - name: Test - backend
       id: tests
       continue-on-error: true
       run: |
         dotnet test --filter "Category=Integration" --no-build --configuration Release --verbosity normal 
+      shell: bash
       working-directory: backend
     - name: Stop docker containers
       id: docker-stop
@@ -44,6 +54,7 @@ jobs:
         docker logs hems-integration-test >${{ runner.temp }}/hems-integration-test-docker.log
         docker compose --file hems-integration-test-docker-compose.yml down
         echo ${{ steps.tests.outcome }}
+      shell: bash        
       working-directory: docker/tests
     - name: Upload backend logs
       uses: actions/upload-artifact@v3
@@ -62,3 +73,4 @@ jobs:
       run: |
         echo ${{ steps.tests.outcome }}
         exit 1
+      shell: bash
