@@ -26,6 +26,15 @@
         "assembly": "EPEXSPOT, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
         "type": "EPEXSPOT.EPEXSPOTService"
       }
+    },
+    {
+      "id": "ac7844a4-14c7-478b-954c-fc03994791d4",
+      "type": "solar",
+      "name": "Enphase - Envoy",
+      "driver": {
+        "assembly": "Enphase, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+        "type": "Enphase.EnphaseService"
+      }
     }
   ],
   "instances": [
@@ -57,6 +66,17 @@
       "adapterid": "f5c39ed5-4fe7-4f81-b7bb-c477aac47fd4",
       "config": {
         "endpoint": "https://mijn.easyenergy.com"
+      }
+    },
+    {
+      "id": "7c87689d-7d9d-4cfa-a5ab-e48f9947a6aa",
+      "name": "Enphase",
+      "enabled": true,
+      "adapterid": "ac7844a4-14c7-478b-954c-fc03994791d4",
+      "config": {
+        "endpoint": "http://192.168.1.8",
+        "username": "installer",
+        "password": "11223344"
       }
     }
   ],
