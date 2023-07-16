@@ -43,10 +43,13 @@ runs:
       id: tests
       continue-on-error: true
       run: |
-        dotnet test --filter "Category=Integration" --no-build --configuration Release --verbosity normal 
+        dotnet test --filter "Category=Integration" --no-build --configuration Release --verbosity normal
+        if [[ "$?" == 1 ]]; then echo "failed=true" >> "$GITHUB_OUTPUT"; else echo "failed=false" >> "$GITHUB_OUTPUT"; fi
       shell: bash
       working-directory: backend
     - name: Stop docker containers
+      env: 
+        IMAGE: ${{ steps.image.outputs.name }}
       id: docker-stop
       continue-on-error: true
       run: |
@@ -69,8 +72,11 @@ runs:
         name: hems-integration-test-docker-logs
         path: ${{ runner.temp }}/hems-integration-test-docker.log
     - name: Check on failures
-      if: steps.tests.outcome == failure()
+      if: ${{ steps.tests.outcome == 'failure' || steps.tests.outputs.failed == 'true' }}
       run: |
-        echo ${{ steps.tests.outcome }}
+        echo "outcome " ${{ steps.tests.outcome }} " - " ${{ steps.tests.outcome == 'failure' }} 
+        echo "failed " ${{ steps.tests.outputs.failed }} " - " ${{ steps.tests.outputs.failed == 'true' }}
+        echo "combined1 " ${{ steps.tests.outcome == 'failure' }} || ${{ steps.tests.outputs.failed == 'true' }}
+        echo "combined2 " ${{ steps.tests.outcome == 'failure' || steps.tests.outputs.failed == 'true' }}
         exit 1
       shell: bash
