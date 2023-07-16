@@ -312,7 +312,6 @@ jobs:
         ls -la dist/app
         find dist/app/runtimes/* -name "*" -not -regex ".*linux-arm" -a -not -regex ".*linux-arm64" -a -not -regex ".*linux-x64" -a -not -regex ".*alpine-arm" -a -not -regex ".*alpine-arm64" -a -not -regex ".*alpine-x64" -maxdepth 0 -exec rm -R {} \; 
         ls -la dist/app/runtimes
-        ls -la /home/runner/work
     - name: create blazorfrontend
       working-directory: docker
       run: |
@@ -326,6 +325,16 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}
+    - name: image tags tolower
+      id: image-tags
+      uses: ./.github/actions/string-tolower
+      with:
+        string: ${{ steps.meta.outputs.tags }}     
+    - name: image version tolower
+      id: image-version
+      uses: ./.github/actions/string-tolower
+      with:
+        string: ${{ steps.meta.outputs.version }}          
     - name: Docker build multi arch and push
       uses: docker/build-push-action@v4
       if: ${{ github.ref != 'refs/heads/main' && (! startsWith(github.ref, 'refs/heads/dependabot')) }}
@@ -333,7 +342,7 @@ jobs:
         context: docker
         file: docker/build/dockerfile
         platforms: linux/amd64,linux/arm64,linux/arm
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: ${{ steps.image-tags.outputs.lowercase }}
         build-args: |
           BACKEND=dist/app 
         push: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
@@ -345,7 +354,7 @@ jobs:
         context: docker
         file: docker/build/dockerfile
         platforms: linux/amd64
-        tags: ${{ steps.meta.outputs.version }}
+        tags: ${{ steps.image-version.outputs.lowercase }}
         build-args: |
           BACKEND=dist/app 
         push: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
@@ -353,4 +362,4 @@ jobs:
     - name: Integration Testing
       uses: ./.github/actions/integration-tests
       with:
-        docker-image-tag: ${{ steps.meta.outputs.version }}
+        docker-image-tag: ${{ steps.image-version.outputs.lowercase }}

@@ -1,0 +1,19 @@
+name: "Change string tolower"
+description: "Github Action to make a string lowercase"
+
+inputs:
+  string:
+    description: string to convert
+    required: true
+outputs:
+  lowercase:
+    description: The input string, with any uppercase characters replaced with lowercase ones
+    value: ${{ steps.run-script.outputs.lowercase }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: run-script
+      run: |
+        echo "${{ inputs.string }}" | awk '{print "lowercase=" tolower($0)}' >> "$GITHUB_OUTPUT"
+      shell: bash
