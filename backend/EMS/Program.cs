@@ -51,6 +51,7 @@ static class Program
     private static NLog.Targets.ColoredConsoleTarget _logconsole = new NLog.Targets.ColoredConsoleTarget("logconsole") { UseDefaultRowHighlightingRules = true };
     private static bool PerformHealthCheck;
 
+    [SuppressMessage("", "CA1031", Justification = "We just need to make sure that unhandled exceptions are noticed.")]
     static async Task<int> Main(string[] args)
     {
         try
@@ -105,7 +106,12 @@ static class Program
         catch (ArgumentException ae)
         {
             /* Somehow we need to catch, otherwise the finally doesn't seem to run */
-            Logger.Error(ae, "Unexpected error occurred and will terminate.");
+            Logger.Error(ae, $"Unexpected error occurred and will terminate. {Environment.NewLine}");
+            return -1;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, $"Unexpected error occurred and will terminate. {Environment.NewLine}");
             return -1;
         }
         finally
@@ -242,10 +248,14 @@ static class Program
         using (var a = new HEMSContext())
         {
             a.Database.Migrate();
-            var t = a.ChargingTransactions.OrderBy(x => x.ID).Include((x) => x.CostDetails).Last();
-            Logger.Info("Last {transaction}", t);
-            foreach(var details in t.CostDetails.OrderBy(x => x.Timestamp))
-                Logger.Info("details {details}", details);
+            if (a.ChargingTransactions.Any())
+            {
+                var t = a.ChargingTransactions.OrderBy(x => x.ID).Include((x) => x.CostDetails).Last();
+                Logger.Info("Last {transaction}", t);
+                foreach (var details in t.CostDetails.OrderBy(x => x.Timestamp))
+                    Logger.Info("details {details}", details);
+            }else
+                Logger.Info("No transactions found");
         }
 
         builder.Services.AddDbContext<DataProtectionKeyContext>(o =>
