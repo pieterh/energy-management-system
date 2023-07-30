@@ -1,6 +1,7 @@
 name: build
 run-name: Build for ${{ github.event_name }} of "${{ github.event.head_commit.message }}"  
-on: 
+on:
+  pull_request:
   push:
     paths:
       - ".github/workflows/build.yml"
@@ -15,7 +16,7 @@ jobs:
     name: Build and test
     runs-on: windows-latest # Need to run on windows due to roslyn analyzers not available (yet?) on linux
     env:
-        dotnet-version:  '7.0.x'
+        dotnet-version: '7.0.x'
         generate-sbom: false
     steps:
     - name: Checkout
