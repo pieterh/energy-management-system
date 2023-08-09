@@ -1,5 +1,5 @@
 name: build
-run-name: Build for ${{ github.event_name }} of "${{ github.event.head_commit.message }}"  
+run-name: Build for ${{ github.event_name }} of "${{ github.event.head_commit.message }}${{ github.event.number }}"  
 on:
   pull_request:
   push:
