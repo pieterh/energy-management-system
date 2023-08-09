@@ -346,8 +346,8 @@ jobs:
         tags: ${{ steps.image-tags.outputs.lowercase }}
         build-args: |
           BACKEND=dist/app 
-        push: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
-        load: ${{ !! startsWith(github.ref, 'refs/heads/dependabot') }}        
+        push: true
+        load: false
     - name: Docker build single arch and load
       uses: docker/build-push-action@v4
       if: ${{ github.ref == 'refs/heads/main' || (!! startsWith(github.ref, 'refs/heads/dependabot')) || github.event_name == 'pull_request'}}
@@ -358,8 +358,8 @@ jobs:
         tags: ${{ steps.image-version.outputs.lowercase }}
         build-args: |
           BACKEND=dist/app 
-        push: ${{ ! startsWith(github.ref, 'refs/heads/dependabot') }}
-        load: ${{ !! startsWith(github.ref, 'refs/heads/dependabot') }}
+        push: false
+        load: true
     - name: Integration Testing
       uses: ./.github/actions/integration-tests
       with:
