@@ -169,106 +169,97 @@ namespace AlfenNG9xx
             return sm;
         }
 
+        [SuppressMessage("CA", "CA1031", Justification = "The HandleException will perform proper handling")]
         protected virtual ushort[] ReadHoldingRegisters(byte slave, ushort address, ushort count)
         {
             lock (_modbusMasterLock)
             {
                 try
                 {
-                    if (_modbusMaster == null)
-                        _modbusMaster = ModbusMasterFactory();
-
-                    if (_modbusMaster == null)
-                    {
-                        Logger.Error($"ReadHoldingRegisters() -> failed, no connection");
+                    var modbusMaster = EnsureModbusMasterInitialized();
+                    if (modbusMaster == null)
                         return Array.Empty<ushort>();
-                    }
 
-                    return _modbusMaster.ReadHoldingRegisters(slave, address, count);
+                    return modbusMaster.ReadHoldingRegisters(slave, address, count);
                 }
-                catch (System.IO.IOException ioe)
+                catch (Exception e)
                 {
-                    // The operation is not allowed on non-connected sockets
-                    Logger.Error("Received an IOException, we try later again", ioe);
-                    Logger.Error("Just to be sure, we are disposing the connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException("IOException", ioe);
-                }
-                catch (System.InvalidOperationException ioe)
-                {
-                    // The operation is not allowed on non-connected sockets
-                    Logger.Error("Received an InvalidOperationException, we try later again", ioe);
-                    Logger.Error("Just to be sure, we are disposing the connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException($"{ioe.Message}", ioe);
-                }
-                catch(SocketException se)
-                {
-                    Logger.Error($"SocketException {se.Message}, we try later again");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException($"{se.Message}", se);
-                }
-                catch (Exception e) when (e.Message.StartsWith("Partial packet exception", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.Error("Partial Modbus packaged received, we try later again");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException("Partial Modbus packaged received.", e);
-                }
-                catch (Exception e) when (e.Message.StartsWith("Timeout connecting", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.Error("{Message}", e.Message);
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException("Modbus connection timeout.", e);
+                    HandleException(e);                    
                 }
             }
+            return Array.Empty<ushort>();  // Added this to ensure all code paths return a value
         }
 
+        [SuppressMessage("CA", "CA1031", Justification = "The HandleException will perform proper handling")]
         protected override void PerformUpdateMaxCurrent(double maxCurrent, ushort phases)
         {
             lock (_modbusMasterLock)
             {
                 try
                 {
-                    if (_modbusMaster == null)
-                        _modbusMaster = ModbusMasterFactory();
-
-                    if (_modbusMaster == null)
-                    {
-                        Logger.Error($"PerformUpdateMaxCurrent({maxCurrent}, {phases}) -> failed, no connection");
+                    var modbusMaster = EnsureModbusMasterInitialized();
+                    if (modbusMaster == null)
                         return;
-                    }
 
                     Logger.Trace($"PerformUpdateMaxCurrent {maxCurrent}, {phases}");
-                    _modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters((float)maxCurrent));
-                    _modbusMaster.WriteRegister(1, 1215, phases);
+                    modbusMaster.WriteRegisters(1, 1210, Converters.ConvertFloatToRegisters((float)maxCurrent));
+                    modbusMaster.WriteRegister(1, 1215, phases);
                 }
-                catch (SocketException se)
+                catch (Exception e)
                 {
-                    Logger.Error($"SocketException {se.Message}, we try later again");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException($"{se.Message}", se);
-                }
-                catch (Exception e) when (e.Message.StartsWith("Partial packet exception", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.Error("Partial Modbus packaged received, we try later again");
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException("Partial Modbus packaged received.", e);
-                }
-                catch (Exception e) when (e.Message.StartsWith("Timeout connecting", StringComparison.OrdinalIgnoreCase))
-                {
-                    Logger.Error("{Message}", e.Message);
-                    Logger.Error("Disposing connection");
-                    DisposeModbusMaster();
-                    throw new CommunicationException("Modbus connection timeout.", e);
+                    HandleException(e);
                 }
             }
         }
 
+        private IModbusMaster? EnsureModbusMasterInitialized()
+        {
+            if (_modbusMaster != null) return _modbusMaster;
+
+            _modbusMaster = ModbusMasterFactory();
+
+            if (_modbusMaster == null)
+            {
+                Logger.Error($"Operation failed, no connection");                
+            }
+
+            return _modbusMaster;
+        }
+
+        private void HandleException(Exception e)
+        {
+            string exceptionMessage = e.Message;
+
+            if (e is System.IO.IOException)
+            {
+                Logger.Error("Received an IOException, we try later again", e);
+                exceptionMessage = "IOException";
+            }
+            else if (e is InvalidOperationException)
+            {
+                Logger.Error($"Received an InvalidOperationException, we try later again", e);
+            }
+            else if (e is SocketException se)
+            {
+                Logger.Error($"SocketException {se.Message}, we try later again");
+            }
+            else if (e.Message.StartsWith("Partial packet exception", StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Error("Partial Modbus packaged received, we try later again");
+                exceptionMessage = "Partial Modbus packaged received.";
+            }
+            else if (e.Message.StartsWith("Timeout connecting", StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Error("{Message}", e.Message);
+                exceptionMessage = "Modbus connection timeout.";
+            }
+
+            Logger.Error("Disposing connection");
+            DisposeModbusMaster();
+
+            throw new CommunicationException(exceptionMessage, e);
+        }
+        
         internal virtual IModbusMaster ModbusMasterFactory()
         {
             return AlfenNG9xx.Modbus.ModbusMaster.TCP(_alfenIp, _alfenPort, 2500);

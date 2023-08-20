@@ -12,6 +12,7 @@ using EMS.Library.Shared.DTO;
 using EMS.Library.Shared.DTO.Users;
 using EMS.DataStore;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace EMS.WebHost.Controllers;
 
@@ -64,7 +65,24 @@ public class UsersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Update password
+    /// </summary>
+    /// <returns></returns>
+    /// <remarks>
+    /// Sample request:
+    /// POST /api/Users/setpassword
+    /// {
+    ///  "oldPassword": "string",
+    ///  "newPassword": "string"
+    /// }
+    /// </remarks>
+    /// <response code="200">Password is changed</response>
     [HttpPost("setpassword")]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public IActionResult SetPassword([FromBody] SetPasswordModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -109,6 +127,14 @@ public class UsersController : ControllerBase
         return new JsonResult(new SetPasswordResponse() { Status = 500, StatusText = "Password was not changed" });
     }
 
+    /// <summary>
+    /// Ping
+    /// </summary>
+    /// <returns></returns>
+    /// <remarks>
+    /// Sample request:
+    /// GET /ping
+    /// </remarks>
     [HttpGet("ping")]
     public IActionResult Ping()
     {

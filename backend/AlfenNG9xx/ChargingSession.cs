@@ -30,61 +30,83 @@ namespace AlfenNG9xx
         {
             if (newMeasurement == null) return;
 
-            // as long as the car is not connected, there is no session
+            HandleSessionStartOrReset(newMeasurement, newTariff);
+            HandleSessionUpdate(newMeasurement);
+            HandleChargingStart(newMeasurement, newTariff);
+            HandleChargingStop(newMeasurement);
+            HandleTariffChangeWhileCharging(newMeasurement, newTariff);
+
+            RaiseEvents(newMeasurement);
+
+            LastSocketMeasurement = newMeasurement;
+        }
+
+        // as long as the car is not connected, there is no session
+        // start session as soon as the car is connected
+        private void HandleSessionStartOrReset(SocketMeasurement newMeasurement, Tariff? newTariff)
+        {
             if (!_isConnected && !newMeasurement.VehicleConnected && newMeasurement.Mode3State == Mode3State.A)
             {
                 ChargeSessionInfo = DefaultSessionInfo();
             }
 
-            // start session as soon as the car is connected
             if (!_isConnected && newMeasurement.VehicleConnected)
             {
                 _isConnected = true;
                 _meterReadingStart = newMeasurement.RealEnergyDeliveredSum;
                 ChargeSessionInfo = DefaultSessionInfo();
                 ChargeSessionInfo.Start = DateTimeOffsetProvider.Now;
-
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
             }
+        }
 
+        // update the session when the car is connected
+        // stop session as soon as the car is no longer connected
+        private void HandleSessionUpdate(SocketMeasurement newMeasurement)
+        {
             if (_isConnected)
             {
                 ChargeSessionInfo.EnergyDelivered = newMeasurement.RealEnergyDeliveredSum - _meterReadingStart;
-            }
 
-            // stop session as soon as the car is no longer connected
-            if (_isConnected && !newMeasurement.VehicleConnected)
-            {
-                _isConnected = false;
-                ChargeSessionInfo.End = DateTimeOffsetProvider.Now;
-                ChargeSessionInfo.SessionEnded = true;
+                if (!newMeasurement.VehicleConnected)
+                {
+                    _isConnected = false;
+                    ChargeSessionInfo.End = DateTimeOffsetProvider.Now;
+                    ChargeSessionInfo.SessionEnded = true;
+                }
             }
+        }
 
-            // the car is started to charge; track start time, tariff
+        // the car is started to charge; track start time, tariff
+        private void HandleChargingStart(SocketMeasurement newMeasurement, Tariff? newTariff)
+        {
             if (newMeasurement.VehicleIsCharging && !_isCharging)
             {
                 _chargingStart = DateTimeProvider.Now;
-
                 _currentTariffDateTime = DateTimeOffsetProvider.Now;
                 _currentTariff = newTariff;
                 _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
             }
+        }
 
-            // the car has stopped charging; record the time
+        // the car has stopped charging; record the time
+        private void HandleChargingStop(SocketMeasurement newMeasurement)
+        {
             if (!newMeasurement.VehicleIsCharging && _isCharging)
             {
                 ChargeSessionInfo.ChargingTime += (uint)(DateTimeProvider.Now - _chargingStart).TotalSeconds;
-
-                // nog te doen: gebruik moment van gebruik van dit tarief ipv now
                 ChargeSessionInfo.Costs.Add(new Cost(_currentTariffDateTime, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                 ChargeSessionInfo.RunningCost = 0m;
             }
 
             _isCharging = newMeasurement.VehicleIsCharging;
+        }
 
-            // we are charging and the tariff did change
-            // calculate the costs for the usage in for the last tariff
+        // we are charging and the tariff did change
+        // calculate the costs for the usage in for the last tariff
+        private void HandleTariffChangeWhileCharging(SocketMeasurement newMeasurement, Tariff? newTariff)
+        {
             if (_isCharging && _currentTariff != null)
             {
                 if (!_currentTariff.Equals(newTariff))
@@ -92,7 +114,6 @@ namespace AlfenNG9xx
                     // nog te doen: gebruik moment van gebruik van dit tarief ipv now
                     ChargeSessionInfo.Costs.Add(new Cost(_currentTariffDateTime, _currentTariff, (newMeasurement.RealEnergyDeliveredSum - _meterReadingStartTariff)));
                     ChargeSessionInfo.RunningCost = 0m;
-
                     _currentTariffDateTime = DateTimeProvider.Now;
                     _currentTariff = newTariff;
                     _meterReadingStartTariff = newMeasurement.RealEnergyDeliveredSum;
@@ -105,10 +126,6 @@ namespace AlfenNG9xx
                     ChargeSessionInfo.RunningCost = energy * costPerWatt;
                 }
             }
-
-            RaiseEvents(newMeasurement);
-
-            LastSocketMeasurement = newMeasurement;
         }
 
         public event EventHandler<ChargingStatusUpdateEventArgs> ChargingStatusUpdate = delegate { };
