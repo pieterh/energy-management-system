@@ -90,11 +90,18 @@ namespace P1SmartMeter.Telegram
                     return rawValue;
 
                 case TelegramFieldType.Timestamp:
-                    var ts = "20" + rawValue.Substring(0, 2) + "-" + rawValue.Substring(2, 2) + "-"
+                    var format = "yyyy-MM-ddTHH:mm:ss";
+                    var rawTimestamp = "20" + rawValue.Substring(0, 2) + "-" + rawValue.Substring(2, 2) + "-"
                              + rawValue.Substring(4, 2) + "T" + rawValue.Substring(6, 2) + ":"
                              + rawValue.Substring(8, 2) + ":" + rawValue.Substring(10, 2);
-                    return DateTime.Parse(ts);
-
+                    if (DateTime.TryParseExact(rawTimestamp, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+                    {
+                        return result;
+                    }
+                    else
+                    {                        
+                        throw new FormatException($"Cannot parse {rawValue} as a timestamp.");
+                    }
                 default: // plain
                     return rawValue;
             }

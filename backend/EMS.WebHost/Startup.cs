@@ -21,6 +21,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 using EMS.WebHost.Controllers;
 using EMS.WebHost.Helpers;
+using System.Reflection;
 
 namespace EMS.WebHost
 {
@@ -111,6 +112,9 @@ namespace EMS.WebHost
                     Scheme = "Bearer"
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
+                
+                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             });
 
             services.Configure<BrotliCompressionProviderOptions>(options =>
