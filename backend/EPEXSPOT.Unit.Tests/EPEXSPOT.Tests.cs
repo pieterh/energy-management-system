@@ -59,7 +59,7 @@ public class TariffTests
         ArgumentNullException.ThrowIfNull(tariff);
         Tariff? t = EPEXSPOTService.FindTariff(tariff, dateTime);
         Assert.NotNull(t);
-        Assert.Equal(tariff[idx].Timestamp, t?.Timestamp);
+        Assert.Equal(tariff[idx].Timestamp, t.Timestamp);
     }
 
     [Theory]
@@ -137,7 +137,7 @@ public class TariffTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             var t = EPEXSPOTService.FindTariff(
-                        new Tariff[] { new Tariff(new DateTime(2021, 12, 29, 13, 00, 00), 0, 0) },
+                        new Tariff[] { new Tariff(new DateTime(2021, 12, 29, 13, 00, 00, DateTimeKind.Utc), 0, 0) },
                         new DateTime(2021, 12, 29, 12, 00, 00, DateTimeKind.Unspecified));
             t.Should().NotBeNull();
         });
@@ -168,7 +168,7 @@ public class TariffTests
         
         var first = result[0];
         Assert.NotNull(first);
-        first.Timestamp.Should<DateTime>().Be(new DateTime(2023, 05, 01, 19, 0, 0));
+        first.Timestamp.Should<DateTime>().Be(new DateTime(2023, 05, 01, 19, 0, 0, DateTimeKind.Utc));
         first.TariffUsage.Should<Decimal>().BeGreaterThan(0);
         first.TariffReturn.Should<Decimal>().BeGreaterThan(0);
     }

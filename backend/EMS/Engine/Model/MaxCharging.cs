@@ -35,7 +35,7 @@ namespace EMS.Engine.Model
             var retval2 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL2, avg.CurrentUsingL2), 2);
             var retval3 = (float)Math.Round(LimitCurrent(avg.CurrentChargingL3, avg.CurrentUsingL3), 2);
 
-            Logger?.LogTrace("{L1}, {L2}, {L3} => {Retval1}, {Retval2}, {Retval3}",
+            Logger.LogTrace("{L1}, {L2}, {L3} => {Retval1}, {Retval2}, {Retval3}",
                 (float)Math.Round(avg.CurrentUsingL1, 2), (float)Math.Round(avg.CurrentUsingL2, 2), (float)Math.Round(avg.CurrentUsingL3, 2),
                 retval1, retval2, retval3);
             return (retval1, retval2, retval3);

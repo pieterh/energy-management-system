@@ -7,6 +7,7 @@ using FluentAssertions;
 using EMS.Library;
 using EMS.Library.Adapter;
 using EMS.Library.Core;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EMS.Tests
 {
@@ -15,14 +16,16 @@ namespace EMS.Tests
         [Fact]
         public void HandlesMeasurementArrayNull()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxSolar);
             mock.Object.Charging().Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
 
         [Fact]
         public void HandlesLessThenMinimum()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxSolar);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints - 1; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(10, 0, 0), new CurrentMeasurement(10, 0, 0));
@@ -33,7 +36,8 @@ namespace EMS.Tests
         [Fact]
         public void NotEnoughProduction1()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxSolar);
 
             mock.Object.AddMeasurement(new CurrentMeasurement(-3, 1, 0), new CurrentMeasurement(16f, 0f, 0f));
             mock.Object.AddMeasurement(new CurrentMeasurement(-3, 1, 1), new CurrentMeasurement(16f, 0f, 0f));
@@ -70,7 +74,8 @@ namespace EMS.Tests
         [Fact]
         public void NotEnoughProduction2()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxSolar);
 
             mock.Object.AddMeasurement(new CurrentMeasurement(3, 1, 0), new CurrentMeasurement(8.64f, 0f, 0f));
             mock.Object.AddMeasurement(new CurrentMeasurement(3, 1, 1), new CurrentMeasurement(8.64f, 0f, 0f));
@@ -107,7 +112,8 @@ namespace EMS.Tests
         [Fact]
         public void Test2()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxSolar);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-12.0, 0.62, 0.40), new CurrentMeasurement(0f, 0f, 0f));
@@ -120,7 +126,8 @@ namespace EMS.Tests
         [MemberData(nameof(GetData), parameters: "_040_Test3")]
         public void T040Test3(ICurrentMeasurement sm, ICurrentMeasurement evse, ICurrentMeasurement expected, string because)
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxSolar);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxSolar);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(sm, evse);

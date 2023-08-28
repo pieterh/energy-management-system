@@ -81,10 +81,7 @@ namespace P1ReaderUnitTests
         [Fact]
         public async Task StartAsyncAndReceiveData()
         {
-            var mock = SetupMock();
-            var serialPortFactoryMock = mock.serialPortFactory;
-            var serialPortMock = mock.serialPort;
-            var watchdockMock = mock.watchdog;
+            var (serialPortFactoryMock, serialPortMock, watchdockMock) = SetupMock();
 
             var r = new P1ReaderTTY("/dev/usb", watchdockMock.Object, serialPortFactoryMock.Object);
             var token = new CancellationToken();
@@ -96,7 +93,12 @@ namespace P1ReaderUnitTests
             DataArrivedEventArgs? dataArrived = null;
             r.DataArrived += (object? sender, DataArrivedEventArgs e) => { dataArrived = e; };
 
-            serialPortMock.Raise((x) => x.DataReceived += null, serialPortMock.Object, null);   /* no need to pass eventargs since there is nothing we can do with it */
+            // Manually simulate RaiseAsync by running it on a different thread.
+            // Moq should support now the RaiseAsync, but somehow we get a null reference
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+            await Task.Run(() => serialPortMock.Raise((x) => x.DataReceived += null, serialPortMock.Object, null)).ConfigureAwait(false);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+
 
             dataArrived.Should().NotBeNull();
             Assert.NotNull(dataArrived);    // just get rid of warning
@@ -119,4 +121,3 @@ namespace P1ReaderUnitTests
         }
     }
 }
-

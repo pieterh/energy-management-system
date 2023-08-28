@@ -12,12 +12,12 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void HandlesChangeInTariff()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00, DateTimeKind.Utc);
 
-            var tariff1 = new Tariff(new DateTime(2021, 4, 1, 13, 00, 00), 0.11m, 0.01m);
-            var tariff2 = new Tariff(new DateTime(2021, 4, 1, 13, 30, 00), 0.12m, 0.02m);
-            var tariff3 = new Tariff(new DateTime(2021, 4, 1, 14, 00, 00), 0.13m, 0.03m);
-            var tariff4 = new Tariff(new DateTime(2021, 4, 1, 14, 30, 00), 0.14m, 0.04m);
+            var tariff1 = new Tariff(new DateTime(2021, 4, 1, 13, 00, 00, DateTimeKind.Utc), 0.11m, 0.01m);
+            var tariff2 = new Tariff(new DateTime(2021, 4, 1, 13, 30, 00, DateTimeKind.Utc), 0.12m, 0.02m);
+            var tariff3 = new Tariff(new DateTime(2021, 4, 1, 14, 00, 00, DateTimeKind.Utc), 0.13m, 0.03m);
+            var tariff4 = new Tariff(new DateTime(2021, 4, 1, 14, 30, 00, DateTimeKind.Utc), 0.14m, 0.04m);
 
             using (new DateTimeProviderContext(fakeDate))
             {

@@ -16,7 +16,7 @@ namespace EMS.Tests
             var mock = new Mock<Measurements>(bufferseconds);
 
             // start filling buffer with some data, but don't overfill the buffer
-            var dateTime = new DateTime(2021, 05, 01, 13, 15, 0);
+            var dateTime = new DateTime(2021, 05, 01, 13, 15, 0, DateTimeKind.Utc);
             for (int i = 0; i < bufferseconds - 10; i++)
             {
                 using (new DateTimeProviderContext(dateTime))
@@ -47,7 +47,7 @@ namespace EMS.Tests
             var mock = new Mock<Measurements>(bufferseconds);
 
             // start filling buffer halfway 
-            var dateTime = new DateTime(2021, 05, 01, 13, 15, 0);
+            var dateTime = new DateTime(2021, 05, 01, 13, 15, 0, DateTimeKind.Utc);
             for (int i = 0; i < bufferseconds / 2; i++)
             {
                 using (new DateTimeProviderContext(dateTime))
@@ -102,7 +102,7 @@ namespace EMS.Tests
             var mock = new Mock<Measurements>(bufferseconds);
 
             // start filling buffer halfway 
-            var dateTime = new DateTime(2021, 05, 01, 13, 15, 0);
+            var dateTime = new DateTime(2021, 05, 01, 13, 15, 0, DateTimeKind.Utc);
             for (int i = 0; i < bufferseconds / 2; i++)
             {
                 using (new DateTimeProviderContext(dateTime))

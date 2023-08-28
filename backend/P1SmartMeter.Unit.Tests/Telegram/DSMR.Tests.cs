@@ -22,12 +22,12 @@ namespace P1SmartMeter.TelegramTests
             t.ActualPowerReturn.Should().Be(0.662);
             t.PowerFailureEventLog.Count.Should().Be(2);
             t.PowerFailureEventLog[0].Duration.Should().Be(336);
-            t.PowerFailureEventLog[0].Timestamp.Should().Be(new DateTime(2019, 9, 11, 15, 49, 33));
+            t.PowerFailureEventLog[0].Timestamp.Should().Be(new DateTime(2019, 9, 11, 15, 49, 33, DateTimeKind.Utc));
 
             t.PowerFailureEventLog[1].Duration.Should().Be(861); 
-            t.PowerFailureEventLog[1].Timestamp.Should().Be(new DateTime(2020, 10, 17, 08, 16, 00));
+            t.PowerFailureEventLog[1].Timestamp.Should().Be(new DateTime(2020, 10, 17, 08, 16, 00, DateTimeKind.Utc));
 
-            t.Timestamp.Should().Be(new DateTime(2021, 03, 07, 12, 37, 21));
+            t.Timestamp.Should().Be(new DateTime(2021, 03, 07, 12, 37, 21, DateTimeKind.Utc));
             t.PowerUsedL1.Should().Be(0);
             t.PowerUsedL2.Should().Be(0.213);
             t.PowerUsedL3.Should().Be(0.076);
@@ -57,7 +57,7 @@ namespace P1SmartMeter.TelegramTests
             t.TextMessage.Should().BeEmpty();
             t.ActualPowerUse.Should().Be(0.335);
             t.ActualPowerReturn.Should().Be(0);
-            t.Timestamp.Should().Be(new DateTime(2017, 11, 05, 20, 13, 24));
+            t.Timestamp.Should().Be(new DateTime(2017, 11, 05, 20, 13, 24, DateTimeKind.Utc));
             t.PowerUsedL1.Should().Be(0.335);
             t.PowerUsedL2.Should().BeNull();
             t.PowerUsedL3.Should().BeNull();
@@ -82,16 +82,16 @@ namespace P1SmartMeter.TelegramTests
         {
             var t = new DSMRTelegram(MsgToString(telegram_4), true);
             t.Should().NotBeNull();
-            t.Timestamp.Should().Be(new DateTime(2010, 12, 09, 11, 30, 20));
+            t.Timestamp.Should().Be(new DateTime(2010, 12, 09, 11, 30, 20, DateTimeKind.Utc));
             t.Electricity1FromGrid.Should().Be(123456.789);
             t.Electricity2FromGrid.Should().Be(123456.789);
             t.Electricity1ToGrid.Should().Be(123456.789);
             t.Electricity2ToGrid.Should().Be(123456.789);            
             t.PowerFailureEventLog.Count.Should().Be(2);
 
-            t.PowerFailureEventLog[0].Timestamp.Should().Be(new DateTime(2010, 12, 08, 15, 24, 15));    // requirements mention 15:20:15, but seems 15:24:15
+            t.PowerFailureEventLog[0].Timestamp.Should().Be(new DateTime(2010, 12, 08, 15, 24, 15, DateTimeKind.Utc));    // requirements mention 15:20:15, but seems 15:24:15
             t.PowerFailureEventLog[0].Duration.Should().Be(240);
-            t.PowerFailureEventLog[1].Timestamp.Should().Be(new DateTime(2010, 12, 08, 15, 10, 04));    // requirements mention 15:05:03, but seems 15:10:04
+            t.PowerFailureEventLog[1].Timestamp.Should().Be(new DateTime(2010, 12, 08, 15, 10, 04, DateTimeKind.Utc));    // requirements mention 15:05:03, but seems 15:10:04
             t.PowerFailureEventLog[1].Duration.Should().Be(301);
             t.PowerSagsL1.Should().Be(2);
             t.PowerSagsL2.Should().Be(1); //(poly phase meters only)

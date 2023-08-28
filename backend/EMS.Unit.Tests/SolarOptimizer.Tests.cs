@@ -15,7 +15,7 @@ public class SolarOptimizerTests
         var s = new Mock<ISolar>();
         var w = new Mock<IWatchdog>();
 
-        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0)))
+        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0, DateTimeKind.Utc)))
         {
             var optimizer = new Mock<SolarOptimizer>(p.Object, s.Object, w.Object);
             var mObj = optimizer.Object;
@@ -33,7 +33,7 @@ public class SolarOptimizerTests
         var s = new Mock<ISolar>();
         var w = new Mock<IWatchdog>();
 
-        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0)))
+        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0, DateTimeKind.Utc)))
         {
             var optimizer = new Mock<SolarOptimizer>(p.Object, s.Object, w.Object);
             var mObj = optimizer.Object;
@@ -53,7 +53,7 @@ public class SolarOptimizerTests
         var w = new Mock<IWatchdog>();
 
         // don't async / await with the datetimeprovider
-        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0)))
+        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0, DateTimeKind.Utc)))
         {
             var optimizer = new Mock<SolarOptimizer>(p.Object, s.Object, w.Object);
             optimizer.CallBase = true;
@@ -78,7 +78,7 @@ public class SolarOptimizerTests
         var s = new Mock<ISolar>();
         var w = new Mock<IWatchdog>();
 
-        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0)))
+        using (new DateTimeProviderContext(new DateTime(2023, 05, 22, 12, 50, 0, DateTimeKind.Utc)))
         {
             var optimizer = new Mock<SolarOptimizer>(p.Object, s.Object, w.Object);
             await optimizer.Object.PerformCheck().ConfigureAwait(false);
