@@ -2,7 +2,7 @@
 using FluentAssertions;
 using EMS.Library.Passwords;
 
-namespace EMS.Library.Unit.Tests
+namespace PasswordQualityCheckerBaseArgumentValidation
 {
     public class PasswordQualityCheckerBaseArgumentValidationTests
     {

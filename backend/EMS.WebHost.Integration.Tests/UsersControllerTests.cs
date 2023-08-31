@@ -80,11 +80,12 @@ namespace EMS.WebHost.Integration.Tests
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
 
             var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true }).ConfigureAwait(true);
-            Assert.False(string.IsNullOrWhiteSpace(loginResponse?.User.Id.ToString()));
-            Assert.False(string.IsNullOrWhiteSpace(loginResponse?.User.Name));
-            Assert.False(string.IsNullOrWhiteSpace(loginResponse?.User.Username));
-            Assert.False(string.IsNullOrWhiteSpace(loginResponse?.Token));
-            Assert.Equal(200, loginResponse?.Status);
+            Assert.NotNull(loginResponse);
+            Assert.False(string.IsNullOrWhiteSpace(loginResponse.User.Id.ToString()));
+            Assert.False(string.IsNullOrWhiteSpace(loginResponse.User.Name));
+            Assert.False(string.IsNullOrWhiteSpace(loginResponse.User.Username));
+            Assert.False(string.IsNullOrWhiteSpace(loginResponse.Token));
+            Assert.Equal(200, loginResponse.Status);
         }
     }
 

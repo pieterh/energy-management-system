@@ -15,7 +15,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void HandlesSimpleChargingSession()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 30);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 30, DateTimeKind.Utc);
             var tariff = new Tariff(fakeDate, 0.23m, 0.08m);
 
             using (new DateTimeProviderContext(fakeDate))
@@ -69,7 +69,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void HandlesChargingSessionWithBreak()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00, DateTimeKind.Utc);
             var tariff1 = new Tariff(fakeDate, 0.215m, 0.08m);
             var tariff2 = new Tariff(fakeDate, 0.254m, 0.08m);
 
@@ -105,7 +105,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void HandlesChargingSessionWithBreaksAndButtonDisco()
         {
-            var fakeDate = new DateTime(2023, 6, 10, 00, 51, 46);
+            var fakeDate = new DateTime(2023, 6, 10, 00, 51, 46, DateTimeKind.Utc);
             var tariff1 = new Tariff(fakeDate, 0.20m, 0.08m);
 
             using (new DateTimeProviderContext(fakeDate))
@@ -160,7 +160,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void EnergyDeliveredNotWhenDisconnected()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00, DateTimeKind.Utc);
             var tariff = new Tariff(fakeDate, 0.23m, 0.08m);
             using (new DateTimeProviderContext(fakeDate))
             {
@@ -181,7 +181,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void EnergyDeliveredWhenConnected()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00, DateTimeKind.Utc);
             var tariff = new Tariff(fakeDate, 0.23m, 0.08m);
 
             using (new DateTimeProviderContext(fakeDate))
@@ -206,7 +206,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void NoTariffAvailWhenCharging()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00, DateTimeKind.Utc);
             var tariff = new Tariff(fakeDate, 0.23m, 0.08m);
 
             using (new DateTimeProviderContext(fakeDate))
@@ -236,7 +236,7 @@ namespace AlfenNG9xx.Tests
         [Fact]
         public void SessionResetWhenStandby()
         {
-            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00);
+            var fakeDate = new DateTime(2021, 4, 1, 13, 14, 00, DateTimeKind.Utc);
             using (new DateTimeProviderContext(fakeDate))
             {
                 var t = new ChargingSession();

@@ -26,6 +26,7 @@ namespace EMS.Engine.Model
 
         protected Base(ILogger logger, Measurements measurements, ChargingStateMachine state)
         {
+            ArgumentNullException.ThrowIfNull(logger);
             _logger = logger;
             _measurements = measurements;
             _state = state;

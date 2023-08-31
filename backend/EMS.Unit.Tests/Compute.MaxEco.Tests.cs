@@ -12,6 +12,7 @@ using EMS.Library.Adapter;
 using static EMS.Compute;
 using EMS.Library.Core;
 using EMS.Engine.Model;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EMS.Tests
 {
@@ -34,14 +35,16 @@ namespace EMS.Tests
         [Fact(DisplayName = "010 HandlesMeasurementArrayNull")]
         public void T010HandlesMeasurementArrayNull()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
             mock.Object.Charging().Should().Be((-1, -1, -1), "-1 should be returned when there are no or not enough samples");
         }
 
         [Fact(DisplayName = "020 HandlesLessThenMinimum")]
         public void T020HandlesLessThenMinimum()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints - 1; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(10, 0, 0), new CurrentMeasurement(10, 0, 0));
@@ -52,7 +55,8 @@ namespace EMS.Tests
         [Fact(DisplayName = "030 Test2")]
         public void T030Test2()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-12.0, 0.62, 0.40), new CurrentMeasurement(0, 0, 0));
@@ -64,7 +68,8 @@ namespace EMS.Tests
         [MemberData(nameof(GetData), parameters: "_040_Test3")]
         public void T040Test3(ICurrentMeasurement sm, ICurrentMeasurement evse, ICurrentMeasurement expected, string because)
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(sm, evse);
@@ -93,7 +98,8 @@ namespace EMS.Tests
         [Fact(DisplayName = "050 StartChargeThreshold_before_no_charge")]
         public void T050StartChargeThresholdBeforeNoCharge()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-4.01, 0.62, 0.40), new CurrentMeasurement(0f, 0f, 0f));
@@ -104,7 +110,8 @@ namespace EMS.Tests
         [Fact(DisplayName = "060 StartChargeThreshold_at_start_charge")]
         public void T060StartChargeThresholdAtStartCharge()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-7.77, 0.62, 0.40), new CurrentMeasurement(0f, 0f, 0f));
@@ -115,7 +122,8 @@ namespace EMS.Tests
         [Fact(DisplayName = "070 StartChargeThreshold_after_good_charge")]
         public void T070StartChargeThresholdAfterGoodCharge()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxEco);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxEco);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(-8.02, 0.62, 0.40), new CurrentMeasurement(0f, 0f, 0f));

@@ -137,7 +137,7 @@ namespace P1SmartMeter.TelegramTests
             const string rawValue = "210307123722W";
             var result = def.ParseValue(0, rawValue);
             result.GetType().Should().Be(typeof(DateTime), "the type is TelegramFieldType.Timestamp");
-            result.Should().Be(new DateTime(2021, 03, 07, 12, 37, 22), "it should have the expected value ;-)");
+            result.Should().Be(new DateTime(2021, 03, 07, 12, 37, 22, DateTimeKind.Utc), "it should have the expected value ;-)");
         }
     }
 

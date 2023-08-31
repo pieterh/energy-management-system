@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using static EMS.Compute;
 using EMS.Library.Adapter;
 using EMS.Library.Core;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace EMS.Tests
 {
@@ -17,14 +19,18 @@ namespace EMS.Tests
         [Fact]
         public void MaxChargeHandlesMeasurementArrayNull()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxCharge);
             mock.Object.Charging().Should().Be((-1, -1, -1), "-1 should be return when there are no or not enough samples");
         }
 
         [Fact]
         public void MaxChargeHandlesLessThenMinimum()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxCharge);
 
             for (int i = 0; i < mock.Object.MinimumDataPoints - 1; i++)
                 mock.Object.AddMeasurement(new CurrentMeasurement(10, 0, 0), new CurrentMeasurement(10f, 0f, 0f));
@@ -72,7 +78,8 @@ namespace EMS.Tests
         [Fact]
         public void MaxChargingTest1()
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxCharge);
 
             AddSamplesLoadSinglePhase1(mock.Object, new CurrentMeasurement(16f, 0f, 0f));
 
@@ -87,7 +94,8 @@ namespace EMS.Tests
         [InlineData(10f, 0f, 0f, 16f, 16f, 16f, "")]
         public void MaxChargingTest2(double cl1, double cl2, double cl3, double el1, double el2, double el3, string because)
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxCharge);
 
             AddSamplesLoadSinglePhase2(mock.Object, new CurrentMeasurement(cl1, cl2, cl3));
 
@@ -101,7 +109,8 @@ namespace EMS.Tests
         [InlineData(6f, 6f, 6f, 12f, 16f, 16f, "")]
         public void MaxChargingHandlesLoad(double cl1, double cl2, double cl3, double el1, double el2, double el3, string because)
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxCharge);
 
             AddSamplesLoad(mock.Object, new CurrentMeasurement(cl1, cl2, cl3));
             mock.Object.Charging().Should().Be((el1, el2, el3), because);
@@ -112,7 +121,8 @@ namespace EMS.Tests
         [InlineData(10f, 10f, 10f, 16f, 16f, 0f, "")]
         public void MaxChargingHandlesOverloading(double cl1, double cl2, double cl3, double el1, double el2, double el3, string because)
         {
-            var mock = new Mock<Compute>(null, ChargingMode.MaxCharge);
+            var logger = NullLoggerFactory.Instance.CreateLogger("nulllogger");
+            var mock = new Mock<Compute>(logger, ChargingMode.MaxCharge);
 
             AddSamplesOverload(mock.Object, new CurrentMeasurement(cl1, cl2, cl3));
             mock.Object.Charging().Should().Be((el1, el2, el3), because);
