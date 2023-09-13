@@ -337,7 +337,7 @@ jobs:
       with:
         string: ${{ steps.meta.outputs.version }}          
     - name: Docker build multi arch and push
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       if: ${{ github.ref != 'refs/heads/main' && (! startsWith(github.ref, 'refs/heads/dependabot')) && github.event_name != 'pull_request' }} 
       with:
         context: docker
@@ -349,7 +349,7 @@ jobs:
         push: true
         load: false
     - name: Docker build single arch and load
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v5
       if: ${{ github.ref == 'refs/heads/main' || (!! startsWith(github.ref, 'refs/heads/dependabot')) || github.event_name == 'pull_request'}}
       with:
         context: docker
