@@ -20,7 +20,7 @@ jobs:
         generate-sbom: false
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Setup default Java 17
@@ -242,7 +242,7 @@ jobs:
       image: ${{ steps.meta.outputs.version }}
     steps:    
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Docker Setup QEMU
