@@ -323,7 +323,7 @@ jobs:
         mv dist/ems.blazorwasm/ems.blazorwasm/wwwroot/* dist/app/wwwroot
     - name: Docker metadata
       id: meta
-      uses: docker/metadata-action@v4
+      uses: docker/metadata-action@v5
       with:
         images: docker.io/${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPOSITORY }}
     - name: image tags tolower
