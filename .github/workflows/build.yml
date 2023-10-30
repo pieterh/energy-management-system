@@ -210,7 +210,7 @@ jobs:
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems backend/EMS
     - name: Zip Release - backend
-      uses: TheDoctor0/zip-release@0.7.1
+      uses: TheDoctor0/zip-release@0.7.5
       with:
         filename: ${{ runner.temp }}/ems.zip
         path: ems
@@ -224,7 +224,7 @@ jobs:
       run: |
         dotnet publish --no-restore --configuration Release --output publish/ems.blazorwasm frontend/EMS.BlazorWasm
     - name: Zip Release - Blazor WASM frontend
-      uses: TheDoctor0/zip-release@0.7.1
+      uses: TheDoctor0/zip-release@0.7.5
       with:
         filename: ${{ runner.temp }}/ems.blazorwasm.zip
         path: ems.blazorwasm
